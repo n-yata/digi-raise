@@ -1,0 +1,124 @@
+import type { Creature } from '../types/creature'
+import { canEvolve } from '../utils/evolution'
+
+interface ActionButtonsProps {
+  creature: Creature
+  onFeed: () => void
+  onTrain: () => void
+  onPlay: () => void
+  onSleep: () => void
+  onEvolve: () => void
+  onStatus: () => void
+}
+
+interface BtnProps {
+  label: string
+  icon: string
+  onClick: () => void
+  disabled?: boolean
+  accent?: string
+  pulse?: boolean
+}
+
+function ActionBtn({ label, icon, onClick, disabled, accent = '#4fc3f7', pulse }: BtnProps) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className={`
+        relative flex flex-col items-center justify-center gap-1
+        rounded-lg transition-all duration-150 active:scale-95
+        ${disabled ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer hover:brightness-125'}
+        ${pulse ? 'animate-pulse' : ''}
+      `}
+      style={{
+        minHeight: 64,
+        minWidth: 72,
+        padding: '8px 4px',
+        background: disabled
+          ? 'rgba(255,255,255,0.05)'
+          : `linear-gradient(135deg, ${accent}22, ${accent}11)`,
+        border: `2px solid ${disabled ? 'rgba(255,255,255,0.1)' : accent + '66'}`,
+        boxShadow: disabled ? 'none' : `0 2px 8px ${accent}33`,
+      }}
+    >
+      <span style={{ fontSize: 22 }}>{icon}</span>
+      <span style={{ fontSize: '0.5rem', color: disabled ? '#666' : '#ccc', letterSpacing: '0.05em' }}>
+        {label}
+      </span>
+    </button>
+  )
+}
+
+export default function ActionButtons({
+  creature,
+  onFeed,
+  onTrain,
+  onPlay,
+  onSleep,
+  onEvolve,
+  onStatus,
+}: ActionButtonsProps) {
+  const sleeping = creature.isSleeping
+  const canEvolveNow = canEvolve(creature)
+
+  return (
+    <div className="w-full">
+      {/* Evolution button - full width when available */}
+      {canEvolveNow && (
+        <button
+          onClick={onEvolve}
+          className="w-full mb-3 py-3 rounded-lg font-pixel text-sm animate-pulse"
+          style={{
+            background: 'linear-gradient(90deg, #ffd700, #ff8c00, #ffd700)',
+            backgroundSize: '200% 100%',
+            animation: 'evolveGradient 2s linear infinite, pulse 1s ease-in-out infinite',
+            border: '2px solid #ffd700',
+            color: '#111',
+            fontSize: '0.65rem',
+            letterSpacing: '0.05em',
+            boxShadow: '0 0 20px #ffd70088',
+          }}
+        >
+          ⭐ 進化できる！タップして進化！ ⭐
+        </button>
+      )}
+
+      {/* Main action grid */}
+      <div className="grid grid-cols-4 gap-2">
+        <ActionBtn
+          label="ご飯" icon="🍖"
+          onClick={onFeed}
+          disabled={sleeping}
+          accent="#fb923c"
+        />
+        <ActionBtn
+          label="トレーニング" icon="⚔️"
+          onClick={onTrain}
+          disabled={sleeping}
+          accent="#f43f5e"
+        />
+        <ActionBtn
+          label="遊ぶ" icon="🎮"
+          onClick={onPlay}
+          disabled={sleeping}
+          accent="#a78bfa"
+        />
+        <ActionBtn
+          label={sleeping ? '起こす' : '寝る'} icon={sleeping ? '☀️' : '💤'}
+          onClick={onSleep}
+          accent="#60a5fa"
+        />
+      </div>
+
+      {/* Status button */}
+      <div className="mt-2 flex justify-end">
+        <ActionBtn
+          label="ステータス" icon="📊"
+          onClick={onStatus}
+          accent="#94a3b8"
+        />
+      </div>
+    </div>
+  )
+}

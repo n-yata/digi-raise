@@ -1,0 +1,175 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html, body, #root {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    background-color: #1a1a2e;
+    color: #e0e0e0;
+    font-family: 'Press Start 2P', monospace;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+}
+
+@layer utilities {
+  .pixel-border {
+    box-shadow:
+      0 0 0 2px #0f3460,
+      0 0 0 4px #16213e,
+      0 0 0 6px #0f3460;
+  }
+
+  .glow-fire   { box-shadow: 0 0 20px #ff6b3560, 0 0 40px #ff6b3530; }
+  .glow-water  { box-shadow: 0 0 20px #4fc3f760, 0 0 40px #4fc3f730; }
+  .glow-plant  { box-shadow: 0 0 20px #81c78460, 0 0 40px #81c78430; }
+  .glow-thunder{ box-shadow: 0 0 20px #ffd54f60, 0 0 40px #ffd54f30; }
+  .glow-dark   { box-shadow: 0 0 20px #ce93d860, 0 0 40px #ce93d830; }
+  .glow-light  { box-shadow: 0 0 20px #fff9c460, 0 0 40px #fff9c430; }
+
+  .text-shadow-glow {
+    text-shadow: 0 0 10px currentColor, 0 0 20px currentColor;
+  }
+}
+
+/* Creature sprite pixel art using CSS */
+.creature-sprite {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+/* Pixel art eyes */
+.pixel-eye {
+  width: 6px;
+  height: 6px;
+  background: #111;
+  border-radius: 0;
+}
+
+.pixel-eye.shine::after {
+  content: '';
+  display: block;
+  width: 2px;
+  height: 2px;
+  background: white;
+  margin: 0 0 2px 3px;
+}
+
+/* Bar animation */
+@keyframes barFill {
+  from { width: 0%; }
+}
+
+.bar-fill {
+  animation: barFill 0.5s ease-out;
+}
+
+/* Message popup */
+@keyframes popUp {
+  0% { opacity: 0; transform: translateY(10px) translateX(-50%); }
+  20% { opacity: 1; transform: translateY(0) translateX(-50%); }
+  80% { opacity: 1; transform: translateY(0) translateX(-50%); }
+  100% { opacity: 0; transform: translateY(-10px) translateX(-50%); }
+}
+
+.message-popup {
+  animation: popUp 2.5s ease-in-out forwards;
+}
+
+/* Scanline effect */
+.scanlines {
+  position: relative;
+}
+
+.scanlines::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.03) 2px,
+    rgba(0, 0, 0, 0.03) 4px
+  );
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* Evolution flash */
+@keyframes evolutionFlash {
+  0%, 100% { background: transparent; }
+  50% { background: rgba(255, 255, 255, 0.9); }
+}
+
+.evolution-flash {
+  animation: evolutionFlash 0.3s ease-in-out 5;
+}
+
+/* Star burst */
+@keyframes starBurst {
+  0% { transform: scale(0) rotate(0deg); opacity: 1; }
+  100% { transform: scale(3) rotate(180deg); opacity: 0; }
+}
+
+.star-burst {
+  animation: starBurst 1s ease-out forwards;
+}
+
+/* Bounce in */
+@keyframes bounceIn {
+  0% { transform: scale(0); opacity: 0; }
+  60% { transform: scale(1.2); opacity: 1; }
+  100% { transform: scale(1); }
+}
+
+.bounce-in {
+  animation: bounceIn 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) forwards;
+}
+
+/* Shake */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-5px); }
+  40% { transform: translateX(5px); }
+  60% { transform: translateX(-3px); }
+  80% { transform: translateX(3px); }
+}
+
+.shake {
+  animation: shake 0.4s ease-in-out;
+}
+
+/* Sparkle float */
+@keyframes sparkleFloat {
+  0% { opacity: 0; transform: translateY(0) scale(0); }
+  50% { opacity: 1; transform: translateY(-20px) scale(1); }
+  100% { opacity: 0; transform: translateY(-40px) scale(0); }
+}
+
+.sparkle {
+  animation: sparkleFloat 1.5s ease-out infinite;
+}
+
+/* Type gradient backgrounds */
+.type-bg-fire    { background: linear-gradient(135deg, #1a1a2e 0%, #2d1210 100%); }
+.type-bg-water   { background: linear-gradient(135deg, #1a1a2e 0%, #0d1f2d 100%); }
+.type-bg-plant   { background: linear-gradient(135deg, #1a1a2e 0%, #122d12 100%); }
+.type-bg-thunder { background: linear-gradient(135deg, #1a1a2e 0%, #2d2510 100%); }
+.type-bg-dark    { background: linear-gradient(135deg, #1a1a2e 0%, #1d1128 100%); }
+.type-bg-light   { background: linear-gradient(135deg, #1a1a2e 0%, #2d2d1e 100%); }
+
+/* Scrollbar styling */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: #1a1a2e; }
+::-webkit-scrollbar-thumb { background: #0f3460; border-radius: 2px; }
