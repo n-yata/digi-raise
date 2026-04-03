@@ -1,0 +1,1 @@
+if('serviceWorker' in navigator) {window.addEventListener('load', () => {navigator.serviceWorker.register('/digi-raise/sw.js', { scope: '/digi-raise/' })})}

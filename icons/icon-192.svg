@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
+  <rect width="192" height="192" rx="32" fill="#1a1a2e"/>
+  <rect x="16" y="16" width="160" height="160" rx="24" fill="#16213e"/>
+  <!-- Creature egg shape -->
+  <ellipse cx="96" cy="104" rx="44" ry="52" fill="#e8d5b7"/>
+  <ellipse cx="96" cy="92" rx="44" ry="52" fill="#f5e6d3"/>
+  <!-- Spots -->
+  <circle cx="80" cy="80" r="8" fill="#ff6b35" opacity="0.8"/>
+  <circle cx="112" cy="88" r="6" fill="#4fc3f7" opacity="0.8"/>
+  <circle cx="88" cy="108" r="5" fill="#81c784" opacity="0.8"/>
+  <!-- Eyes -->
+  <circle cx="84" cy="86" r="8" fill="white"/>
+  <circle cx="108" cy="86" r="8" fill="white"/>
+  <circle cx="86" cy="88" r="5" fill="#1a1a2e"/>
+  <circle cx="110" cy="88" r="5" fill="#1a1a2e"/>
+  <circle cx="87" cy="87" r="2" fill="white"/>
+  <circle cx="111" cy="87" r="2" fill="white"/>
+  <!-- Smile -->
+  <path d="M 84 100 Q 96 110 108 100" stroke="#1a1a2e" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <!-- Title text -->
+  <text x="96" y="170" text-anchor="middle" font-family="monospace" font-size="14" font-weight="bold" fill="#ffd54f">DigiRaise</text>
+</svg>
