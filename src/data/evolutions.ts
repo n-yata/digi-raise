@@ -54,10 +54,11 @@ export interface EvolutionRequirement {
 }
 
 export const EVOLUTION_REQUIREMENTS: Record<number, EvolutionRequirement> = {
-  1: { minAge: 1 },                                                          // Baby -> Child
-  2: { minAge: 3, minHappiness: 50 },                                       // Child -> Adult
-  3: { minAge: 7, minLevel: 10, minCombatStats: 60 },                      // Adult -> Perfect
-  4: { minAge: 14, minLevel: 20, minEachStat: 30 },                        // Perfect -> Ultimate
+  0: { minAge: 0 },                                                          // Egg -> Baby (即時)
+  1: { minAge: 1 },                                                          // Baby -> Child (1時間)
+  2: { minAge: 3, minHappiness: 50 },                                       // Child -> Adult (3時間, 幸福50以上)
+  3: { minAge: 6, minLevel: 8, minCombatStats: 40 },                       // Adult -> Perfect (6時間, Lv8, 戦闘力40)
+  4: { minAge: 12, minLevel: 14, minEachStat: 20 },                        // Perfect -> Ultimate (12時間, Lv14, 各ステ20)
 }
 
 export const EXP_TO_LEVEL: (level: number) => number = (level) => level * 20

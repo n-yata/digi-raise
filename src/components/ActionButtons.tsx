@@ -1,5 +1,5 @@
 import type { Creature } from '../types/creature'
-import { canEvolve } from '../utils/evolution'
+import { canEvolve, getEvolutionProgress } from '../utils/evolution'
 
 interface ActionButtonsProps {
   creature: Creature
@@ -61,6 +61,9 @@ export default function ActionButtons({
 }: ActionButtonsProps) {
   const sleeping = creature.isSleeping
   const canEvolveNow = canEvolve(creature)
+  const evolutionProgress = !canEvolveNow && creature.evolutionStage < 5
+    ? getEvolutionProgress(creature)
+    : []
 
   return (
     <div className="w-full">
@@ -82,6 +85,31 @@ export default function ActionButtons({
         >
           ⭐ 進化できる！タップして進化！ ⭐
         </button>
+      )}
+
+      {/* Evolution conditions (when can't evolve) */}
+      {evolutionProgress.length > 0 && (
+        <div className="mb-3 p-2 rounded-lg" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
+          <p style={{ fontSize: '0.5rem', color: '#aaa', marginBottom: 4, letterSpacing: '0.05em' }}>🔒 進化条件</p>
+          <div className="flex flex-wrap gap-2">
+            {evolutionProgress.map((c) => (
+              <span
+                key={c.label}
+                style={{
+                  fontSize: '0.45rem',
+                  padding: '2px 6px',
+                  borderRadius: 4,
+                  background: c.met ? 'rgba(74,222,128,0.2)' : 'rgba(248,113,113,0.2)',
+                  border: `1px solid ${c.met ? '#4ade80' : '#f87171'}`,
+                  color: c.met ? '#4ade80' : '#f87171',
+                  letterSpacing: '0.03em',
+                }}
+              >
+                {c.met ? '✓' : '✗'} {c.label}: {c.value}/{c.max}
+              </span>
+            ))}
+          </div>
+        </div>
       )}
 
       {/* Main action grid */}
