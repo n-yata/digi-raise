@@ -23,7 +23,7 @@ React + TypeScript + Vite で構築し、GitHub Pages にデプロイ。
 ## ディレクトリ構成
 
 ```
-src/
+frontend/src/
 ├── App.tsx                    # ルートコンポーネント・画面ルーティング
 ├── components/
 │   ├── ActionButtons.tsx      # えさ/トレーニング/あそぶ/ねる ボタン
@@ -148,6 +148,8 @@ main → death → title
 ## 開発コマンド
 
 ```bash
+# frontend/ ディレクトリ内で実行
+cd frontend
 npm install
 npm run dev      # 開発サーバー起動 (localhost:5173)
 npm run build    # TypeScript チェック + Vite ビルド
@@ -166,7 +168,7 @@ GitHub Pages にデプロイ。`vite.config.ts` で `base: '/digi-raise/'` を�
 
 ## 実装上の注意
 
-- `src/types/creature.ts` と `src/hooks/useGameState.ts` の両方に `GameState` インターフェースが存在する。hooks 側が実際の状態管理に使われている（進化アニメーション用フィールドを含む）。
+- `frontend/src/types/creature.ts` と `frontend/src/hooks/useGameState.ts` の両方に `GameState` インターフェースが存在する。hooks 側が実際の状態管理に使われている（進化アニメーション用フィールドを含む）。
 - `age` は float（30分ティックごとに +0.5）。進化条件の比較は float のまま行われ、表示のみ `Math.floor`。
 - トレーニング成功/失敗時に EXP の数値は画面に表示しない。
 - ごはんアクションは EXP を付与しない。
