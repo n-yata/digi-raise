@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import type { Creature, GameScreen, EvolutionStage } from './types/creature'
+import type { BattleRole, CreatureSnapshot, BattleResult } from './types/battle'
 import { applyTimeUpdate } from './utils/gameLogic'
 import { canEvolve, evolveCreature } from './utils/evolution'
 import { saveCreature, loadCreature, deleteCreature } from './utils/storage'
@@ -12,6 +13,8 @@ import StatusScreen from './components/StatusScreen'
 import TrainingMiniGame from './components/TrainingMiniGame'
 import PlayMiniGame from './components/PlayMiniGame'
 import FeedMiniGame from './components/FeedMiniGame'
+import BattleLobbyScreen from './components/BattleLobbyScreen'
+import BattleScreen from './components/BattleScreen'
 import { feedCreature, trainCreature, playWithCreature, toggleSleep } from './utils/gameLogic'
 
 export default function App() {
@@ -27,6 +30,12 @@ export default function App() {
   const [showTrainingGame, setShowTrainingGame] = useState(false)
   const [showPlayGame, setShowPlayGame] = useState(false)
   const [showFeedGame, setShowFeedGame] = useState(false)
+
+  // Battle state
+  const [battleRole, setBattleRole] = useState<BattleRole | null>(null)
+  const [battleOpponent, setBattleOpponent] = useState<CreatureSnapshot | null>(null)
+  const [battleSeed, setBattleSeed] = useState<number>(0)
+  const [battleRoomCode] = useState<string>('')
 
   const creatureRef = useRef<Creature | null>(null)
   const devModeRef = useRef(devMode)
@@ -187,6 +196,33 @@ export default function App() {
     setEvolvedFrom(null)
   }, [])
 
+  const handleBattle = useCallback(() => {
+    setScreen('battle_lobby')
+  }, [])
+
+  const handleBattleStart = useCallback((role: BattleRole, opponentCreature: CreatureSnapshot, seed: number) => {
+    setBattleRole(role)
+    setBattleOpponent(opponentCreature)
+    setBattleSeed(seed)
+    setScreen('battle')
+  }, [])
+
+  const handleBattleEnd = useCallback((result: BattleResult) => {
+    if (!creatureRef.current) return
+    const c = creatureRef.current
+    const updated: Creature = {
+      ...c,
+      exp: c.exp + result.expGain,
+      happiness: Math.max(0, Math.min(100, c.happiness + result.happinessChange)),
+      hp: Math.max(1, result.hpAfterBattle),
+      wins: result.result === 'win' ? (c.wins ?? 0) + 1 : (c.wins ?? 0),
+      losses: result.result === 'lose' ? (c.losses ?? 0) + 1 : (c.losses ?? 0),
+    }
+    persistCreature(updated)
+    setScreen('main')
+    showMessage(result.result === 'win' ? '勝利！強さを証明した！' : result.result === 'lose' ? '敗北...次は勝つぞ！' : '引き分け...いい戦いだった')
+  }, [persistCreature, showMessage])
+
   const handleStartOver = useCallback(async () => {
     await deleteCreature()
     setCreature(null)
@@ -248,6 +284,7 @@ export default function App() {
           onEvolve={handleEvolve}
           onStatus={() => setScreen('status')}
           onToggleDevMode={() => setDevMode(d => !d)}
+          onBattle={handleBattle}
         />
       )}
 
@@ -273,6 +310,35 @@ export default function App() {
           onLoad={handleLoadFromFile}
         />
       )}
+      {screen === 'battle_lobby' && creature && (
+        <BattleLobbyScreen
+          creature={creature}
+          onBattleStart={handleBattleStart}
+          onCancel={() => setScreen('main')}
+        />
+      )}
+
+      {screen === 'battle' && creature && battleRole && battleOpponent && (
+        <BattleScreen
+          myCreature={{
+            name: creature.name,
+            evolutionStage: creature.evolutionStage,
+            type: creature.type,
+            hp: creature.hp,
+            maxHp: creature.maxHp,
+            atk: creature.atk,
+            def: creature.def,
+            spd: creature.spd,
+            level: creature.level,
+          }}
+          opponentCreature={battleOpponent}
+          role={battleRole}
+          seed={battleSeed}
+          roomCode={battleRoomCode}
+          onBattleEnd={handleBattleEnd}
+        />
+      )}
+
       {showTrainingGame && creature && (
         <TrainingMiniGame creature={creature} onResult={handleTrainResult} />
       )}

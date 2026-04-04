@@ -26,9 +26,11 @@ export interface Creature {
   trainCount: number
   playCount: number
   feedCount: number
+  wins?: number
+  losses?: number
 }
 
-export type GameScreen = 'title' | 'setup' | 'main' | 'evolution' | 'death' | 'status'
+export type GameScreen = 'title' | 'setup' | 'main' | 'evolution' | 'death' | 'status' | 'battle_lobby' | 'battle'
 
 export interface GameState {
   creature: Creature | null

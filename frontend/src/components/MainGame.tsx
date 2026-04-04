@@ -20,6 +20,7 @@ interface MainGameProps {
   onEvolve: () => void
   onStatus: () => void
   onToggleDevMode: () => void
+  onBattle: () => void
 }
 
 export default function MainGame({
@@ -35,6 +36,7 @@ export default function MainGame({
   onEvolve,
   onStatus,
   onToggleDevMode,
+  onBattle,
 }: MainGameProps) {
   const color = TYPE_COLORS[creature.type]
   const animState = getAnimationState(creature, attackAnimation)
@@ -215,6 +217,33 @@ export default function MainGame({
           onEvolve={onEvolve}
           onStatus={onStatus}
         />
+
+        {/* Battle button */}
+        <div className="mt-2">
+          <button
+            onClick={onBattle}
+            disabled={creature.isSleeping || !creature.isAlive}
+            className="relative flex flex-col items-center justify-center gap-1 rounded-lg transition-all duration-150 active:scale-95 w-full"
+            style={{
+              minHeight: 48,
+              padding: '8px 16px',
+              background: creature.isSleeping || !creature.isAlive
+                ? 'rgba(255,255,255,0.05)'
+                : 'linear-gradient(135deg, #ef444422, #ef444411)',
+              border: `2px solid ${creature.isSleeping || !creature.isAlive ? 'rgba(255,255,255,0.1)' : '#ef444466'}`,
+              boxShadow: creature.isSleeping || !creature.isAlive ? 'none' : '0 2px 8px #ef444433',
+              opacity: creature.isSleeping || !creature.isAlive ? 0.4 : 1,
+              cursor: creature.isSleeping || !creature.isAlive ? 'not-allowed' : 'pointer',
+            }}
+          >
+            <div className="flex items-center gap-2">
+              <span style={{ fontSize: 18 }}>⚔️</span>
+              <span style={{ fontSize: '0.5rem', color: creature.isSleeping || !creature.isAlive ? '#666' : '#fca5a5', letterSpacing: '0.05em' }}>
+                バトル
+              </span>
+            </div>
+          </button>
+        </div>
       </div>
     </div>
   )

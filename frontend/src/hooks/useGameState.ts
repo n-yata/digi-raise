@@ -1,5 +1,6 @@
 import { useReducer, useCallback } from 'react'
 import type { Creature, GameScreen, EvolutionStage } from '../types/creature'
+import type { BattleResult } from '../types/battle'
 import {
   feedCreature,
   trainCreature,
@@ -28,6 +29,7 @@ type Action =
   | { type: 'SET_ATTACK_ANIMATION'; payload: boolean }
   | { type: 'SET_EVOLVED_FROM'; payload: EvolutionStage | null }
   | { type: 'SET_MESSAGE'; payload: string | null }
+  | { type: 'APPLY_BATTLE_RESULT'; payload: BattleResult }
 
 const initialState: GameState = {
   creature: null,
@@ -55,6 +57,19 @@ function reducer(state: GameState, action: Action): GameState {
       return { ...state, evolvedFrom: action.payload }
     case 'SET_MESSAGE':
       return { ...state, message: action.payload }
+    case 'APPLY_BATTLE_RESULT': {
+      if (!state.creature) return state
+      const { expGain, happinessChange, hpAfterBattle, result } = action.payload
+      const updated: Creature = {
+        ...state.creature,
+        exp: state.creature.exp + expGain,
+        happiness: Math.max(0, Math.min(100, state.creature.happiness + happinessChange)),
+        hp: Math.max(1, hpAfterBattle),
+        wins: result === 'win' ? (state.creature.wins ?? 0) + 1 : (state.creature.wins ?? 0),
+        losses: result === 'lose' ? (state.creature.losses ?? 0) + 1 : (state.creature.losses ?? 0),
+      }
+      return { ...state, creature: updated }
+    }
     default:
       return state
   }
@@ -166,6 +181,21 @@ export function useGameState() {
     dispatch({ type: 'SET_PENDING_EVOLUTION', payload: val })
   }, [])
 
+  const applyBattleResult = useCallback((result: BattleResult) => {
+    dispatch({ type: 'APPLY_BATTLE_RESULT', payload: result })
+    if (state.creature) {
+      const updated: Creature = {
+        ...state.creature,
+        exp: state.creature.exp + result.expGain,
+        happiness: Math.max(0, Math.min(100, state.creature.happiness + result.happinessChange)),
+        hp: Math.max(1, result.hpAfterBattle),
+        wins: result.result === 'win' ? (state.creature.wins ?? 0) + 1 : (state.creature.wins ?? 0),
+        losses: result.result === 'lose' ? (state.creature.losses ?? 0) + 1 : (state.creature.losses ?? 0),
+      }
+      saveCreature(updated)
+    }
+  }, [state.creature])
+
   return {
     state,
     actions: {
@@ -182,6 +212,7 @@ export function useGameState() {
       goToMain,
       toggleDevMode,
       setPendingEvolution,
+      applyBattleResult,
     },
   }
 }
