@@ -9,6 +9,7 @@ import MainGame from './components/MainGame'
 import EvolutionScreen from './components/EvolutionScreen'
 import DeathScreen from './components/DeathScreen'
 import StatusScreen from './components/StatusScreen'
+import TrainingMiniGame from './components/TrainingMiniGame'
 import { feedCreature, trainCreature, playWithCreature, toggleSleep } from './utils/gameLogic'
 
 export default function App() {
@@ -21,6 +22,7 @@ export default function App() {
   const [message, setMessage] = useState<string | null>(null)
   const [hasExistingSave, setHasExistingSave] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [showTrainingGame, setShowTrainingGame] = useState(false)
 
   const creatureRef = useRef<Creature | null>(null)
   const devModeRef = useRef(devMode)
@@ -126,11 +128,17 @@ export default function App() {
   }, [persistCreature, showMessage])
 
   const handleTrain = useCallback(() => {
+    if (!creatureRef.current || creatureRef.current.isSleeping) return
+    setShowTrainingGame(true)
+  }, [])
+
+  const handleTrainResult = useCallback((success: boolean) => {
+    setShowTrainingGame(false)
     if (!creatureRef.current) return
-    const updated = trainCreature(creatureRef.current)
+    const updated = trainCreature(creatureRef.current, success)
     persistCreature(updated)
     setAttackAnimation(true)
-    showMessage('トレーニング完了！強くなった！⚔️')
+    showMessage(success ? 'トレーニング成功！大きく強くなった！⚔️' : 'トレーニング失敗…でも少し強くなった')
     setTimeout(() => setAttackAnimation(false), 1200)
   }, [persistCreature, showMessage])
 
@@ -248,6 +256,9 @@ export default function App() {
           onBack={() => setScreen('main')}
           onLoad={handleLoadFromFile}
         />
+      )}
+      {showTrainingGame && creature && (
+        <TrainingMiniGame creature={creature} onResult={handleTrainResult} />
       )}
     </div>
   )

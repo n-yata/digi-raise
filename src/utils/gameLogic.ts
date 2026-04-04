@@ -57,11 +57,12 @@ export function feedCreature(creature: Creature): Creature {
   return { ...updated, lastUpdated: Date.now() }
 }
 
-export function trainCreature(creature: Creature): Creature {
+export function trainCreature(creature: Creature, success: boolean = true): Creature {
   if (!creature.isAlive || creature.isSleeping) return creature
-  const atkGain = Math.floor(Math.random() * 3) + 1
-  const defGain = Math.floor(Math.random() * 3) + 1
-  const spdGain = Math.floor(Math.random() * 3) + 1
+  const atkGain = success ? Math.floor(Math.random() * 3) + 1 : Math.floor(Math.random() * 2)
+  const defGain = success ? Math.floor(Math.random() * 3) + 1 : Math.floor(Math.random() * 2)
+  const spdGain = success ? Math.floor(Math.random() * 3) + 1 : Math.floor(Math.random() * 2)
+  const expGain = success ? 20 : 5
   const updated = addExp(
     {
       ...creature,
@@ -72,7 +73,7 @@ export function trainCreature(creature: Creature): Creature {
       happiness: Math.max(0, creature.happiness - 5),
       trainCount: creature.trainCount + 1,
     },
-    10
+    expGain
   )
   return { ...updated, lastUpdated: Date.now() }
 }
