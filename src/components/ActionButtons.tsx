@@ -61,6 +61,37 @@ export default function ActionButtons({
 }: ActionButtonsProps) {
   const sleeping = creature.isSleeping
   const canEvolveNow = canEvolve(creature)
+  const isEgg = creature.evolutionStage === 0
+
+  // タマゴステージ: 「生まれる」ボタンのみ表示
+  if (isEgg) {
+    return (
+      <div className="w-full flex justify-center">
+        <button
+          onClick={onEvolve}
+          className="w-full py-4 rounded-lg font-pixel"
+          style={{
+            background: 'linear-gradient(90deg, #ffd700, #ff8c00, #ffd700)',
+            backgroundSize: '200% 100%',
+            animation: 'evolveGradient 2s linear infinite, hatch 0.6s ease-in-out infinite alternate',
+            border: '2px solid #ffd700',
+            color: '#111',
+            fontSize: '0.65rem',
+            letterSpacing: '0.05em',
+            boxShadow: '0 0 24px #ffd70099',
+          }}
+        >
+          🥚 タップして生まれる！
+        </button>
+        <style>{`
+          @keyframes hatch {
+            0% { transform: rotate(-4deg) scale(1.01); }
+            100% { transform: rotate(4deg) scale(1.03); }
+          }
+        `}</style>
+      </div>
+    )
+  }
 
   return (
     <div className="w-full">
@@ -95,13 +126,13 @@ export default function ActionButtons({
         <ActionBtn
           label="トレーニング" icon="⚔️"
           onClick={onTrain}
-          disabled={sleeping}
+          disabled={sleeping || creature.hunger <= 0}
           accent="#f43f5e"
         />
         <ActionBtn
           label="遊ぶ" icon="🎮"
           onClick={onPlay}
-          disabled={sleeping}
+          disabled={sleeping || creature.hunger <= 0}
           accent="#a78bfa"
         />
         <ActionBtn
