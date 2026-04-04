@@ -10,6 +10,8 @@ import EvolutionScreen from './components/EvolutionScreen'
 import DeathScreen from './components/DeathScreen'
 import StatusScreen from './components/StatusScreen'
 import TrainingMiniGame from './components/TrainingMiniGame'
+import PlayMiniGame from './components/PlayMiniGame'
+import FeedMiniGame from './components/FeedMiniGame'
 import { feedCreature, trainCreature, playWithCreature, toggleSleep } from './utils/gameLogic'
 
 export default function App() {
@@ -23,6 +25,8 @@ export default function App() {
   const [hasExistingSave, setHasExistingSave] = useState(false)
   const [loading, setLoading] = useState(true)
   const [showTrainingGame, setShowTrainingGame] = useState(false)
+  const [showPlayGame, setShowPlayGame] = useState(false)
+  const [showFeedGame, setShowFeedGame] = useState(false)
 
   const creatureRef = useRef<Creature | null>(null)
   const devModeRef = useRef(devMode)
@@ -122,6 +126,12 @@ export default function App() {
 
   const handleFeed = useCallback(() => {
     if (!creatureRef.current) return
+    setShowFeedGame(true)
+  }, [])
+
+  const handleFeedDone = useCallback(() => {
+    setShowFeedGame(false)
+    if (!creatureRef.current) return
     const updated = feedCreature(creatureRef.current)
     persistCreature(updated)
     showMessage('もぐもぐ！ご飯を食べた！🍖')
@@ -143,6 +153,12 @@ export default function App() {
   }, [persistCreature, showMessage])
 
   const handlePlay = useCallback(() => {
+    if (!creatureRef.current || creatureRef.current.isSleeping) return
+    setShowPlayGame(true)
+  }, [])
+
+  const handlePlayResult = useCallback(() => {
+    setShowPlayGame(false)
     if (!creatureRef.current) return
     const updated = playWithCreature(creatureRef.current)
     persistCreature(updated)
@@ -259,6 +275,12 @@ export default function App() {
       )}
       {showTrainingGame && creature && (
         <TrainingMiniGame creature={creature} onResult={handleTrainResult} />
+      )}
+      {showPlayGame && creature && (
+        <PlayMiniGame creature={creature} onResult={handlePlayResult} />
+      )}
+      {showFeedGame && creature && (
+        <FeedMiniGame creature={creature} onDone={handleFeedDone} />
       )}
     </div>
   )

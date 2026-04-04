@@ -44,17 +44,14 @@ function addExp(creature: Creature, amount: number): Creature {
 export function feedCreature(creature: Creature): Creature {
   if (!creature.isAlive || creature.isSleeping) return creature
   const isOverfed = creature.hunger >= 90
-  const updated = addExp(
-    {
-      ...creature,
-      hunger: Math.min(100, creature.hunger + 30),
-      happiness: Math.min(100, creature.happiness + 5),
-      weight: creature.weight + (isOverfed ? 3 : 1),
-      feedCount: creature.feedCount + 1,
-    },
-    2
-  )
-  return { ...updated, lastUpdated: Date.now() }
+  return {
+    ...creature,
+    hunger: Math.min(100, creature.hunger + 30),
+    happiness: Math.min(100, creature.happiness + 5),
+    weight: creature.weight + (isOverfed ? 3 : 1),
+    feedCount: creature.feedCount + 1,
+    lastUpdated: Date.now(),
+  }
 }
 
 export function trainCreature(creature: Creature, success: boolean = true): Creature {
@@ -107,10 +104,8 @@ export function applyTimeUpdate(creature: Creature, devMode: boolean): Creature 
   const now = Date.now()
   const elapsed = now - creature.lastUpdated
   const thirtyMinutes = devMode ? 1000 * 30 : 1000 * 60 * 30
-  const oneHour = devMode ? 1000 * 60 : 1000 * 60 * 60
 
   const thirtyMinTicks = Math.floor(elapsed / thirtyMinutes)
-  const hourTicks = Math.floor(elapsed / oneHour)
 
   if (thirtyMinTicks === 0) return creature
 
@@ -120,12 +115,12 @@ export function applyTimeUpdate(creature: Creature, devMode: boolean): Creature 
   updated.hunger = Math.max(0, updated.hunger - thirtyMinTicks * 5)
   updated.happiness = Math.max(0, updated.happiness - thirtyMinTicks * 2)
 
-  // Apply hourly ticks
-  if (hourTicks > 0) {
-    updated.age = updated.age + hourTicks
-    if (updated.isSleeping) {
-      updated.hp = Math.min(updated.maxHp, updated.hp + hourTicks * 10)
-    }
+  // Apply hourly effects: 2 thirty-min ticks = 1 game-hour
+  // age はティック数 × 0.5 ずつ増える（float。表示は Math.floor）
+  updated.age = updated.age + thirtyMinTicks * 0.5
+  if (updated.isSleeping) {
+    // 10 HP/hour = 5 HP per 30-min tick
+    updated.hp = Math.min(updated.maxHp, updated.hp + thirtyMinTicks * 5)
   }
 
   // Starvation damage
