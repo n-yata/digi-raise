@@ -3,17 +3,19 @@ import type { Creature } from '../types/creature'
 import type { BattleRole, CreatureSnapshot } from '../types/battle'
 import { useBattleWebSocket } from '../hooks/useBattleWebSocket'
 import { useBattleState } from '../hooks/useBattleState'
+import { generateCpuCreature } from '../utils/cpuBattle'
 
 interface BattleLobbyScreenProps {
   creature: Creature
   onBattleStart: (role: BattleRole, opponentCreature: CreatureSnapshot, seed: number) => void
+  onCpuBattleStart: (opponentCreature: CreatureSnapshot, seed: number) => void
   onCancel: () => void
 }
 
-type LobbyTab = 'create' | 'join'
+type LobbyTab = 'create' | 'join' | 'cpu'
 
-export default function BattleLobbyScreen({ creature, onBattleStart, onCancel }: BattleLobbyScreenProps) {
-  const [tab, setTab] = useState<LobbyTab>('create')
+export default function BattleLobbyScreen({ creature, onBattleStart, onCpuBattleStart, onCancel }: BattleLobbyScreenProps) {
+  const [tab, setTab] = useState<LobbyTab>('cpu')
   const [joinCode, setJoinCode] = useState('')
   const [copied, setCopied] = useState(false)
   const [isReady, setIsReady] = useState(false)
@@ -21,11 +23,51 @@ export default function BattleLobbyScreen({ creature, onBattleStart, onCancel }:
   const [battleRole, setBattleRole] = useState<BattleRole | null>(null)
   const [opponentSnapshot, setOpponentSnapshot] = useState<CreatureSnapshot | null>(null)
 
+  const [cpuOpponent, setCpuOpponent] = useState<CreatureSnapshot | null>(null)
+
   const ws = useBattleWebSocket()
   const { state, processEvent } = useBattleState()
 
-  // WebSocket接続
+  // CPU対戦相手を生成
   useEffect(() => {
+    const playerSnapshot: CreatureSnapshot = {
+      name: creature.name,
+      evolutionStage: creature.evolutionStage,
+      type: creature.type,
+      hp: creature.hp,
+      maxHp: creature.maxHp,
+      atk: creature.atk,
+      def: creature.def,
+      spd: creature.spd,
+      level: creature.level,
+    }
+    setCpuOpponent(generateCpuCreature(playerSnapshot))
+  }, [creature])
+
+  const handleRegenerateCpu = () => {
+    const playerSnapshot: CreatureSnapshot = {
+      name: creature.name,
+      evolutionStage: creature.evolutionStage,
+      type: creature.type,
+      hp: creature.hp,
+      maxHp: creature.maxHp,
+      atk: creature.atk,
+      def: creature.def,
+      spd: creature.spd,
+      level: creature.level,
+    }
+    setCpuOpponent(generateCpuCreature(playerSnapshot))
+  }
+
+  const handleCpuBattleStart = () => {
+    if (!cpuOpponent) return
+    const seed = Date.now()
+    onCpuBattleStart(cpuOpponent, seed)
+  }
+
+  // WebSocket接続（オンラインタブ選択時のみ）
+  useEffect(() => {
+    if (tab !== 'create' && tab !== 'join') return
     ws.connect(creature).catch(() => {
       // ignore connection error
     })
@@ -33,7 +75,7 @@ export default function BattleLobbyScreen({ creature, onBattleStart, onCancel }:
       ws.disconnect()
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [tab])
 
   // イベント処理
   useEffect(() => {
@@ -115,21 +157,23 @@ export default function BattleLobbyScreen({ creature, onBattleStart, onCancel }:
             キャンセル
           </button>
         </div>
-        {/* 接続状態 */}
-        <div className="mt-2 flex items-center gap-2">
-          <div
-            className="rounded-full"
-            style={{
-              width: 8,
-              height: 8,
-              background: ws.isConnected ? '#4ade80' : '#f87171',
-              boxShadow: ws.isConnected ? '0 0 6px #4ade80' : 'none',
-            }}
-          />
-          <span className="font-pixel" style={{ fontSize: '0.4rem', color: '#64748b' }}>
-            {ws.isConnected ? '接続済み' : '接続中...'}
-          </span>
-        </div>
+        {/* 接続状態（オンラインタブ時のみ表示） */}
+        {tab !== 'cpu' && (
+          <div className="mt-2 flex items-center gap-2">
+            <div
+              className="rounded-full"
+              style={{
+                width: 8,
+                height: 8,
+                background: ws.isConnected ? '#4ade80' : '#f87171',
+                boxShadow: ws.isConnected ? '0 0 6px #4ade80' : 'none',
+              }}
+            />
+            <span className="font-pixel" style={{ fontSize: '0.4rem', color: '#64748b' }}>
+              {ws.isConnected ? '接続済み' : '接続中...'}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* 自分のクリーチャー情報 */}
@@ -158,9 +202,9 @@ export default function BattleLobbyScreen({ creature, onBattleStart, onCancel }:
       </div>
 
       {/* タブ */}
-      <div className="mx-4 mt-3 grid grid-cols-2 gap-1 rounded-lg overflow-hidden"
+      <div className="mx-4 mt-3 grid grid-cols-3 gap-1 rounded-lg overflow-hidden"
         style={{ background: '#16213e', border: '1px solid #0f3460' }}>
-        {(['create', 'join'] as LobbyTab[]).map(t => (
+        {(['cpu', 'create', 'join'] as LobbyTab[]).map(t => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -172,13 +216,75 @@ export default function BattleLobbyScreen({ creature, onBattleStart, onCancel }:
               border: 'none',
             }}
           >
-            {t === 'create' ? 'ルーム作成' : 'ルームに参加'}
+            {t === 'cpu' ? 'CPU対戦' : t === 'create' ? 'ルーム作成' : 'ルームに参加'}
           </button>
         ))}
       </div>
 
       {/* タブコンテンツ */}
       <div className="mx-4 mt-3 flex-1">
+        {tab === 'cpu' && cpuOpponent && (
+          <div className="flex flex-col gap-3">
+            {/* CPU対戦相手情報 */}
+            <div className="px-3 py-3 rounded-lg" style={{ background: '#16213e', border: '1px solid #0f3460' }}>
+              <div className="font-pixel mb-2" style={{ fontSize: '0.45rem', color: '#64748b' }}>
+                対戦相手（CPU）
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="font-pixel" style={{ fontSize: '0.6rem', color: '#e0e0e0' }}>
+                  {cpuOpponent.name}
+                </span>
+                <div className="flex gap-3">
+                  {[
+                    { label: 'HP', value: cpuOpponent.maxHp },
+                    { label: 'ATK', value: cpuOpponent.atk },
+                    { label: 'DEF', value: cpuOpponent.def },
+                    { label: 'SPD', value: cpuOpponent.spd },
+                  ].map(({ label, value }) => (
+                    <div key={label} className="flex flex-col items-center">
+                      <span className="font-pixel" style={{ fontSize: '0.35rem', color: '#64748b' }}>{label}</span>
+                      <span className="font-pixel" style={{ fontSize: '0.5rem', color: '#4fc3f7' }}>{value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="font-pixel mt-2" style={{ fontSize: '0.4rem', color: '#64748b' }}>
+                タイプ: {cpuOpponent.type} / Lv.{cpuOpponent.level}
+              </div>
+            </div>
+
+            {/* 対戦相手を変更 */}
+            <button
+              onClick={handleRegenerateCpu}
+              className="w-full py-2 rounded-lg font-pixel transition-all active:scale-95"
+              style={{
+                fontSize: '0.45rem',
+                background: 'rgba(100, 116, 139, 0.1)',
+                border: '1px solid #64748b44',
+                color: '#64748b',
+              }}
+            >
+              対戦相手を変更
+            </button>
+
+            {/* バトル開始 */}
+            <button
+              onClick={handleCpuBattleStart}
+              className="w-full py-3 rounded-lg font-pixel transition-all active:scale-95 animate-pulse"
+              style={{
+                fontSize: '0.55rem',
+                background: 'linear-gradient(90deg, #ffd700, #ff8c00, #ffd700)',
+                backgroundSize: '200% 100%',
+                border: '2px solid #ffd700',
+                color: '#111',
+                boxShadow: '0 0 20px #ffd70088',
+              }}
+            >
+              ⚔️ CPUバトル開始！
+            </button>
+          </div>
+        )}
+
         {tab === 'create' && (
           <div className="flex flex-col gap-3">
             {!state.roomCode ? (

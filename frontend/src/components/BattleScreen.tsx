@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import type { CreatureSnapshot, BattleRole, BattleResult, BattleAction } from '../types/battle'
 import { useBattleWebSocket } from '../hooks/useBattleWebSocket'
 import { useBattleState } from '../hooks/useBattleState'
 import { resolveTurn } from '../utils/battleLogic'
+import { selectCpuAction } from '../utils/cpuBattle'
 import BattleHPBar from './BattleHPBar'
 import BattleActionButtons from './BattleActionButtons'
 import BattleResultModal from './BattleResult'
@@ -14,7 +15,10 @@ interface BattleScreenProps {
   seed: number
   roomCode: string
   onBattleEnd: (result: BattleResult) => void
+  isCpuBattle?: boolean
 }
+
+const MAX_TURNS = 10
 
 export default function BattleScreen({
   myCreature,
@@ -23,6 +27,7 @@ export default function BattleScreen({
   seed: initialSeed,
   roomCode,
   onBattleEnd,
+  isCpuBattle = false,
 }: BattleScreenProps) {
   const ws = useBattleWebSocket()
   const { state, processEvent, selectAction, addLog, updateHp, updateEffects } = useBattleState()
@@ -49,8 +54,18 @@ export default function BattleScreen({
   const currentSeedRef = useRef(initialSeed)
   const roleRef = useRef(role)
 
-  // WebSocket接続
+  // CPU戦の初期化
+  const cpuInitialized = useRef(false)
   useEffect(() => {
+    if (isCpuBattle && !cpuInitialized.current) {
+      cpuInitialized.current = true
+      processEvent({ event: 'battle_start', seed: initialSeed, yourRole: role })
+    }
+  }, [isCpuBattle, initialSeed, role, processEvent])
+
+  // WebSocket接続（オンライン戦のみ）
+  useEffect(() => {
+    if (isCpuBattle) return
     ws.connect(myCreature as unknown as Parameters<typeof ws.connect>[0]).catch(() => {
       // ignore
     })
@@ -131,9 +146,94 @@ export default function BattleScreen({
     }
   }, [ws.lastEvent, processEvent, addLog, updateHp, updateEffects, role, opponentCreature.level, localMyHp])
 
+  // CPU戦: プレイヤーのアクション選択後にCPUアクションを決定してターン解決
+  const cpuTurnRef = useRef(0)
+  const resolveCpuTurn = useCallback((myAction: BattleAction) => {
+    const cpuAction = selectCpuAction(effectsRef.current.opponentSpecialCooldown)
+    const seed = initialSeed + cpuTurnRef.current * 1000 + Date.now() % 1000
+    cpuTurnRef.current++
+
+    const resolution = resolveTurn(
+      myCreatureRef.current,
+      opponentCreatureRef.current,
+      myAction,
+      cpuAction,
+      roleRef.current,
+      seed,
+      effectsRef.current
+    )
+
+    // HP更新
+    setLocalMyHp(resolution.myHpAfter)
+    setLocalOpponentHp(resolution.opponentHpAfter)
+    myCreatureRef.current = { ...myCreatureRef.current, hp: resolution.myHpAfter }
+    opponentCreatureRef.current = { ...opponentCreatureRef.current, hp: resolution.opponentHpAfter }
+    updateHp(resolution.myHpAfter, resolution.opponentHpAfter)
+
+    // エフェクト更新
+    effectsRef.current = {
+      myPoisonTurns: resolution.myPoisonTurns,
+      opponentPoisonTurns: resolution.opponentPoisonTurns,
+      myParalyzed: resolution.myParalyzed,
+      opponentParalyzed: resolution.opponentParalyzed,
+      myDefBuff: resolution.myDefBuff,
+      opponentDefBuff: resolution.opponentDefBuff,
+      specialCooldown: myAction === 'special' ? 3 : Math.max(0, effectsRef.current.specialCooldown - 1),
+      opponentSpecialCooldown: cpuAction === 'special' ? 3 : Math.max(0, effectsRef.current.opponentSpecialCooldown - 1),
+    }
+    updateEffects({
+      myPoisonTurns: resolution.myPoisonTurns,
+      opponentPoisonTurns: resolution.opponentPoisonTurns,
+      myParalyzed: resolution.myParalyzed,
+      myDefBuff: resolution.myDefBuff,
+    })
+
+    // ログ追加
+    resolution.logMessages.forEach(msg => addLog(msg))
+
+    // アクションボタンリセット
+    setActionButtonKey(k => k + 1)
+
+    // バトル終了判定
+    const turnNumber = cpuTurnRef.current
+    if (resolution.myHpAfter <= 0 || resolution.opponentHpAfter <= 0 || turnNumber >= MAX_TURNS) {
+      let winner: 'me' | 'opponent' | 'draw'
+      if (resolution.myHpAfter <= 0 && resolution.opponentHpAfter <= 0) {
+        winner = 'draw'
+      } else if (resolution.opponentHpAfter <= 0) {
+        winner = 'me'
+      } else if (resolution.myHpAfter <= 0) {
+        winner = 'opponent'
+      } else {
+        // 最大ターン到達: HP残量比較
+        winner = resolution.myHpAfter > resolution.opponentHpAfter ? 'me'
+          : resolution.myHpAfter < resolution.opponentHpAfter ? 'opponent'
+          : 'draw'
+      }
+
+      const result: BattleResult = {
+        result: winner === 'me' ? 'win' : winner === 'opponent' ? 'lose' : 'draw',
+        expGain: winner === 'me' ? 50 + (opponentCreature.level ?? 1) * 5 : winner === 'draw' ? 25 : 10,
+        happinessChange: winner === 'me' ? 20 : winner === 'draw' ? 0 : -10,
+        hpAfterBattle: resolution.myHpAfter,
+      }
+      setBattleResult(result)
+      setTimeout(() => setShowResult(true), 800)
+      return
+    }
+
+    // 次のターンへ: turn_resolvedイベントでアクションをクリアしフェーズをselectingに戻す
+    processEvent({ event: 'turn_resolved', turnNumber: cpuTurnRef.current })
+  }, [initialSeed, updateHp, updateEffects, addLog, opponentCreature.level, processEvent])
+
   const handleSelectAction = (action: BattleAction) => {
     selectAction(action)
-    ws.sendAction(roomCode, action)
+    if (isCpuBattle) {
+      // CPU戦: 少し遅延させてターン解決（演出用）
+      setTimeout(() => resolveCpuTurn(action), 500)
+    } else {
+      ws.sendAction(roomCode, action)
+    }
   }
 
   const handleResultClose = () => {
@@ -142,7 +242,7 @@ export default function BattleScreen({
     }
   }
 
-  const isSelecting = state.phase === 'selecting'
+  const isSelecting = isCpuBattle ? (state.phase === 'selecting' && !showResult) : state.phase === 'selecting'
   const recentLogs = state.battleLog.slice(-5)
 
   return (
@@ -153,7 +253,7 @@ export default function BattleScreen({
       {/* ヘッダー */}
       <div className="px-4 pt-4 pb-2 flex items-center justify-between" style={{ borderBottom: '1px solid #0f346044' }}>
         <div className="font-pixel" style={{ fontSize: '0.55rem', color: '#4fc3f7' }}>
-          ⚔️ バトル ターン {state.currentTurn + 1}
+          ⚔️ {isCpuBattle ? 'CPUバトル' : 'バトル'} ターン {state.currentTurn + 1}
         </div>
         <div className="flex items-center gap-2">
           {state.myParalyzed && (

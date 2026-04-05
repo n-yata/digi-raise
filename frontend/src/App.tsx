@@ -200,10 +200,21 @@ export default function App() {
     setScreen('battle_lobby')
   }, [])
 
+  const [isCpuBattle, setIsCpuBattle] = useState(false)
+
   const handleBattleStart = useCallback((role: BattleRole, opponentCreature: CreatureSnapshot, seed: number) => {
     setBattleRole(role)
     setBattleOpponent(opponentCreature)
     setBattleSeed(seed)
+    setIsCpuBattle(false)
+    setScreen('battle')
+  }, [])
+
+  const handleCpuBattleStart = useCallback((opponentCreature: CreatureSnapshot, seed: number) => {
+    setBattleRole('host')
+    setBattleOpponent(opponentCreature)
+    setBattleSeed(seed)
+    setIsCpuBattle(true)
     setScreen('battle')
   }, [])
 
@@ -314,6 +325,7 @@ export default function App() {
         <BattleLobbyScreen
           creature={creature}
           onBattleStart={handleBattleStart}
+          onCpuBattleStart={handleCpuBattleStart}
           onCancel={() => setScreen('main')}
         />
       )}
@@ -336,6 +348,7 @@ export default function App() {
           seed={battleSeed}
           roomCode={battleRoomCode}
           onBattleEnd={handleBattleEnd}
+          isCpuBattle={isCpuBattle}
         />
       )}
 
