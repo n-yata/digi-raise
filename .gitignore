@@ -3,3 +3,16 @@ dist/
 .vite/
 .DS_Store
 *.local
+
+# SAM ビルド成果物
+backend/.aws-sam/
+backend/terraform/.lambda_zips/
+
+# ローカル開発用環境変数（シークレットキーを含む可能性あり）
+backend/env.json
+
+# SAM local invoke 用イベント（トークンを含むため）
+backend/events/connect.json
+
+# Claude Code のローカル設定（プロジェクト固有の権限設定など）
+.claude/

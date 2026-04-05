@@ -13,7 +13,10 @@ let apigwClient = null;
  */
 export function getApiGwClient() {
   if (!apigwClient) {
-    const endpoint = process.env.APIGW_ENDPOINT;
+    // SAM local 実行時は WebSocket 送信不可のためダミーエンドポイントを使用
+    const endpoint =
+      process.env.APIGW_ENDPOINT ||
+      (process.env.AWS_SAM_LOCAL === 'true' ? 'http://localhost:3001' : null);
     if (!endpoint) {
       throw new Error('APIGW_ENDPOINT environment variable is not set');
     }
