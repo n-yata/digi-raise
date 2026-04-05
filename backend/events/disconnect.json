@@ -1,0 +1,13 @@
+{
+  "requestContext": {
+    "connectionId": "local-connection-id-001",
+    "routeKey": "$disconnect",
+    "eventType": "DISCONNECT",
+    "stage": "local",
+    "domainName": "localhost",
+    "apiId": "local"
+  },
+  "headers": {
+    "Host": "localhost"
+  }
+}

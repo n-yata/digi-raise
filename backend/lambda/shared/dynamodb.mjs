@@ -10,8 +10,20 @@ let docClient = null;
  */
 export function getDynamoDBClient() {
   if (!client) {
+    const isLocal = process.env.AWS_SAM_LOCAL === 'true';
+    // DYNAMODB_ENDPOINT 優先、次に SAM local 実行を自動検知して DynamoDB Local を使用
+    // sam local invoke --docker-network backend_default で同一ネットワークに接続する
+    const endpoint =
+      process.env.DYNAMODB_ENDPOINT ||
+      (isLocal ? 'http://digi-raise-dynamodb-local:8000' : undefined);
+
     client = new DynamoDBClient({
       region: process.env.AWS_REGION || 'ap-northeast-1',
+      ...(endpoint && { endpoint }),
+      // SAM local では docker-compose セットアップコンテナと同じ認証情報を使用
+      ...(isLocal && {
+        credentials: { accessKeyId: 'local', secretAccessKey: 'local' },
+      }),
     });
   }
   return client;

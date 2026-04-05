@@ -1,0 +1,185 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: DigiRaise - WebSocket Battle System (Lambda + DynamoDB)
+
+# ============================================================
+# ローカル開発について
+# ============================================================
+# sam local start-api は WebSocket API 非対応のため、以下を使用:
+#
+#   sam local invoke ConnectFunction -e events/connect.json --docker-network backend_default
+#   sam local invoke DisconnectFunction -e events/disconnect.json --docker-network backend_default
+#   sam local invoke MessageFunction -e events/message-ping.json --docker-network backend_default
+#
+# DynamoDB Local の起動 (別ターミナルで事前に実行):
+#   docker compose up -d
+# ============================================================
+
+Globals:
+  Function:
+    Runtime: nodejs22.x
+    Timeout: 10
+    MemorySize: 128
+    # lambda/ ディレクトリ全体を CodeUri にすることで shared/ モジュールを共有
+    CodeUri: lambda/
+
+Resources:
+  # ============================================================
+  # Lambda 関数
+  # ============================================================
+
+  ConnectFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: digi-raise-connect
+      Handler: connect/index.handler
+      Description: WebSocket $connect ルートハンドラー
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ConnectionsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref ConfigTable
+      Environment:
+        Variables:
+          SECRET_KEY: !Ref SecretKey
+          CONNECTIONS_TABLE: DigiRaiseConnections
+          CONFIG_TABLE: DigiRaiseConfig
+
+  DisconnectFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: digi-raise-disconnect
+      Handler: disconnect/index.handler
+      Description: WebSocket $disconnect ルートハンドラー
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ConnectionsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref RoomsTable
+      Environment:
+        Variables:
+          CONNECTIONS_TABLE: DigiRaiseConnections
+          ROOMS_TABLE: DigiRaiseRooms
+          APIGW_ENDPOINT: !Ref ApigwEndpoint
+
+  MessageFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: digi-raise-message
+      Handler: message/index.handler
+      Description: WebSocket $default ルートハンドラー（メッセージ処理）
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ConnectionsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref RoomsTable
+      Environment:
+        Variables:
+          CONNECTIONS_TABLE: DigiRaiseConnections
+          ROOMS_TABLE: DigiRaiseRooms
+          APIGW_ENDPOINT: !Ref ApigwEndpoint
+
+  EmergencyShutdownFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: digi-raise-emergency-shutdown
+      Handler: emergency-shutdown/index.handler
+      Description: メンテナンスモード有効化（CloudWatch Alarm / SNS からトリガー）
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ConfigTable
+      Environment:
+        Variables:
+          CONFIG_TABLE: DigiRaiseConfig
+
+  # ============================================================
+  # DynamoDB テーブル
+  # ============================================================
+
+  ConnectionsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: DigiRaiseConnections
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: connectionId
+          AttributeType: S
+        - AttributeName: roomCode
+          AttributeType: S
+      KeySchema:
+        - AttributeName: connectionId
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: roomCode-index
+          KeySchema:
+            - AttributeName: roomCode
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+
+  RoomsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: DigiRaiseRooms
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: roomCode
+          AttributeType: S
+      KeySchema:
+        - AttributeName: roomCode
+          KeyType: HASH
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+
+  ConfigTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: DigiRaiseConfig
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: configKey
+          AttributeType: S
+      KeySchema:
+        - AttributeName: configKey
+          KeyType: HASH
+
+# ============================================================
+# パラメーター
+# ============================================================
+
+Parameters:
+  SecretKey:
+    Type: String
+    NoEcho: true
+    Description: WebSocket 接続認証用シークレットキー（デプロイ時に必ず指定すること）
+    MinLength: 16
+
+  ApigwEndpoint:
+    Type: String
+    Description: API Gateway Management API エンドポイント (wss → https)
+    Default: https://placeholder.execute-api.ap-northeast-1.amazonaws.com/prod
+
+# ============================================================
+# 出力
+# ============================================================
+
+Outputs:
+  ConnectFunction:
+    Description: Connect Lambda 関数 ARN
+    Value: !GetAtt ConnectFunction.Arn
+
+  DisconnectFunction:
+    Description: Disconnect Lambda 関数 ARN
+    Value: !GetAtt DisconnectFunction.Arn
+
+  MessageFunction:
+    Description: Message Lambda 関数 ARN
+    Value: !GetAtt MessageFunction.Arn
+
+  EmergencyShutdownFunction:
+    Description: EmergencyShutdown Lambda 関数 ARN
+    Value: !GetAtt EmergencyShutdownFunction.Arn

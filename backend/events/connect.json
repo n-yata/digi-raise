@@ -1,0 +1,17 @@
+{
+  "requestContext": {
+    "connectionId": "local-connection-id-001",
+    "routeKey": "$connect",
+    "eventType": "CONNECT",
+    "stage": "local",
+    "domainName": "localhost",
+    "apiId": "local"
+  },
+  "queryStringParameters": {
+    "token": "RUN_GEN_TOKEN_MJS",
+    "ts": "0000000000"
+  },
+  "headers": {
+    "Host": "localhost"
+  }
+}

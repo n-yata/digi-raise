@@ -1,0 +1,11 @@
+{
+  "requestContext": {
+    "connectionId": "local-connection-id-001",
+    "routeKey": "$default",
+    "eventType": "MESSAGE",
+    "stage": "local",
+    "domainName": "localhost",
+    "apiId": "local"
+  },
+  "body": "{\"action\": \"ping\"}"
+}
