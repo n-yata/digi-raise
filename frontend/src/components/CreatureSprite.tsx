@@ -7,6 +7,7 @@ interface CreatureSpriteProps {
   type: CreatureType
   stage: EvolutionStage
   animState: AnimState
+  customSvg?: string
 }
 
 // Emoji base per type and stage
@@ -161,7 +162,7 @@ function PixelBody({ type, stage, color }: { type: CreatureType; stage: Evolutio
   )
 }
 
-export default function CreatureSprite({ type, stage, animState }: CreatureSpriteProps) {
+export default function CreatureSprite({ type, stage, animState, customSvg }: CreatureSpriteProps) {
   const color = TYPE_COLORS[type]
 
   const getAnimClass = () => {
@@ -175,6 +176,8 @@ export default function CreatureSprite({ type, stage, animState }: CreatureSprit
       default:         return 'animate-idle-breathe'
     }
   }
+
+  const shadowWidth = [40, 55, 70, 85, 100, 115][stage]
 
   return (
     <div className="relative flex flex-col items-center justify-center">
@@ -195,14 +198,22 @@ export default function CreatureSprite({ type, stage, animState }: CreatureSprit
 
       {/* Main sprite */}
       <div className={`transition-all duration-300 ${getAnimClass()}`}>
-        <PixelBody type={type} stage={stage} color={color} />
+        {customSvg ? (
+          // User-drawn SVG (only user's own drawings are used here, XSS risk is accepted)
+          <div
+            style={{ width: 64, height: 64 }}
+            dangerouslySetInnerHTML={{ __html: customSvg }}
+          />
+        ) : (
+          <PixelBody type={type} stage={stage} color={color} />
+        )}
       </div>
 
       {/* Shadow */}
       <div
         className="rounded-full mt-1 opacity-30"
         style={{
-          width: [40, 55, 70, 85, 100, 115][stage],
+          width: shadowWidth,
           height: 8,
           background: 'radial-gradient(ellipse, #000 0%, transparent 80%)',
         }}

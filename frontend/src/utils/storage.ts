@@ -109,7 +109,9 @@ export async function importSave(): Promise<Creature | null> {
       const file = await handle.getFile()
       const text = await file.text()
       const saveData = JSON.parse(text)
-      return saveData.creature ?? null
+      const creature = saveData.creature ?? null
+      if (creature) delete creature.customSprites
+      return creature
     } catch (err) {
       if ((err as { name: string }).name !== 'AbortError') {
         console.error('File open error:', err)
@@ -129,7 +131,9 @@ export async function importSave(): Promise<Creature | null> {
       const text = await file.text()
       try {
         const saveData = JSON.parse(text)
-        resolve(saveData.creature ?? null)
+        const creature = saveData.creature ?? null
+        if (creature) delete creature.customSprites
+        resolve(creature)
       } catch {
         resolve(null)
       }

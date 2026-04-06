@@ -15,6 +15,7 @@ import PlayMiniGame from './components/PlayMiniGame'
 import FeedMiniGame from './components/FeedMiniGame'
 import BattleLobbyScreen from './components/BattleLobbyScreen'
 import BattleScreen from './components/BattleScreen'
+import CreatureDrawingScreen from './components/CreatureDrawingScreen'
 import { feedCreature, trainCreature, playWithCreature, toggleSleep } from './utils/gameLogic'
 
 export default function App() {
@@ -30,6 +31,9 @@ export default function App() {
   const [showTrainingGame, setShowTrainingGame] = useState(false)
   const [showPlayGame, setShowPlayGame] = useState(false)
   const [showFeedGame, setShowFeedGame] = useState(false)
+
+  // Drawing state
+  const [pendingCreature, setPendingCreature] = useState<Creature | null>(null)
 
   // Battle state
   const [battleRole, setBattleRole] = useState<BattleRole | null>(null)
@@ -128,10 +132,26 @@ export default function App() {
   }, [persistCreature])
 
   const handleStartGame = useCallback((newCreature: Creature) => {
-    persistCreature(newCreature)
-    setScreen('main')
+    // Hold creature in pending state; show drawing screen first
+    setPendingCreature(newCreature)
+    setScreen('drawing')
     setPendingEvolution(false)
-  }, [persistCreature])
+  }, [])
+
+  const handleDrawingComplete = useCallback((sprites: Partial<Record<EvolutionStage, string>>) => {
+    const base = pendingCreature!
+    const withSprites: Creature = { ...base, customSprites: sprites }
+    persistCreature(withSprites)
+    setPendingCreature(null)
+    setScreen('main')
+  }, [pendingCreature, persistCreature])
+
+  const handleDrawingSkip = useCallback(() => {
+    const base = pendingCreature!
+    persistCreature(base)
+    setPendingCreature(null)
+    setScreen('main')
+  }, [pendingCreature, persistCreature])
 
   const handleFeed = useCallback(() => {
     if (!creatureRef.current) return
@@ -321,6 +341,14 @@ export default function App() {
           onLoad={handleLoadFromFile}
         />
       )}
+      {screen === 'drawing' && pendingCreature && (
+        <CreatureDrawingScreen
+          creatureType={pendingCreature.type}
+          onComplete={handleDrawingComplete}
+          onSkip={handleDrawingSkip}
+        />
+      )}
+
       {screen === 'battle_lobby' && creature && (
         <BattleLobbyScreen
           creature={creature}
@@ -342,6 +370,7 @@ export default function App() {
             def: creature.def,
             spd: creature.spd,
             level: creature.level,
+            customSvg: creature.customSprites?.[creature.evolutionStage],
           }}
           opponentCreature={battleOpponent}
           role={battleRole}

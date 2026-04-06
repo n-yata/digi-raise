@@ -12,6 +12,7 @@ export interface CreatureSnapshot {
   def: number
   spd: number
   level?: number
+  customSvg?: string
 }
 
 export interface BattleState {

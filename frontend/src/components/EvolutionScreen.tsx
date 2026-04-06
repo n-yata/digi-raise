@@ -77,6 +77,7 @@ export default function EvolutionScreen({ creature, evolvedFrom, onContinue }: E
               type={creature.type}
               stage={creature.evolutionStage}
               animState="happy"
+              customSvg={creature.customSprites?.[creature.evolutionStage]}
             />
             {/* Sparkles */}
             {[...Array(6)].map((_, i) => (

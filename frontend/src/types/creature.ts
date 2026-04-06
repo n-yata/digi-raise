@@ -28,9 +28,10 @@ export interface Creature {
   feedCount: number
   wins?: number
   losses?: number
+  customSprites?: Partial<Record<EvolutionStage, string>> // SVG strings for custom drawn sprites
 }
 
-export type GameScreen = 'title' | 'setup' | 'main' | 'evolution' | 'death' | 'status' | 'battle_lobby' | 'battle'
+export type GameScreen = 'title' | 'setup' | 'main' | 'evolution' | 'death' | 'status' | 'battle_lobby' | 'battle' | 'drawing'
 
 export interface GameState {
   creature: Creature | null

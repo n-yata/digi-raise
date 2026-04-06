@@ -61,6 +61,7 @@ export default function PlayMiniGame({ creature, onResult }: Props) {
             type={creature.type}
             stage={creature.evolutionStage}
             animState={done ? 'happy' : 'idle'}
+            customSvg={creature.customSprites?.[creature.evolutionStage]}
           />
         </div>
 

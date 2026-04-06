@@ -433,6 +433,7 @@ export default function BattleScreen({
             damageNumber={myDamageNumber}
             poisonActive={myPoisonActive}
             paralyzed={myIsParalyzed}
+            customSvg={myCreature.customSvg}
           />
         </div>
         <div className="flex-1" />
