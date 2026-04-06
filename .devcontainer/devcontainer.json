@@ -24,7 +24,7 @@
 
   // コンテナ起動前（ホスト側）: .claude ディレクトリの権限をコンテナ内 vscode(1000) に合わせる
   // 配列形式で bash を直接呼び出し、Windows の cmd.exe をバイパスする
-  "initializeCommand": ["bash", "-c", "mkdir -p \"$HOME/.claude/session-env\" && chmod -R 777 \"$HOME/.claude\""],
+  "initializeCommand": ["bash", "-c", "mkdir -p \"$HOME/.claude/session-env\" && chmod 700 \"$HOME/.claude\" && chmod 777 \"$HOME/.claude/session-env\""],
 
   // コンテナ初回作成後にフロントエンド依存関係をインストール
   "postCreateCommand": "cd /workspaces/digi-raise/frontend && npm install",

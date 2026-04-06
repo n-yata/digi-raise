@@ -25,7 +25,7 @@ npm run preview  # ビルド結果の確認
 npm run lint     # Lint チェック
 ```
 
-> **Dev Container 環境の場合**: ブラウザからアクセスするには `--host` オプションを付けて起動してください。
+> **Dev Container 環境の場合**: ブラウザからアクセスするには `--host` オプションを付けて起動してください（Dev Container 内でのみ使用してください）。
 > ```bash
 > npm run dev -- --host
 > ```
