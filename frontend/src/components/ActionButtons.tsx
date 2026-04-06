@@ -9,6 +9,7 @@ interface ActionButtonsProps {
   onSleep: () => void
   onEvolve: () => void
   onStatus: () => void
+  onBattle: () => void
 }
 
 interface BtnProps {
@@ -58,6 +59,7 @@ export default function ActionButtons({
   onSleep,
   onEvolve,
   onStatus,
+  onBattle,
 }: ActionButtonsProps) {
   const sleeping = creature.isSleeping
   const canEvolveNow = canEvolve(creature)
@@ -152,7 +154,7 @@ export default function ActionButtons({
           accent="#fb923c"
         />
         <ActionBtn
-          label="トレーニング" icon="⚔️"
+          label="トレーニング" icon="🏋️"
           onClick={onTrain}
           disabled={sleeping || creature.hunger <= 0}
           accent="#f43f5e"
@@ -170,8 +172,14 @@ export default function ActionButtons({
         />
       </div>
 
-      {/* Status button */}
-      <div className="mt-2 flex justify-end">
+      {/* Battle & Status buttons */}
+      <div className="mt-2 grid grid-cols-2 gap-2">
+        <ActionBtn
+          label="バトル" icon="⚔️"
+          onClick={onBattle}
+          disabled={sleeping || !creature.isAlive}
+          accent="#ef4444"
+        />
         <ActionBtn
           label="ステータス" icon="📊"
           onClick={onStatus}

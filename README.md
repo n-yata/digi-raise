@@ -25,6 +25,12 @@ npm run preview  # ビルド結果の確認
 npm run lint     # Lint チェック
 ```
 
+> **Dev Container 環境の場合**: ブラウザからアクセスするには `--host` オプションを付けて起動してください。
+> ```bash
+> npm run dev -- --host
+> ```
+> VS Code の「ポート」タブに表示される 5173 ポートからブラウザで開けます。
+
 ### バックエンド（SAM ローカル開発）
 
 前提条件: [AWS SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-sam-cli.html)、Docker
