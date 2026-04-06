@@ -7,6 +7,8 @@ import { selectCpuAction } from '../utils/cpuBattle'
 import BattleHPBar from './BattleHPBar'
 import BattleActionButtons from './BattleActionButtons'
 import BattleResultModal from './BattleResult'
+import BattleCreatureDisplay from './BattleCreatureDisplay'
+import type { BattleEffectType } from './BattleCreatureDisplay'
 
 interface BattleScreenProps {
   myCreature: CreatureSnapshot
@@ -38,6 +40,16 @@ export default function BattleScreen({
   const [battleResult, setBattleResult] = useState<BattleResult | null>(null)
   const [actionButtonKey, setActionButtonKey] = useState(0)
 
+  // エフェクト状態
+  const [myEffect, setMyEffect] = useState<BattleEffectType>(null)
+  const [opponentEffect, setOpponentEffect] = useState<BattleEffectType>(null)
+  const [myDamageNumber, setMyDamageNumber] = useState<number | null>(null)
+  const [opponentDamageNumber, setOpponentDamageNumber] = useState<number | null>(null)
+  const [myPoisonActive, setMyPoisonActive] = useState(false)
+  const [opponentPoisonActive, setOpponentPoisonActive] = useState(false)
+  const [myIsParalyzed, setMyIsParalyzed] = useState(false)
+  const [opponentIsParalyzed, setOpponentIsParalyzed] = useState(false)
+
   const effectsRef = useRef({
     myPoisonTurns: 0,
     opponentPoisonTurns: 0,
@@ -53,6 +65,86 @@ export default function BattleScreen({
   const opponentCreatureRef = useRef<CreatureSnapshot>({ ...opponentCreature })
   const currentSeedRef = useRef(initialSeed)
   const roleRef = useRef(role)
+
+  // エフェクトをトリガーする共通関数
+  const triggerEffects = useCallback((
+    myAction: BattleAction,
+    opponentAction: BattleAction,
+    resolution: {
+      myHpAfter: number
+      opponentHpAfter: number
+      myPoisonTurns: number
+      opponentPoisonTurns: number
+      myParalyzed: boolean
+      opponentParalyzed: boolean
+    },
+    prevMyHp: number,
+    prevOpponentHp: number,
+  ) => {
+    // 自分のアクションに対する相手へのエフェクト
+    const opponentDmg = prevOpponentHp - resolution.opponentHpAfter
+    const myDmg = prevMyHp - resolution.myHpAfter
+
+    // 相手のエフェクト（自分が与えた）
+    if (myAction === 'attack') {
+      setOpponentEffect('hit')
+      if (opponentAction === 'guard' && opponentDmg <= 0) {
+        setOpponentEffect('guard')
+        setOpponentDamageNumber(0) // GUARD!表示
+      } else {
+        setOpponentDamageNumber(opponentDmg > 0 ? opponentDmg : null)
+      }
+    } else if (myAction === 'special') {
+      setOpponentEffect('special')
+      if (opponentDmg > 0) {
+        setTimeout(() => {
+          setOpponentEffect('hit')
+          setOpponentDamageNumber(opponentDmg)
+        }, 300)
+      }
+      // Water type heal
+      if (myCreatureRef.current.type === 'Water' && resolution.myHpAfter > prevMyHp) {
+        setTimeout(() => {
+          setMyEffect('heal')
+          setMyDamageNumber(-(resolution.myHpAfter - prevMyHp + myDmg))
+        }, 200)
+      }
+    } else if (myAction === 'guard') {
+      setMyEffect('guard')
+      if (myDmg <= 0) {
+        setMyDamageNumber(0) // GUARD!
+      }
+    }
+
+    // 自分へのエフェクト（相手が与えた）
+    if (opponentAction === 'attack') {
+      setTimeout(() => {
+        setMyEffect('hit')
+        if (myAction !== 'guard' || myDmg > 0) {
+          setMyDamageNumber(myDmg > 0 ? myDmg : null)
+        }
+      }, myAction === 'guard' ? 0 : 400)
+    } else if (opponentAction === 'special') {
+      setTimeout(() => {
+        setMyEffect(myDmg > 0 ? 'hit' : 'special')
+        if (myDmg > 0) setMyDamageNumber(myDmg)
+      }, 400)
+    }
+
+    // 毒・麻痺の持続表示
+    setMyPoisonActive(resolution.myPoisonTurns > 0)
+    setOpponentPoisonActive(resolution.opponentPoisonTurns > 0)
+    setMyIsParalyzed(resolution.myParalyzed)
+    setOpponentIsParalyzed(resolution.opponentParalyzed)
+
+    // エフェクトクリア
+    setTimeout(() => {
+      setMyEffect(null)
+      setOpponentEffect(null)
+      setMyDamageNumber(null)
+      setOpponentDamageNumber(null)
+    }, 1200)
+  }, [])
 
   // CPU戦の初期化
   const cpuInitialized = useRef(false)
@@ -90,6 +182,9 @@ export default function BattleScreen({
 
       currentSeedRef.current = ev.seed
 
+      const prevMyHp = myCreatureRef.current.hp
+      const prevOpponentHp = opponentCreatureRef.current.hp
+
       const resolution = resolveTurn(
         myCreatureRef.current,
         opponentCreatureRef.current,
@@ -99,6 +194,9 @@ export default function BattleScreen({
         ev.seed,
         effectsRef.current
       )
+
+      // エフェクトトリガー
+      triggerEffects(myAction, opponentAction, resolution, prevMyHp, prevOpponentHp)
 
       // HP更新
       setLocalMyHp(resolution.myHpAfter)
@@ -144,7 +242,7 @@ export default function BattleScreen({
       setBattleResult(result)
       setShowResult(true)
     }
-  }, [ws.lastEvent, processEvent, addLog, updateHp, updateEffects, role, opponentCreature.level, localMyHp])
+  }, [ws.lastEvent, processEvent, addLog, updateHp, updateEffects, role, opponentCreature.level, localMyHp, triggerEffects])
 
   // CPU戦: プレイヤーのアクション選択後にCPUアクションを決定してターン解決
   const cpuTurnRef = useRef(0)
@@ -152,6 +250,9 @@ export default function BattleScreen({
     const cpuAction = selectCpuAction(effectsRef.current.opponentSpecialCooldown)
     const seed = initialSeed + cpuTurnRef.current * 1000 + Date.now() % 1000
     cpuTurnRef.current++
+
+    const prevMyHp = myCreatureRef.current.hp
+    const prevOpponentHp = opponentCreatureRef.current.hp
 
     const resolution = resolveTurn(
       myCreatureRef.current,
@@ -162,6 +263,9 @@ export default function BattleScreen({
       seed,
       effectsRef.current
     )
+
+    // エフェクトトリガー
+    triggerEffects(myAction, cpuAction, resolution, prevMyHp, prevOpponentHp)
 
     // HP更新
     setLocalMyHp(resolution.myHpAfter)
@@ -224,7 +328,7 @@ export default function BattleScreen({
 
     // 次のターンへ: turn_resolvedイベントでアクションをクリアしフェーズをselectingに戻す
     processEvent({ event: 'turn_resolved', turnNumber: cpuTurnRef.current })
-  }, [initialSeed, updateHp, updateEffects, addLog, opponentCreature.level, processEvent])
+  }, [initialSeed, updateHp, updateEffects, addLog, opponentCreature.level, processEvent, triggerEffects])
 
   const handleSelectAction = (action: BattleAction) => {
     selectAction(action)
@@ -251,7 +355,7 @@ export default function BattleScreen({
       style={{ background: 'linear-gradient(135deg, #1a1a2e 0%, #0f1a2d 100%)', maxWidth: 420, margin: '0 auto' }}
     >
       {/* ヘッダー */}
-      <div className="px-4 pt-4 pb-2 flex items-center justify-between" style={{ borderBottom: '1px solid #0f346044' }}>
+      <div className="px-4 pt-3 pb-2 flex items-center justify-between" style={{ borderBottom: '1px solid #0f346044' }}>
         <div className="font-pixel" style={{ fontSize: '0.55rem', color: '#4fc3f7' }}>
           ⚔️ {isCpuBattle ? 'CPUバトル' : 'バトル'} ターン {state.currentTurn + 1}
         </div>
@@ -271,8 +375,8 @@ export default function BattleScreen({
         </div>
       </div>
 
-      {/* 相手HPバー */}
-      <div className="mx-4 mt-3">
+      {/* 対戦相手エリア */}
+      <div className="mx-4 mt-2">
         <BattleHPBar
           label={opponentCreature.name}
           hp={localOpponentHp}
@@ -281,14 +385,67 @@ export default function BattleScreen({
         />
       </div>
 
+      {/* バトルフィールド: 両者のクリーチャー対面表示 */}
+      <div
+        className="mx-4 mt-2 relative flex items-center justify-between px-4"
+        style={{
+          minHeight: 160,
+          background: 'radial-gradient(ellipse at center, #16213e44 0%, transparent 70%)',
+          borderRadius: 12,
+        }}
+      >
+        {/* 対戦相手のクリーチャー（右上寄り） */}
+        <div className="flex-1" />
+        <div style={{ transform: 'scale(0.75)', transformOrigin: 'center' }}>
+          <BattleCreatureDisplay
+            name={opponentCreature.name}
+            type={opponentCreature.type}
+            evolutionStage={opponentCreature.evolutionStage}
+            isOpponent={true}
+            effect={opponentEffect}
+            damageNumber={opponentDamageNumber}
+            poisonActive={opponentPoisonActive}
+            paralyzed={opponentIsParalyzed}
+          />
+        </div>
+
+        {/* VS divider */}
+        <div
+          className="font-pixel mx-2"
+          style={{
+            fontSize: '0.5rem',
+            color: '#f43f5e',
+            textShadow: '0 0 10px #f43f5e88',
+            fontWeight: 'bold',
+          }}
+        >
+          VS
+        </div>
+
+        {/* 自分のクリーチャー（左下寄り） */}
+        <div style={{ transform: 'scale(0.75)', transformOrigin: 'center' }}>
+          <BattleCreatureDisplay
+            name={myCreature.name}
+            type={myCreature.type}
+            evolutionStage={myCreature.evolutionStage}
+            isOpponent={false}
+            effect={myEffect}
+            damageNumber={myDamageNumber}
+            poisonActive={myPoisonActive}
+            paralyzed={myIsParalyzed}
+          />
+        </div>
+        <div className="flex-1" />
+      </div>
+
       {/* バトルログ */}
       <div
-        className="mx-4 mt-3 px-3 py-2 rounded-lg flex-1"
+        className="mx-4 mt-2 px-3 py-2 rounded-lg flex-1"
         style={{
           background: '#16213e',
           border: '1px solid #0f3460',
-          minHeight: 120,
-          maxHeight: 160,
+          minHeight: 80,
+          maxHeight: 110,
           overflowY: 'auto',
         }}
       >
@@ -312,7 +469,7 @@ export default function BattleScreen({
       </div>
 
       {/* 自分のHP + アクション */}
-      <div className="mx-4 mt-3 mb-6 flex flex-col gap-3">
+      <div className="mx-4 mt-2 mb-4 flex flex-col gap-2">
         <BattleHPBar
           label={`${myCreature.name}（あなた）`}
           hp={localMyHp}

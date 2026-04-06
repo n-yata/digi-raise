@@ -19,7 +19,9 @@
     // session-env はコンテナローカル tmpfs で上書き（ホスト側の権限問題を回避）
     "target=/home/vscode/.claude/session-env,type=tmpfs,tmpfs-mode=1777",
     // AWS 認証情報（read-only: コンテナから書き換えさせない）
-    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.aws,target=/home/vscode/.aws,type=bind,readonly"
+    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.aws,target=/home/vscode/.aws,type=bind,readonly",
+    // SAM ビルド成果物をボリュームに配置（バインドマウントの I/O ボトルネック回避）
+    "source=digi-raise-sam-build,target=/workspaces/digi-raise/backend/.aws-sam,type=volume"
   ],
 
   // コンテナ起動前（ホスト側）: .claude ディレクトリの権限をコンテナ内 vscode(1000) に合わせる
