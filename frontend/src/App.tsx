@@ -159,8 +159,12 @@ export default function App() {
 
   const handleFeed = useCallback(() => {
     if (!creatureRef.current) return
+    if (creatureRef.current.hunger >= 100) {
+      showMessage('お腹いっぱいで食べられない！')
+      return
+    }
     setShowFeedGame(true)
-  }, [])
+  }, [showMessage])
 
   const handleFeedDone = useCallback(() => {
     setShowFeedGame(false)

@@ -42,7 +42,7 @@ function addExp(creature: Creature, amount: number): Creature {
 }
 
 export function feedCreature(creature: Creature): Creature {
-  if (!creature.isAlive || creature.isSleeping) return creature
+  if (!creature.isAlive || creature.isSleeping || creature.hunger >= 100) return creature
   const isOverfed = creature.hunger >= 90
   return {
     ...creature,
@@ -119,8 +119,8 @@ export function applyTimeUpdate(creature: Creature, devMode: boolean): Creature 
   // age はティック数 × 0.5 ずつ増える（float。表示は Math.floor）
   updated.age = updated.age + thirtyMinTicks * 0.5
   if (updated.isSleeping) {
-    // 10 HP/hour = 5 HP per 30-min tick
-    updated.hp = Math.min(updated.maxHp, updated.hp + thirtyMinTicks * 5)
+    // 50 HP/hour = 25 HP per 30-min tick
+    updated.hp = Math.min(updated.maxHp, updated.hp + thirtyMinTicks * 25)
   }
 
   // Starvation damage
