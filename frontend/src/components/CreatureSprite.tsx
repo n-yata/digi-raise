@@ -201,7 +201,7 @@ export default function CreatureSprite({ type, stage, animState, customSvg }: Cr
         {customSvg ? (
           // User-drawn SVG (only user's own drawings are used here, XSS risk is accepted)
           <div
-            style={{ width: 64, height: 64 }}
+            style={{ width: [60, 80, 100, 120, 140, 160][stage], height: [60, 80, 100, 120, 140, 160][stage] }}
             dangerouslySetInnerHTML={{ __html: customSvg }}
           />
         ) : (

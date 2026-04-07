@@ -7,21 +7,25 @@ import type { DrawingTool } from './DrawingCanvas'
 
 interface CreatureDrawingScreenProps {
   creatureType: CreatureType
+  /** When provided, only this single stage is drawn (used during evolution) */
+  singleStage?: EvolutionStage
   onComplete: (sprites: Partial<Record<EvolutionStage, string>>) => void
   onSkip: () => void
 }
 
 // Drawing stages: 1-5 (excluding egg stage 0)
-const DRAWING_STAGES: EvolutionStage[] = [1, 2, 3, 4, 5]
+const ALL_DRAWING_STAGES: EvolutionStage[] = [1, 2, 3, 4, 5]
 
 export default function CreatureDrawingScreen({
   creatureType,
+  singleStage,
   onComplete,
   onSkip,
 }: CreatureDrawingScreenProps) {
   const color = TYPE_COLORS[creatureType]
 
-  const [activeStage, setActiveStage] = useState<EvolutionStage>(1)
+  const drawingStages: EvolutionStage[] = singleStage ? [singleStage] : ALL_DRAWING_STAGES
+  const [activeStage, setActiveStage] = useState<EvolutionStage>(drawingStages[0])
   const [sprites, setSprites] = useState<Partial<Record<EvolutionStage, string>>>({})
 
   // Tool state
@@ -47,15 +51,15 @@ export default function CreatureDrawingScreen({
   const handleComplete = useCallback(() => {
     // Merge canvas values into sprites
     const finalSprites: Partial<Record<EvolutionStage, string>> = { ...sprites }
-    for (const stage of DRAWING_STAGES) {
+    for (const stage of drawingStages) {
       if (canvasValues[stage]) {
         finalSprites[stage] = canvasValues[stage]
       }
     }
     onComplete(finalSprites)
-  }, [sprites, canvasValues, onComplete])
+  }, [sprites, canvasValues, onComplete, drawingStages])
 
-  const drawnCount = DRAWING_STAGES.filter(s => canvasValues[s] && canvasValues[s] !== '').length
+  const drawnCount = drawingStages.filter(s => canvasValues[s] && canvasValues[s] !== '').length
 
   return (
     <div
@@ -68,10 +72,12 @@ export default function CreatureDrawingScreen({
         style={{ borderBottom: `1px solid ${color}33` }}
       >
         <div className="font-pixel text-center mb-1" style={{ fontSize: '0.7rem', color }}>
-          クリーチャーを描こう！
+          {singleStage ? '新しい姿を描こう！' : 'クリーチャーを描こう！'}
         </div>
         <div className="font-pixel text-center" style={{ fontSize: '0.45rem', color: '#64748b' }}>
-          ステージ1〜5の姿を描いてください
+          {singleStage
+            ? `${STAGE_NAMES[singleStage]}の姿を描いてください`
+            : 'ステージ1〜5の姿を描いてください'}
         </div>
         <div className="flex justify-center mt-2">
           <span
@@ -83,12 +89,12 @@ export default function CreatureDrawingScreen({
         </div>
       </div>
 
-      {/* Stage tabs */}
-      <div
+      {/* Stage tabs (hidden in single-stage mode) */}
+      {!singleStage && <div
         className="flex px-2 pt-2 gap-1"
         style={{ borderBottom: `1px solid #0f3460` }}
       >
-        {DRAWING_STAGES.map(stage => {
+        {drawingStages.map(stage => {
           const hasDrawing = !!(canvasValues[stage])
           const isActive = activeStage === stage
           return (
@@ -115,7 +121,7 @@ export default function CreatureDrawingScreen({
             </button>
           )
         })}
-      </div>
+      </div>}
 
       {/* Drawing area */}
       <div className="flex-1 flex flex-col items-center py-4 px-2">
@@ -128,7 +134,7 @@ export default function CreatureDrawingScreen({
         <div className="flex gap-3 items-start" ref={canvasRef}>
           {/* DrawingCanvas per stage (render all, hide inactive to preserve state) */}
           <div className="relative">
-            {DRAWING_STAGES.map(stage => (
+            {drawingStages.map(stage => (
               <div
                 key={stage}
                 style={{ display: activeStage === stage ? 'block' : 'none' }}
@@ -157,7 +163,7 @@ export default function CreatureDrawingScreen({
 
         {/* Progress indicator */}
         <div className="mt-3 font-pixel" style={{ fontSize: '0.4rem', color: '#64748b' }}>
-          {drawnCount} / {DRAWING_STAGES.length} 枚描画済み
+          {drawnCount} / {drawingStages.length} 枚描画済み
         </div>
       </div>
 

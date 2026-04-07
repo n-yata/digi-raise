@@ -34,6 +34,7 @@ export default function App() {
 
   // Drawing state
   const [pendingCreature, setPendingCreature] = useState<Creature | null>(null)
+  const [drawingStage, setDrawingStage] = useState<EvolutionStage | undefined>(undefined)
 
   // Battle state
   const [battleRole, setBattleRole] = useState<BattleRole | null>(null)
@@ -132,26 +133,30 @@ export default function App() {
   }, [persistCreature])
 
   const handleStartGame = useCallback((newCreature: Creature) => {
-    // Hold creature in pending state; show drawing screen first
+    // Hold creature in pending state; show drawing screen for stage 1 only
     setPendingCreature(newCreature)
+    setDrawingStage(1)
     setScreen('drawing')
     setPendingEvolution(false)
   }, [])
 
   const handleDrawingComplete = useCallback((sprites: Partial<Record<EvolutionStage, string>>) => {
-    const base = pendingCreature!
-    const withSprites: Creature = { ...base, customSprites: sprites }
+    const base = pendingCreature ?? creature!
+    const mergedSprites = { ...base.customSprites, ...sprites }
+    const withSprites: Creature = { ...base, customSprites: mergedSprites }
     persistCreature(withSprites)
     setPendingCreature(null)
+    setDrawingStage(undefined)
     setScreen('main')
-  }, [pendingCreature, persistCreature])
+  }, [pendingCreature, creature, persistCreature])
 
   const handleDrawingSkip = useCallback(() => {
-    const base = pendingCreature!
+    const base = pendingCreature ?? creature!
     persistCreature(base)
     setPendingCreature(null)
+    setDrawingStage(undefined)
     setScreen('main')
-  }, [pendingCreature, persistCreature])
+  }, [pendingCreature, creature, persistCreature])
 
   const handleFeed = useCallback(() => {
     if (!creatureRef.current) return
@@ -212,9 +217,15 @@ export default function App() {
   }, [persistCreature])
 
   const handleEvolutionContinue = useCallback(() => {
-    setScreen('main')
+    // After evolution, show drawing screen for the new stage
+    if (creature) {
+      setDrawingStage(creature.evolutionStage)
+      setScreen('drawing')
+    } else {
+      setScreen('main')
+    }
     setEvolvedFrom(null)
-  }, [])
+  }, [creature])
 
   const handleBattle = useCallback(() => {
     setScreen('battle_lobby')
@@ -341,9 +352,10 @@ export default function App() {
           onLoad={handleLoadFromFile}
         />
       )}
-      {screen === 'drawing' && pendingCreature && (
+      {screen === 'drawing' && (pendingCreature || creature) && (
         <CreatureDrawingScreen
-          creatureType={pendingCreature.type}
+          creatureType={(pendingCreature ?? creature!).type}
+          singleStage={drawingStage}
           onComplete={handleDrawingComplete}
           onSkip={handleDrawingSkip}
         />
