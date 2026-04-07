@@ -1,6 +1,6 @@
 # デジレイズ (DigiRaise) フロントエンド仕様書
 
-**更新日**: 2026-04-04
+**更新日**: 2026-04-07
 
 ---
 
@@ -37,8 +37,12 @@ frontend/src/
 │   ├── BattleLobbyScreen.tsx     # ルーム作成・参加ロビー画面
 │   ├── BattleResult.tsx          # 勝敗結果モーダル
 │   ├── BattleScreen.tsx          # バトルメイン画面
+│   ├── BattleCreatureDisplay.tsx # バトル用クリーチャー表示（エフェクト付き）
+│   ├── CreatureDrawingScreen.tsx # クリーチャーお絵描き画面
 │   ├── CreatureSetup.tsx         # クリーチャー名前・タイプ選択
-│   ├── CreatureSprite.tsx        # クリーチャーのスプライト表示
+│   ├── CreatureSprite.tsx        # クリーチャーのスプライト表示（カスタムSVG対応）
+│   ├── DrawingCanvas.tsx         # お絵描きキャンバス（64x64ピクセルアート）
+│   ├── DrawingToolbar.tsx        # お絵描きツールバー（ペン/消しゴム/塗りつぶし）
 │   ├── DeathScreen.tsx           # 死亡画面
 │   ├── EvolutionScreen.tsx       # 進化演出画面
 │   ├── FeedMiniGame.tsx          # ごはんポップアップ演出
@@ -59,7 +63,9 @@ frontend/src/
 │   └── creature.ts               # Creature / GameState / GameScreen 型定義
 └── utils/
     ├── battleLogic.ts            # ダメージ計算・ターン解決・タイプ相性
+    ├── cpuBattle.ts              # CPUバトルのアクション選択ロジック
     ├── evolution.ts              # 進化ロジック
+    ├── floodFill.ts              # お絵描き塗りつぶしアルゴリズム
     ├── gameLogic.ts              # えさ/トレーニング/あそぶ/睡眠/時間更新
     ├── storage.ts                # IndexedDB CRUD + JSON セーブエクスポート/インポート
     └── wsToken.ts                # WebSocket接続トークン生成（HMAC-SHA256）
@@ -71,7 +77,7 @@ frontend/src/
 
 ```
 title → setup → main ⇄ status
-main → evolution → main
+main → evolution → drawing → main（進化のたびにお絵描き）
 main → death → title
 main → battle_lobby → battle → main（勝敗結果反映後）
                      ↘ main（キャンセル）
@@ -114,7 +120,7 @@ main → battle_lobby → battle → main（勝敗結果反映後）
 ### えさ
 - ポップアップ演出（`FeedMiniGame`）: 🍖 が1回落下 → クリーチャーがバウンス → 自動で閉じる
 - 効果: hunger +30, happiness +5, weight +1（過食時 +3）
-- 制限: 睡眠中は不可
+- 制限: 睡眠中は不可、**お腹いっぱい（hunger ≥ 100）時は不可**（「お腹いっぱいで食べられない！」メッセージ表示）
 
 ### トレーニング
 - ミニゲーム（`TrainingMiniGame`）: 動くバーの緑ゾーン（35〜65%）でタップ
@@ -129,7 +135,7 @@ main → battle_lobby → battle → main（勝敗結果反映後）
 
 ### ねる
 - 睡眠状態をトグル
-- 睡眠中: HP が30分ごとに +5 回復（= 10/時間）
+- 睡眠中: HP が30分ごとに +25 回復（= 50/時間）
 - 制限なし
 
 ### ⚔️ バトル
@@ -145,7 +151,7 @@ main → battle_lobby → battle → main（勝敗結果反映後）
 | タイミング | 処理 |
 |-----------|------|
 | 30分ごと | hunger -5, happiness -2 |
-| 30分ごと（睡眠中） | hp +5 |
+| 30分ごと（睡眠中） | hp +25 |
 | 30分ごと | age +0.5 |
 | 30分ごと（hunger ≤ 0 時） | hp -5（餓死ダメージ） |
 | hp ≤ 0 | isAlive = false → 死亡画面へ |
@@ -172,12 +178,18 @@ main → battle_lobby → battle → main（勝敗結果反映後）
 ┌─────────────────────────┐
 │ 相手のHPバー（BattleHPBar）│
 ├─────────────────────────┤
+│ [自分]  VS  [相手]       │
+│  (左)        (右)        │
+├─────────────────────────┤
 │ バトルログ（最新5件）      │
 ├─────────────────────────┤
 │ 自分のHPバー（BattleHPBar）│
 │ BattleActionButtons      │
 └─────────────────────────┘
 ```
+
+- 自分のクリーチャーは左側、相手は右側に配置
+- 互いに向き合うようスプライトを反転表示
 
 ### アクション種別
 
@@ -254,6 +266,50 @@ HP はバトル終了時の値を維持する。
 
 ---
 
+## クリーチャーお絵描き機能
+
+### 概要
+
+進化のたびにプレイヤーが新しい姿を手書きできる機能。64×64 ピクセルアートとして描画し、SVG 文字列で保存する。
+
+### 描画タイミング
+
+- **進化時のみ**: 進化演出画面の後にお絵描き画面（`drawing`）に遷移
+- ゲーム新規開始時には描画画面を表示しない（卵から孵化した時点が最初の描画機会）
+- スキップ可能（スキップ時はデフォルトスプライト表示）
+
+### キャンバス仕様
+
+| 項目 | 値 |
+|------|-----|
+| 論理サイズ | 64×64 px |
+| 表示サイズ | 256×256 px |
+| レンダリング | `imageRendering: pixelated`（ドット絵風） |
+| ツール | ペン / 消しゴム / 塗りつぶし |
+| カラーパレット | タイプカラー + 自由選択 |
+| 出力形式 | SVG 文字列（`viewBox="0 0 64 64"`、width/height 属性なし） |
+
+### 表示サイズ（ステージ別）
+
+カスタムSVGはステージに応じたサイズで表示される（`CreatureSprite.tsx`）。
+
+| ステージ | 表示サイズ (px) |
+|---------|----------------|
+| 0（タマゴ） | 100 |
+| 1（ベイビー） | 160 |
+| 2（チャイルド） | 200 |
+| 3（アダルト） | 240 |
+| 4（パーフェクト） | 270 |
+| 5（アルティメット） | 300 |
+
+### 保存方法
+
+- `Creature.customSprites` に `Partial<Record<EvolutionStage, string>>` として保存
+- 進化ごとに新しいステージの SVG が追加される（既存ステージのデータは保持）
+- IndexedDB に永続化。セーブエクスポート時は XSS 防止のため `customSprites` を除外
+
+---
+
 ## 型定義
 
 ### GameScreen
@@ -266,6 +322,7 @@ type GameScreen =
   | 'status'
   | 'evolution'
   | 'death'
+  | 'drawing'       // クリーチャーお絵描き（進化後に表示）
   | 'battle_lobby'  // バトルロビー（ルーム作成・参加）
   | 'battle'        // バトルメイン
 ```
@@ -277,6 +334,7 @@ interface Creature {
   // ... 既存フィールド ...
   wins?: number    // バトル勝利数
   losses?: number  // バトル敗北数
+  customSprites?: Partial<Record<EvolutionStage, string>>  // ステージ別カスタムSVG
 }
 ```
 
