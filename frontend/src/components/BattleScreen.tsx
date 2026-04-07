@@ -394,18 +394,19 @@ export default function BattleScreen({
           borderRadius: 12,
         }}
       >
-        {/* 対戦相手のクリーチャー（右上寄り） */}
+        {/* 自分のクリーチャー（左側） */}
         <div className="flex-1" />
         <div style={{ transform: 'scale(0.75)', transformOrigin: 'center' }}>
           <BattleCreatureDisplay
-            name={opponentCreature.name}
-            type={opponentCreature.type}
-            evolutionStage={opponentCreature.evolutionStage}
-            isOpponent={true}
-            effect={opponentEffect}
-            damageNumber={opponentDamageNumber}
-            poisonActive={opponentPoisonActive}
-            paralyzed={opponentIsParalyzed}
+            name={myCreature.name}
+            type={myCreature.type}
+            evolutionStage={myCreature.evolutionStage}
+            isOpponent={false}
+            effect={myEffect}
+            damageNumber={myDamageNumber}
+            poisonActive={myPoisonActive}
+            paralyzed={myIsParalyzed}
+            customSvg={myCreature.customSvg}
           />
         </div>
 
@@ -422,18 +423,17 @@ export default function BattleScreen({
           VS
         </div>
 
-        {/* 自分のクリーチャー（左下寄り） */}
+        {/* 対戦相手のクリーチャー（右側） */}
         <div style={{ transform: 'scale(0.75)', transformOrigin: 'center' }}>
           <BattleCreatureDisplay
-            name={myCreature.name}
-            type={myCreature.type}
-            evolutionStage={myCreature.evolutionStage}
-            isOpponent={false}
-            effect={myEffect}
-            damageNumber={myDamageNumber}
-            poisonActive={myPoisonActive}
-            paralyzed={myIsParalyzed}
-            customSvg={myCreature.customSvg}
+            name={opponentCreature.name}
+            type={opponentCreature.type}
+            evolutionStage={opponentCreature.evolutionStage}
+            isOpponent={true}
+            effect={opponentEffect}
+            damageNumber={opponentDamageNumber}
+            poisonActive={opponentPoisonActive}
+            paralyzed={opponentIsParalyzed}
           />
         </div>
         <div className="flex-1" />
