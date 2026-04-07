@@ -82,7 +82,7 @@ export default function BattleCreatureDisplay({
         key={isHit || isSpecial ? effectKey : 'stable'}
         style={{
           color: color,
-          transform: isOpponent ? 'scaleX(-1)' : undefined,
+          transform: isOpponent ? undefined : 'scaleX(-1)',
         }}
       >
         <CreatureSprite
