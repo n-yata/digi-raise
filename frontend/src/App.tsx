@@ -133,12 +133,11 @@ export default function App() {
   }, [persistCreature])
 
   const handleStartGame = useCallback((newCreature: Creature) => {
-    // Hold creature in pending state; show drawing screen for stage 1 only
-    setPendingCreature(newCreature)
-    setDrawingStage(1)
-    setScreen('drawing')
+    // Start game directly; drawing happens when egg hatches (evolution)
+    persistCreature(newCreature)
+    setScreen('main')
     setPendingEvolution(false)
-  }, [])
+  }, [persistCreature])
 
   const handleDrawingComplete = useCallback((sprites: Partial<Record<EvolutionStage, string>>) => {
     const base = pendingCreature ?? creature!
