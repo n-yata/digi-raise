@@ -36,7 +36,7 @@ function buildSvgString(paths: PathData[]): string {
     return `<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.strokeWidth}" fill="${p.fill}" stroke-linecap="round" stroke-linejoin="round"/>`
   }).join('\n')
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${CANVAS_SIZE} ${CANVAS_SIZE}" width="${CANVAS_SIZE}" height="${CANVAS_SIZE}">\n${inner}\n</svg>`
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${CANVAS_SIZE} ${CANVAS_SIZE}">\n${inner}\n</svg>`
 }
 
 function parseSvgToPaths(svgString: string): PathData[] {
