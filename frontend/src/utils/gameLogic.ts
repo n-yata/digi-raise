@@ -141,10 +141,13 @@ export function applyTimeUpdate(creature: Creature, devMode: boolean): Creature 
 export function getAnimationState(
   creature: Creature,
   isAttacking: boolean
-): 'idle' | 'happy' | 'sleeping' | 'attack' | 'evolving' | 'dead' {
+): 'idle' | 'happy' | 'sleeping' | 'attack' | 'evolving' | 'dead' | 'sad' | 'hungry' | 'critical' {
   if (!creature.isAlive) return 'dead'
   if (isAttacking) return 'attack'
   if (creature.isSleeping) return 'sleeping'
+  if (creature.hp <= creature.maxHp * 0.2) return 'critical'
+  if (creature.hunger <= 20) return 'hungry'
+  if (creature.happiness <= 30) return 'sad'
   if (creature.happiness > 70) return 'happy'
   return 'idle'
 }

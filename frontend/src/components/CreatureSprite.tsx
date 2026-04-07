@@ -1,7 +1,7 @@
 import type { CreatureType, EvolutionStage } from '../types/creature'
 import { TYPE_COLORS } from '../data/evolutions'
 
-type AnimState = 'idle' | 'happy' | 'sleeping' | 'attack' | 'evolving' | 'dead'
+type AnimState = 'idle' | 'happy' | 'sleeping' | 'attack' | 'evolving' | 'dead' | 'sad' | 'hungry' | 'critical'
 
 interface CreatureSpriteProps {
   type: CreatureType
@@ -172,6 +172,9 @@ export default function CreatureSprite({ type, stage, animState, customSvg }: Cr
       case 'attack':   return 'animate-attack-flash'
       case 'evolving': return 'animate-evolve-glow'
       case 'dead':     return 'opacity-40 grayscale'
+      case 'sad':      return 'animate-sad-sway'
+      case 'hungry':   return 'animate-hungry-droop'
+      case 'critical': return 'animate-critical-blink'
       case 'idle':
       default:         return 'animate-idle-breathe'
     }
@@ -193,6 +196,28 @@ export default function CreatureSprite({ type, stage, animState, customSvg }: Cr
         <div className="absolute inset-0 pointer-events-none">
           <span className="absolute text-xs" style={{ top: '5%', left: '10%', animationDelay: '0s' }}>✨</span>
           <span className="absolute text-xs" style={{ top: '5%', right: '10%', animationDelay: '0.5s' }}>⭐</span>
+        </div>
+      )}
+
+      {/* Sad teardrops */}
+      {animState === 'sad' && (
+        <div className="absolute inset-0 pointer-events-none">
+          <span className="absolute animate-sad-drop" style={{ top: '20%', left: '5%', fontSize: 14, animationDelay: '0s' }}>💧</span>
+          <span className="absolute animate-sad-drop" style={{ top: '20%', right: '5%', fontSize: 14, animationDelay: '0.8s' }}>💧</span>
+        </div>
+      )}
+
+      {/* Hungry callout */}
+      {animState === 'hungry' && (
+        <div className="absolute pointer-events-none animate-hungry-callout" style={{ top: '-28px', left: '50%', transform: 'translateX(-50%)', fontSize: 20, whiteSpace: 'nowrap' }}>
+          🍖
+        </div>
+      )}
+
+      {/* Critical warning */}
+      {animState === 'critical' && (
+        <div className="absolute pointer-events-none animate-critical-warn" style={{ top: '-28px', left: '50%', transform: 'translateX(-50%)', fontSize: 18, whiteSpace: 'nowrap' }}>
+          ⚠️
         </div>
       )}
 

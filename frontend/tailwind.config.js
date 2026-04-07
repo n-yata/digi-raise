@@ -28,6 +28,12 @@ export default {
         'evolve-glow': 'evolveGlow 0.5s ease-in-out infinite',
         'float': 'float 3s ease-in-out infinite',
         'pulse-glow': 'pulseGlow 2s ease-in-out infinite',
+        'sad-sway': 'sadSway 2.5s ease-in-out infinite',
+        'sad-drop': 'sadDrop 2s ease-in infinite',
+        'hungry-droop': 'hungryDroop 3s ease-in-out infinite',
+        'hungry-callout': 'hungryCallout 1.2s ease-in-out infinite',
+        'critical-blink': 'criticalBlink 0.6s ease-in-out infinite',
+        'critical-warn': 'criticalWarn 0.6s ease-in-out infinite',
       },
       keyframes: {
         idleBreathe: {
@@ -57,6 +63,33 @@ export default {
         pulseGlow: {
           '0%, 100%': { boxShadow: '0 0 5px currentColor' },
           '50%': { boxShadow: '0 0 20px currentColor, 0 0 40px currentColor' },
+        },
+        sadSway: {
+          '0%, 100%': { transform: 'rotate(-4deg) translateY(0)' },
+          '50%': { transform: 'rotate(4deg) translateY(2px)' },
+        },
+        sadDrop: {
+          '0%': { opacity: '0', transform: 'translateY(-4px)' },
+          '20%': { opacity: '1' },
+          '80%': { opacity: '0.8' },
+          '100%': { opacity: '0', transform: 'translateY(20px)' },
+        },
+        hungryDroop: {
+          '0%, 100%': { transform: 'translateY(0) scaleY(1)' },
+          '40%': { transform: 'translateY(4px) scaleY(0.95)' },
+          '60%': { transform: 'translateY(4px) scaleY(0.95)' },
+        },
+        hungryCallout: {
+          '0%, 100%': { opacity: '1', transform: 'translateX(-50%) translateY(0) scale(1)' },
+          '50%': { opacity: '0.7', transform: 'translateX(-50%) translateY(-4px) scale(1.15)' },
+        },
+        criticalBlink: {
+          '0%, 100%': { opacity: '1', filter: 'brightness(1)' },
+          '50%': { opacity: '0.3', filter: 'brightness(1.8) saturate(0.5)' },
+        },
+        criticalWarn: {
+          '0%, 100%': { opacity: '1', transform: 'translateX(-50%) scale(1)' },
+          '50%': { opacity: '0.5', transform: 'translateX(-50%) scale(1.2)' },
         },
       },
     },
