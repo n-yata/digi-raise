@@ -4,21 +4,26 @@ import { TYPE_COLORS, TYPE_EMOJIS, STAGE_NAMES, EVOLUTION_NAMES } from '../data/
 import { EXP_TO_LEVEL } from '../data/evolutions'
 import { canEvolve, getEvolutionProgress } from '../utils/evolution'
 import { exportSave, importSave } from '../utils/storage'
+import type { SaveData } from '../utils/storage'
 
 interface StatusScreenProps {
   creature: Creature
+  allCreatures: Creature[]
+  activeCreatureId: string
   onBack: () => void
-  onLoad: (c: Creature) => void
+  onLoad: (saveData: SaveData) => void
+  onSelectCreature: (id: string) => void
+  onNewCreature: () => void
 }
 
-export default function StatusScreen({ creature, onBack, onLoad }: StatusScreenProps) {
+export default function StatusScreen({ creature, allCreatures, activeCreatureId, onBack, onLoad, onSelectCreature, onNewCreature }: StatusScreenProps) {
   const color = TYPE_COLORS[creature.type]
   const expNeeded = EXP_TO_LEVEL(creature.level)
   const evolutionChecks = getEvolutionProgress(creature)
   const canEvolveNow = canEvolve(creature)
 
   const handleExport = async () => {
-    await exportSave(creature)
+    await exportSave({ creatures: allCreatures, activeCreatureId })
   }
 
   const handleImport = async () => {
@@ -169,6 +174,84 @@ export default function StatusScreen({ creature, onBack, onLoad }: StatusScreenP
           ))}
         </div>
       )}
+
+      {/* Creature list */}
+      <div className="px-4 py-3 rounded-xl mb-4" style={{ background: '#16213e', border: '1px solid #0f3460' }}>
+        <div className="font-pixel mb-3" style={{ fontSize: '0.55rem', color }}>クリーチャー一覧</div>
+        {allCreatures.map(c => {
+          const isActive = c.id === activeCreatureId
+          const isDead = c.isAlive === false
+          const isClickable = !isDead && !isActive
+          const cColor = TYPE_COLORS[c.type]
+
+          const content = (
+            <>
+              <div style={{ fontSize: 22 }}>{isDead ? '🪦' : TYPE_EMOJIS[c.type]}</div>
+              <div className="flex-1 min-w-0">
+                <div className="font-pixel" style={{ fontSize: '0.5rem', color: '#e0e0e0' }}>{c.name}</div>
+                <div className="font-pixel mt-0.5" style={{ fontSize: '0.4rem', color: isDead ? '#475569' : cColor }}>
+                  {c.evolutionName}
+                </div>
+                <div className="font-pixel mt-0.5" style={{ fontSize: '0.38rem', color: '#475569' }}>
+                  {STAGE_NAMES[c.evolutionStage]}
+                </div>
+              </div>
+              {isActive && (
+                <span
+                  className="font-pixel px-2 py-1 rounded"
+                  style={{
+                    fontSize: '0.38rem',
+                    background: `${cColor}33`,
+                    color: cColor,
+                    border: `1px solid ${cColor}66`,
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  育成中
+                </span>
+              )}
+            </>
+          )
+
+          const commonStyle = {
+            background: isActive ? `${cColor}11` : 'transparent',
+            borderLeft: isActive ? `3px solid ${cColor}` : '3px solid transparent',
+            opacity: isDead ? 0.5 : 1,
+            cursor: isClickable ? 'pointer' : 'default',
+            transition: 'background 0.15s',
+          }
+
+          if (isClickable) {
+            return (
+              <button
+                key={c.id}
+                onClick={() => onSelectCreature(c.id)}
+                className="flex items-center gap-3 py-2 px-2 rounded-lg mb-2 w-full text-left"
+                style={commonStyle}
+              >
+                {content}
+              </button>
+            )
+          }
+          return (
+            <div key={c.id} className="flex items-center gap-3 py-2 px-2 rounded-lg mb-2" style={commonStyle}>
+              {content}
+            </div>
+          )
+        })}
+        <button
+          onClick={onNewCreature}
+          className="w-full py-3 rounded-lg font-pixel transition-all active:scale-95 mt-1"
+          style={{
+            fontSize: '0.5rem',
+            background: 'transparent',
+            border: '1px dashed #4fc3f766',
+            color: '#4fc3f7',
+          }}
+        >
+          ＋ 新しいクリーチャーを育てる
+        </button>
+      </div>
 
       {/* Save/Load buttons */}
       <div className="flex gap-3 mb-6">

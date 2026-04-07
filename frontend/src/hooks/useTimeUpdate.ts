@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import type { Creature } from '../types/creature'
 import { applyTimeUpdate } from '../utils/gameLogic'
-import { saveCreature } from '../utils/storage'
+import { saveSaveData } from '../utils/storage'
 import { canEvolve } from '../utils/evolution'
 
 interface UseTimeUpdateOptions {
@@ -28,12 +28,12 @@ export function useTimeUpdate({
     const tick = () => {
       const updated = applyTimeUpdate(creature, devMode)
       if (!updated.isAlive) {
-        saveCreature(updated)
+        saveSaveData({ creatures: [updated], activeCreatureId: updated.id })
         onUpdate(updated)
         onDeath()
         return
       }
-      saveCreature(updated)
+      saveSaveData({ creatures: [updated], activeCreatureId: updated.id })
       onUpdate(updated)
 
       const nowEvolvable = canEvolve(updated)

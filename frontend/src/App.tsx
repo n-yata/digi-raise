@@ -3,7 +3,8 @@ import type { Creature, GameScreen, EvolutionStage } from './types/creature'
 import type { BattleRole, CreatureSnapshot, BattleResult } from './types/battle'
 import { applyTimeUpdate } from './utils/gameLogic'
 import { canEvolve, evolveCreature } from './utils/evolution'
-import { saveCreature, loadCreature, deleteCreature } from './utils/storage'
+import { saveSaveData, loadSaveData, deleteSaveData, migrateLegacyData } from './utils/storage'
+import type { SaveData } from './utils/storage'
 import TitleScreen from './components/TitleScreen'
 import CreatureSetup from './components/CreatureSetup'
 import MainGame from './components/MainGame'
@@ -20,7 +21,8 @@ import { feedCreature, trainCreature, playWithCreature, toggleSleep } from './ut
 
 export default function App() {
   const [screen, setScreen] = useState<GameScreen>('title')
-  const [creature, setCreature] = useState<Creature | null>(null)
+  const [creatures, setCreatures] = useState<Creature[]>([])
+  const [activeCreatureId, setActiveCreatureId] = useState<string | null>(null)
   const [devMode, setDevMode] = useState(false)
   const [attackAnimation, setAttackAnimation] = useState(false)
   const [pendingEvolution, setPendingEvolution] = useState(false)
@@ -40,19 +42,26 @@ export default function App() {
   const [battleRole, setBattleRole] = useState<BattleRole | null>(null)
   const [battleOpponent, setBattleOpponent] = useState<CreatureSnapshot | null>(null)
   const [battleSeed, setBattleSeed] = useState<number>(0)
-  const [battleRoomCode] = useState<string>('')
+  const battleRoomCode = ''
 
   const creatureRef = useRef<Creature | null>(null)
   const devModeRef = useRef(devMode)
+  const activeCreatureIdRef = useRef<string | null>(null)
+
+  // Derive active creature
+  const activeCreature = creatures.find(c => c.id === activeCreatureId) ?? null
 
   // Keep refs in sync
-  useEffect(() => { creatureRef.current = creature }, [creature])
+  useEffect(() => { creatureRef.current = activeCreature }, [activeCreature])
   useEffect(() => { devModeRef.current = devMode }, [devMode])
+  useEffect(() => { activeCreatureIdRef.current = activeCreatureId }, [activeCreatureId])
 
   // Load save on mount
   useEffect(() => {
-    loadCreature().then(saved => {
-      if (saved) setHasExistingSave(true)
+    migrateLegacyData().then(() => loadSaveData()).then(saved => {
+      if (saved && saved.creatures.length > 0 && saved.creatures.some(c => c.isAlive)) {
+        setHasExistingSave(true)
+      }
       setLoading(false)
     })
   }, [])
@@ -62,10 +71,12 @@ export default function App() {
     setTimeout(() => setMessage(null), 2500)
   }, [])
 
-  const persistCreature = useCallback((c: Creature) => {
-    setCreature(c)
-    saveCreature(c)
-    creatureRef.current = c
+  const persistActiveCreature = useCallback((updated: Creature) => {
+    setCreatures(prev => {
+      const newCreatures = prev.map(c => c.id === updated.id ? updated : c)
+      saveSaveData({ creatures: newCreatures, activeCreatureId: activeCreatureIdRef.current })
+      return newCreatures
+    })
   }, [])
 
   // Time tick
@@ -79,7 +90,7 @@ export default function App() {
       if (!current || !current.isAlive) return
 
       const updated = applyTimeUpdate(current, devModeRef.current)
-      persistCreature(updated)
+      persistActiveCreature(updated)
 
       if (!updated.isAlive) {
         setScreen('death')
@@ -93,23 +104,23 @@ export default function App() {
 
     const id = setInterval(tick, tickInterval)
     return () => clearInterval(id)
-  }, [screen, persistCreature])
+  }, [screen, persistActiveCreature])
 
   // Re-evaluate tick interval when devMode changes
   useEffect(() => {
     devModeRef.current = devMode
   }, [devMode])
 
-  // Check evolution on creature change
+  // Check evolution on activeCreature change
   useEffect(() => {
-    if (creature && screen === 'main') {
-      if (canEvolve(creature)) {
+    if (activeCreature && screen === 'main') {
+      if (canEvolve(activeCreature)) {
         setPendingEvolution(true)
       } else {
         setPendingEvolution(false)
       }
     }
-  }, [creature, screen])
+  }, [activeCreature, screen])
 
   // --- Actions ---
 
@@ -120,42 +131,58 @@ export default function App() {
   }, [])
 
   const handleContinue = useCallback(async () => {
-    const saved = await loadCreature()
-    if (!saved) return
+    const saved = await loadSaveData()
+    if (!saved || saved.creatures.length === 0) return
+    setCreatures(saved.creatures)
+    const activeId = saved.activeCreatureId
+    const activeCandidate = saved.creatures.find(c => c.id === activeId)
+    const target = (activeCandidate && activeCandidate.isAlive)
+      ? activeCandidate
+      : saved.creatures.find(c => c.isAlive)
+    if (!target) return // 全員死亡（起こらないはず）
     // Apply time catch-up
-    const updated = applyTimeUpdate(saved, false)
-    persistCreature(updated)
+    const updated = applyTimeUpdate(target, false)
+    const newCreatures = saved.creatures.map(c => c.id === updated.id ? updated : c)
+    setCreatures(newCreatures)
+    setActiveCreatureId(updated.id)
+    saveSaveData({ creatures: newCreatures, activeCreatureId: updated.id })
     if (!updated.isAlive) {
       setScreen('death')
     } else {
       setScreen('main')
     }
-  }, [persistCreature])
+  }, [])
 
   const handleStartGame = useCallback((newCreature: Creature) => {
-    // Start game directly; drawing happens when egg hatches (evolution)
-    persistCreature(newCreature)
+    setCreatures(prev => {
+      const newCreatures = [...prev, newCreature]
+      saveSaveData({ creatures: newCreatures, activeCreatureId: newCreature.id })
+      return newCreatures
+    })
+    setActiveCreatureId(newCreature.id)
     setScreen('main')
     setPendingEvolution(false)
-  }, [persistCreature])
+  }, [])
 
   const handleDrawingComplete = useCallback((sprites: Partial<Record<EvolutionStage, string>>) => {
-    const base = pendingCreature ?? creature!
+    const base = pendingCreature ?? activeCreature
+    if (!base) return
     const mergedSprites = { ...base.customSprites, ...sprites }
     const withSprites: Creature = { ...base, customSprites: mergedSprites }
-    persistCreature(withSprites)
+    persistActiveCreature(withSprites)
     setPendingCreature(null)
     setDrawingStage(undefined)
     setScreen('main')
-  }, [pendingCreature, creature, persistCreature])
+  }, [pendingCreature, activeCreature, persistActiveCreature])
 
   const handleDrawingSkip = useCallback(() => {
-    const base = pendingCreature ?? creature!
-    persistCreature(base)
+    const base = pendingCreature ?? activeCreature
+    if (!base) return
+    persistActiveCreature(base)
     setPendingCreature(null)
     setDrawingStage(undefined)
     setScreen('main')
-  }, [pendingCreature, creature, persistCreature])
+  }, [pendingCreature, activeCreature, persistActiveCreature])
 
   const handleFeed = useCallback(() => {
     if (!creatureRef.current) return
@@ -170,9 +197,9 @@ export default function App() {
     setShowFeedGame(false)
     if (!creatureRef.current) return
     const updated = feedCreature(creatureRef.current)
-    persistCreature(updated)
+    persistActiveCreature(updated)
     showMessage('もぐもぐ！ご飯を食べた！🍖')
-  }, [persistCreature, showMessage])
+  }, [persistActiveCreature, showMessage])
 
   const handleTrain = useCallback(() => {
     if (!creatureRef.current || creatureRef.current.isSleeping) return
@@ -183,11 +210,11 @@ export default function App() {
     setShowTrainingGame(false)
     if (!creatureRef.current) return
     const updated = trainCreature(creatureRef.current, success)
-    persistCreature(updated)
+    persistActiveCreature(updated)
     setAttackAnimation(true)
     showMessage(success ? 'トレーニング成功！大きく強くなった！⚔️' : 'トレーニング失敗…でも少し強くなった')
     setTimeout(() => setAttackAnimation(false), 1200)
-  }, [persistCreature, showMessage])
+  }, [persistActiveCreature, showMessage])
 
   const handlePlay = useCallback(() => {
     if (!creatureRef.current || creatureRef.current.isSleeping) return
@@ -198,37 +225,37 @@ export default function App() {
     setShowPlayGame(false)
     if (!creatureRef.current) return
     const updated = playWithCreature(creatureRef.current)
-    persistCreature(updated)
+    persistActiveCreature(updated)
     showMessage('一緒に遊んだ！楽しかった！🎮')
-  }, [persistCreature, showMessage])
+  }, [persistActiveCreature, showMessage])
 
   const handleSleep = useCallback(() => {
     if (!creatureRef.current) return
     const updated = toggleSleep(creatureRef.current)
-    persistCreature(updated)
+    persistActiveCreature(updated)
     showMessage(updated.isSleeping ? 'おやすみなさい…💤' : 'おはよう！元気いっぱい！☀️')
-  }, [persistCreature, showMessage])
+  }, [persistActiveCreature, showMessage])
 
   const handleEvolve = useCallback(() => {
     if (!creatureRef.current) return
     const prevStage = creatureRef.current.evolutionStage
     const evolved = evolveCreature(creatureRef.current)
     setEvolvedFrom(prevStage)
-    persistCreature(evolved)
+    persistActiveCreature(evolved)
     setPendingEvolution(false)
     setScreen('evolution')
-  }, [persistCreature])
+  }, [persistActiveCreature])
 
   const handleEvolutionContinue = useCallback(() => {
     // After evolution, show drawing screen for the new stage
-    if (creature) {
-      setDrawingStage(creature.evolutionStage)
+    if (activeCreature) {
+      setDrawingStage(activeCreature.evolutionStage)
       setScreen('drawing')
     } else {
       setScreen('main')
     }
     setEvolvedFrom(null)
-  }, [creature])
+  }, [activeCreature])
 
   const handleBattle = useCallback(() => {
     setScreen('battle_lobby')
@@ -263,26 +290,60 @@ export default function App() {
       wins: result.result === 'win' ? (c.wins ?? 0) + 1 : (c.wins ?? 0),
       losses: result.result === 'lose' ? (c.losses ?? 0) + 1 : (c.losses ?? 0),
     }
-    persistCreature(updated)
+    persistActiveCreature(updated)
     setScreen('main')
     showMessage(result.result === 'win' ? '勝利！強さを証明した！' : result.result === 'lose' ? '敗北...次は勝つぞ！' : '引き分け...いい戦いだった')
-  }, [persistCreature, showMessage])
+  }, [persistActiveCreature, showMessage])
+
+  const handleGoToCreatureListAfterDeath = useCallback(() => {
+    // 生存中の最初のクリーチャーをアクティブにする
+    const alive = creatures.find(c => c.isAlive && c.id !== activeCreatureId)
+    if (!alive) {
+      setScreen('setup')
+      return
+    }
+    const resetTarget = { ...alive, lastUpdated: Date.now() }
+    setCreatures(prev => {
+      const newCreatures = prev.map(c => c.id === alive.id ? resetTarget : c)
+      saveSaveData({ creatures: newCreatures, activeCreatureId: alive.id })
+      return newCreatures
+    })
+    setActiveCreatureId(alive.id)
+    setScreen('status')
+  }, [creatures, activeCreatureId])
 
   const handleStartOver = useCallback(async () => {
-    await deleteCreature()
-    setCreature(null)
-    creatureRef.current = null
+    await deleteSaveData()
+    setCreatures([])
+    setActiveCreatureId(null)
     setScreen('title')
     setPendingEvolution(false)
     setEvolvedFrom(null)
     setHasExistingSave(false)
   }, [])
 
-  const handleLoadFromFile = useCallback((loaded: Creature) => {
-    persistCreature(loaded)
+  const handleSelectCreature = useCallback((id: string) => {
+    const target = creatures.find(c => c.id === id)
+    if (!target || !target.isAlive) return
+    const resetTarget = { ...target, lastUpdated: Date.now() }
+    setCreatures(prev => {
+      const newCreatures = prev.map(c => c.id === id ? resetTarget : c)
+      saveSaveData({ creatures: newCreatures, activeCreatureId: id })
+      return newCreatures
+    })
+    setActiveCreatureId(id)
+    setScreen('main')
+  }, [creatures])
+
+  const handleLoadFromFile = useCallback((loaded: SaveData) => {
+    setCreatures(loaded.creatures)
+    const active = loaded.creatures.find(c => c.id === loaded.activeCreatureId) ?? loaded.creatures.find(c => c.isAlive)
+    if (!active) return
+    setActiveCreatureId(active.id)
+    saveSaveData(loaded)
     setScreen('main')
     showMessage('セーブデータを読み込みました！')
-  }, [persistCreature, showMessage])
+  }, [showMessage])
 
   if (loading) {
     return (
@@ -315,9 +376,9 @@ export default function App() {
         />
       )}
 
-      {screen === 'main' && creature && (
+      {screen === 'main' && activeCreature && (
         <MainGame
-          creature={creature}
+          creature={activeCreature}
           devMode={devMode}
           attackAnimation={attackAnimation}
           message={message}
@@ -333,59 +394,65 @@ export default function App() {
         />
       )}
 
-      {screen === 'evolution' && creature && (
+      {screen === 'evolution' && activeCreature && (
         <EvolutionScreen
-          creature={creature}
+          creature={activeCreature}
           evolvedFrom={evolvedFrom}
           onContinue={handleEvolutionContinue}
         />
       )}
 
-      {screen === 'death' && creature && (
+      {screen === 'death' && activeCreature && (
         <DeathScreen
-          creature={creature}
+          creature={activeCreature}
+          hasOtherAliveCreatures={creatures.some(c => c.id !== activeCreature.id && c.isAlive)}
           onStartOver={handleStartOver}
+          onGoToCreatureList={handleGoToCreatureListAfterDeath}
         />
       )}
 
-      {screen === 'status' && creature && (
+      {screen === 'status' && activeCreature && (
         <StatusScreen
-          creature={creature}
+          creature={activeCreature}
+          allCreatures={creatures}
+          activeCreatureId={activeCreatureId!}
           onBack={() => setScreen('main')}
           onLoad={handleLoadFromFile}
+          onSelectCreature={handleSelectCreature}
+          onNewCreature={() => setScreen('setup')}
         />
       )}
-      {screen === 'drawing' && (pendingCreature || creature) && (
+      {screen === 'drawing' && (pendingCreature || activeCreature) && (
         <CreatureDrawingScreen
-          creatureType={(pendingCreature ?? creature!).type}
+          creatureType={(pendingCreature ?? activeCreature!).type}
           singleStage={drawingStage}
           onComplete={handleDrawingComplete}
           onSkip={handleDrawingSkip}
         />
       )}
 
-      {screen === 'battle_lobby' && creature && (
+      {screen === 'battle_lobby' && activeCreature && (
         <BattleLobbyScreen
-          creature={creature}
+          creature={activeCreature}
           onBattleStart={handleBattleStart}
           onCpuBattleStart={handleCpuBattleStart}
           onCancel={() => setScreen('main')}
         />
       )}
 
-      {screen === 'battle' && creature && battleRole && battleOpponent && (
+      {screen === 'battle' && activeCreature && battleRole && battleOpponent && (
         <BattleScreen
           myCreature={{
-            name: creature.name,
-            evolutionStage: creature.evolutionStage,
-            type: creature.type,
-            hp: creature.hp,
-            maxHp: creature.maxHp,
-            atk: creature.atk,
-            def: creature.def,
-            spd: creature.spd,
-            level: creature.level,
-            customSvg: creature.customSprites?.[creature.evolutionStage],
+            name: activeCreature.name,
+            evolutionStage: activeCreature.evolutionStage,
+            type: activeCreature.type,
+            hp: activeCreature.hp,
+            maxHp: activeCreature.maxHp,
+            atk: activeCreature.atk,
+            def: activeCreature.def,
+            spd: activeCreature.spd,
+            level: activeCreature.level,
+            customSvg: activeCreature.customSprites?.[activeCreature.evolutionStage],
           }}
           opponentCreature={battleOpponent}
           role={battleRole}
@@ -396,14 +463,14 @@ export default function App() {
         />
       )}
 
-      {showTrainingGame && creature && (
-        <TrainingMiniGame creature={creature} onResult={handleTrainResult} />
+      {showTrainingGame && activeCreature && (
+        <TrainingMiniGame creature={activeCreature} onResult={handleTrainResult} />
       )}
-      {showPlayGame && creature && (
-        <PlayMiniGame creature={creature} onResult={handlePlayResult} />
+      {showPlayGame && activeCreature && (
+        <PlayMiniGame creature={activeCreature} onResult={handlePlayResult} />
       )}
-      {showFeedGame && creature && (
-        <FeedMiniGame creature={creature} onDone={handleFeedDone} />
+      {showFeedGame && activeCreature && (
+        <FeedMiniGame creature={activeCreature} onDone={handleFeedDone} />
       )}
     </div>
   )

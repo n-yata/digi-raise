@@ -34,7 +34,8 @@ export interface Creature {
 export type GameScreen = 'title' | 'setup' | 'main' | 'evolution' | 'death' | 'status' | 'battle_lobby' | 'battle' | 'drawing'
 
 export interface GameState {
-  creature: Creature | null
+  creatures: Creature[]
+  activeCreatureId: string | null
   screen: GameScreen
   devMode: boolean
   pendingEvolution: boolean
