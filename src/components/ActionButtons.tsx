@@ -44,7 +44,7 @@ function ActionBtn({ label, icon, onClick, disabled, accent = '#4fc3f7', pulse }
       }}
     >
       <span style={{ fontSize: 22 }}>{icon}</span>
-      <span style={{ fontSize: '0.7rem', color: disabled ? '#666' : '#ccc', letterSpacing: '0.05em' }}>
+      <span style={{ fontSize: '0.5rem', color: disabled ? '#666' : '#ccc', letterSpacing: '0.05em' }}>
         {label}
       </span>
     </button>

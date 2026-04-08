@@ -123,7 +123,7 @@ export default function MainGame({
           <div
             className="message-popup absolute top-2 left-1/2 z-20 font-pixel px-3 py-2 rounded-lg"
             style={{
-              fontSize: '1rem',
+              fontSize: '0.6rem',
               background: '#16213e',
               border: `1px solid ${color}`,
               color,
