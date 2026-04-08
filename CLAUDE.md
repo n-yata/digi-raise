@@ -119,7 +119,8 @@ docker compose down
 - 状態管理の中枢は `App.tsx`（useState群）。`useGameState.ts` は削除済み。
 - クリーチャーの保存は `SaveData { creatures, activeCreatureId }` を固定キー `"saveData"` で IndexedDB に一括保存（`storage.ts`）。
 - 非アクティブのクリーチャーは時間停止。切り替え時に `lastUpdated` を現在時刻にリセットする。
-- 死亡クリーチャーは `isAlive: false` の状態でリストに墓石として残る。
+- 死亡クリーチャーは `isAlive: false` の状態でリストに墓石として残る。個別削除も可能。
+- クリーチャーの保持上限は5体（`MAX_CREATURES = 5`、死亡含む）。上限時は新規作成ボタンを無効化。アクティブクリーチャーは削除不可。
 - `age` は float（30分ティックごとに +0.5）。進化条件の比較は float のまま、表示のみ `Math.floor`。
 - ごはんアクションは EXP を付与しない。
 - devMode は `App.tsx` のヘッダー「DEV」ボタンで切り替え。時間スケール: 30分 → 30秒。

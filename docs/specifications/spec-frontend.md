@@ -49,7 +49,7 @@ frontend/src/
 │   ├── MainGame.tsx              # メインゲーム画面（⚔️ バトルボタン含む）
 │   ├── PlayMiniGame.tsx          # 遊ぶミニゲーム
 │   ├── StatusBars.tsx            # 満腹度・しあわせ度バー
-│   ├── StatusScreen.tsx          # ステータス詳細画面・クリーチャー一覧・切り替え・新規作成
+│   ├── StatusScreen.tsx          # ステータス詳細画面・クリーチャー一覧・切り替え・新規作成・個別削除
 │   ├── TitleScreen.tsx           # タイトル・セーブロード画面
 │   └── TrainingMiniGame.tsx      # トレーニングミニゲーム
 ├── data/
@@ -75,13 +75,13 @@ frontend/src/
 ## 画面遷移
 
 ```
-title → setup → main ⇄ status（クリーチャー一覧・切り替え・新規作成）
+title → setup → main ⇄ status（クリーチャー一覧・切り替え・新規作成・個別削除）
 main → evolution → drawing → main（進化のたびにお絵描き）
 main → death → status（他に生存クリーチャーがいる場合）
 main → death → setup（全クリーチャー死亡の場合）
 main → battle_lobby → battle → main（勝敗結果反映後）
                      ↘ main（キャンセル）
-status → setup（「＋ 新しいクリーチャーを育てる」ボタン）
+status → setup（「＋ 新しいクリーチャーを育てる」ボタン、上限5体到達時は無効化）
 ```
 
 ---
@@ -420,6 +420,8 @@ interface UseBattleWebSocketReturn {
 
 ゲーム状態は `App.tsx` で `useState` 群により管理する（`useGameState.ts` は削除済み）。
 `creatures: Creature[]` + `activeCreatureId: string | null` で複数クリーチャーを管理し、`activeCreature` を導出で取得する。
+クリーチャーの保持数は最大5体（死亡含む）。上限到達時は新規作成ボタンが無効化される。
+ステータス画面からアクティブでないクリーチャーを個別削除可能（確認ダイアログ付き）。
 バトル結果はアクティブクリーチャーに対して反映される。
 
 ---
@@ -497,7 +499,9 @@ GitHub Pages にデプロイ。`vite.config.ts` で `base: '/digi-raise/'` を�
 - `GameState` 型は `frontend/src/types/creature.ts` に定義。状態管理の中枢は `App.tsx`（useState群）。`useGameState.ts` は削除済み。
 - クリーチャーは `creatures: Creature[]` + `activeCreatureId: string | null` で管理。`activeCreature` は導出で取得。
 - 非アクティブクリーチャーは時間停止。切り替え時に `lastUpdated` を現在時刻にリセットする。
-- 死亡クリーチャーは `isAlive: false` の状態でリストに墓石として残る。
+- 死亡クリーチャーは `isAlive: false` の状態でリストに墓石として残る。個別削除も可能。
+- クリーチャーの保持上限は5体（`MAX_CREATURES = 5`、死亡含む）。上限時は新規作成ボタンを無効化。
+- アクティブクリーチャーは削除不可。削除前に `window.confirm` で確認を表示。
 - `age` は float（30分ティックごとに +0.5）。進化条件の比較は float のまま行われ、表示のみ `Math.floor`。
 - トレーニング成功/失敗時に EXP の数値は画面に表示しない。
 - ごはんアクションは EXP を付与しない。
