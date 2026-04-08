@@ -115,11 +115,15 @@ docker compose down
 
 ## 実装上の注意
 
-- `frontend/src/types/creature.ts` と `frontend/src/hooks/useGameState.ts` の両方に `GameState` インターフェースが存在する。hooks 側が実際の状態管理に使われている。
+- `GameState` 型は `frontend/src/types/creature.ts` に定義。`creatures: Creature[]` + `activeCreatureId: string | null` で複数クリーチャーを管理する。
+- 状態管理の中枢は `App.tsx`（useState群）。`useGameState.ts` は削除済み。
+- クリーチャーの保存は `SaveData { creatures, activeCreatureId }` を固定キー `"saveData"` で IndexedDB に一括保存（`storage.ts`）。
+- 非アクティブのクリーチャーは時間停止。切り替え時に `lastUpdated` を現在時刻にリセットする。
+- 死亡クリーチャーは `isAlive: false` の状態でリストに墓石として残る。
 - `age` は float（30分ティックごとに +0.5）。進化条件の比較は float のまま、表示のみ `Math.floor`。
 - ごはんアクションは EXP を付与しない。
 - devMode は `App.tsx` のヘッダー「DEV」ボタンで切り替え。時間スケール: 30分 → 30秒。
-- バトルロジック（ダメージ計算・ターン解決）はフロントエンドで完結。サーバーは乱数シードの発行と同期のみ担う。
+- バトルロジック（ダメージ計算・ターン解決）はフロントエンドで完結。サーバーは乱数シードの発行と同期のみ担う。バトルはアクティブクリーチャーで自動参加。
 - タイプ相性マトリクスは `frontend/src/utils/battleLogic.ts` の `TYPE_ADVANTAGE` が正。有利: ×1.2、不利: ×0.8。
 - WebSocket 接続には `VITE_WS_URL` と `VITE_WS_SECRET_KEY` 環境変数が必要（`frontend/.env.example` 参照）。
 

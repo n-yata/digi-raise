@@ -1,6 +1,6 @@
 # デジレイズ (DigiRaise) フロントエンド仕様書
 
-**更新日**: 2026-04-07
+**更新日**: 2026-04-08
 
 ---
 
@@ -49,15 +49,14 @@ frontend/src/
 │   ├── MainGame.tsx              # メインゲーム画面（⚔️ バトルボタン含む）
 │   ├── PlayMiniGame.tsx          # 遊ぶミニゲーム
 │   ├── StatusBars.tsx            # 満腹度・しあわせ度バー
-│   ├── StatusScreen.tsx          # ステータス詳細画面
+│   ├── StatusScreen.tsx          # ステータス詳細画面・クリーチャー一覧・切り替え・新規作成
 │   ├── TitleScreen.tsx           # タイトル・セーブロード画面
 │   └── TrainingMiniGame.tsx      # トレーニングミニゲーム
 ├── data/
 │   └── evolutions.ts             # 進化名・ステージ定義・進化条件・基礎ステータス
 ├── hooks/
 │   ├── useBattleState.ts         # バトル状態管理（useReducer）
-│   ├── useBattleWebSocket.ts     # WebSocket接続管理・メッセージハンドリング
-│   └── useGameState.ts           # ゲーム状態管理（育成・バトル結果反映）
+│   └── useBattleWebSocket.ts     # WebSocket接続管理・メッセージハンドリング
 ├── types/
 │   ├── battle.ts                 # バトル専用型定義
 │   └── creature.ts               # Creature / GameState / GameScreen 型定義
@@ -76,11 +75,13 @@ frontend/src/
 ## 画面遷移
 
 ```
-title → setup → main ⇄ status
+title → setup → main ⇄ status（クリーチャー一覧・切り替え・新規作成）
 main → evolution → drawing → main（進化のたびにお絵描き）
-main → death → title
+main → death → status（他に生存クリーチャーがいる場合）
+main → death → setup（全クリーチャー死亡の場合）
 main → battle_lobby → battle → main（勝敗結果反映後）
                      ↘ main（キャンセル）
+status → setup（「＋ 新しいクリーチャーを育てる」ボタン）
 ```
 
 ---
@@ -140,6 +141,7 @@ main → battle_lobby → battle → main（勝敗結果反映後）
 
 ### ⚔️ バトル
 - `battle_lobby` 画面に遷移
+- アクティブクリーチャーで自動参加
 - バトル結果に応じてステータスが変化（後述）
 
 ---
@@ -154,7 +156,7 @@ main → battle_lobby → battle → main（勝敗結果反映後）
 | 30分ごと（睡眠中） | hp +25 |
 | 30分ごと | age +0.5 |
 | 30分ごと（hunger ≤ 0 時） | hp -5（餓死ダメージ） |
-| hp ≤ 0 | isAlive = false → 死亡画面へ |
+| hp ≤ 0 | isAlive = false → 死亡画面へ（墓石としてリストに残る） |
 
 ### devMode
 `devMode = true` のとき時間スケールが加速。
@@ -327,13 +329,37 @@ type GameScreen =
   | 'battle'        // バトルメイン
 ```
 
+### GameState
+
+```typescript
+interface GameState {
+  creatures: Creature[]            // 全クリーチャーのリスト（墓石含む）
+  activeCreatureId: string | null  // 現在操作中のクリーチャーID
+  screen: GameScreen
+  devMode: boolean
+  pendingEvolution: boolean
+  animationState: 'idle' | 'happy' | 'sleeping' | 'attack' | 'evolving' | 'dead'
+  message: string | null
+}
+```
+
+### SaveData（ストレージ用）
+
+```typescript
+interface SaveData {
+  creatures: Creature[]
+  activeCreatureId: string | null
+}
+```
+
 ### Creature（抜粋）
 
 ```typescript
 interface Creature {
   // ... 既存フィールド ...
-  wins?: number    // バトル勝利数
-  losses?: number  // バトル敗北数
+  isAlive: boolean   // false = 墓石状態
+  wins?: number      // バトル勝利数
+  losses?: number    // バトル敗北数
   customSprites?: Partial<Record<EvolutionStage, string>>  // ステージ別カスタムSVG
 }
 ```
@@ -390,9 +416,11 @@ interface UseBattleWebSocketReturn {
 
 `useReducer` でバトル状態を管理。`processEvent(event: ServerEvent)` で受信イベントを処理する。
 
-### useGameState（バトル結果反映）
+### 状態管理（App.tsx）
 
-`APPLY_BATTLE_RESULT` アクションでバトル結果をゲーム状態に反映する。
+ゲーム状態は `App.tsx` で `useState` 群により管理する（`useGameState.ts` は削除済み）。
+`creatures: Creature[]` + `activeCreatureId: string | null` で複数クリーチャーを管理し、`activeCreature` を導出で取得する。
+バトル結果はアクティブクリーチャーに対して反映される。
 
 ---
 
@@ -429,10 +457,15 @@ VITE_WS_SECRET_KEY=your-secret-key-here
 
 ## 永続化
 
-- IndexedDB (`digi-raise` DB, `gameState` ストア) に自動保存
-- アプリを閉じている間も `lastUpdated` タイムスタンプを元に再起動時に時間を一括適用
-- ステータス画面からセーブデータのエクスポート/インポートが可能（JSON ファイル）
+- IndexedDB (`digi-raise` DB, `gameState` ストア) に `SaveData` を固定キー `"saveData"` で一括保存
+- 全クリーチャー情報（墓石含む）と `activeCreatureId` をまとめて保存・読み込み
+- アクティブクリーチャーのみ `lastUpdated` タイムスタンプを元に再起動時に時間を一括適用
+- 非アクティブクリーチャーは時間停止。切り替え時に `lastUpdated` を現在時刻にリセット
+- 旧形式（`"currentCreature"` キー）からの自動移行処理あり（`migrateLegacyData`）
+- ステータス画面からセーブデータ全体のエクスポート/インポートが可能（JSON ファイル）
   - File System Access API 対応ブラウザはファイルピッカー、非対応はフォールバック
+  - インポート時はバリデーション実施（型検証・件数50件上限・ファイルサイズ1MB上限）
+  - 旧形式（v1: クリーチャー単体）のインポートファイルも後方互換で読み込み可能
 
 ---
 
@@ -461,8 +494,11 @@ GitHub Pages にデプロイ。`vite.config.ts` で `base: '/digi-raise/'` を�
 
 ## 実装上の注意
 
-- `frontend/src/types/creature.ts` と `frontend/src/hooks/useGameState.ts` の両方に `GameState` インターフェースが存在する。hooks 側が実際の状態管理に使われている（進化アニメーション用フィールドを含む）。
+- `GameState` 型は `frontend/src/types/creature.ts` に定義。状態管理の中枢は `App.tsx`（useState群）。`useGameState.ts` は削除済み。
+- クリーチャーは `creatures: Creature[]` + `activeCreatureId: string | null` で管理。`activeCreature` は導出で取得。
+- 非アクティブクリーチャーは時間停止。切り替え時に `lastUpdated` を現在時刻にリセットする。
+- 死亡クリーチャーは `isAlive: false` の状態でリストに墓石として残る。
 - `age` は float（30分ティックごとに +0.5）。進化条件の比較は float のまま行われ、表示のみ `Math.floor`。
 - トレーニング成功/失敗時に EXP の数値は画面に表示しない。
 - ごはんアクションは EXP を付与しない。
-- バトルロジックはサーバーに委譲せず、フロントエンドで双方が独立して計算する。乱数シードはサーバーが発行する。
+- バトルロジックはサーバーに委譲せず、フロントエンドで双方が独立して計算する。乱数シードはサーバーが発行する。バトルはアクティブクリーチャーで自動参加。
