@@ -1,5 +1,6 @@
 import { openDB, type IDBPDatabase } from 'idb'
-import type { Creature, CreatureType } from '../types/creature'
+import DOMPurify from 'dompurify'
+import type { Creature, CreatureType, EvolutionStage } from '../types/creature'
 
 const MAX_FILE_SIZE = 1 * 1024 * 1024 // 1MB
 
@@ -24,6 +25,17 @@ function validateCreature(c: unknown): c is Creature {
 
   const stage = obj.evolutionStage
   if (typeof stage !== 'number' || !Number.isInteger(stage) || stage < 0 || stage > 5) return false
+
+  // customSprites: optional, each value must be a string (SVG) under 500KB
+  if (obj.customSprites !== undefined) {
+    if (typeof obj.customSprites !== 'object' || obj.customSprites === null) return false
+    const sprites = obj.customSprites as Record<string, unknown>
+    for (const [key, val] of Object.entries(sprites)) {
+      const stageNum = Number(key)
+      if (!Number.isInteger(stageNum) || stageNum < 0 || stageNum > 5) return false
+      if (typeof val !== 'string' || val.length > 512_000) return false
+    }
+  }
 
   return true
 }
@@ -221,6 +233,16 @@ export async function importSave(): Promise<SaveData | null> {
   })
 }
 
+function sanitizeCustomSprites(creature: Creature): void {
+  if (!creature.customSprites) return
+  const sanitized: Partial<Record<EvolutionStage, string>> = {}
+  for (const [key, svg] of Object.entries(creature.customSprites)) {
+    sanitized[Number(key) as EvolutionStage] =
+      DOMPurify.sanitize(svg, { USE_PROFILES: { svg: true } })
+  }
+  creature.customSprites = sanitized
+}
+
 function parseSaveFile(text: string): SaveData | null {
   try {
     const parsed = JSON.parse(text)
@@ -233,16 +255,16 @@ function parseSaveFile(text: string): SaveData | null {
     // version 2: SaveData 形式
     if (parsed.saveData != null) {
       const saveData = parsed.saveData as SaveData
-      saveData.creatures.forEach((c) => { delete c.customSprites })
       if (!validateSaveData(saveData)) return null
+      saveData.creatures.forEach(sanitizeCustomSprites)
       return saveData
     }
 
     // version 1 (後方互換): 単体クリーチャー形式
     if (parsed.creature != null) {
       const creature = parsed.creature as Creature
-      delete creature.customSprites
       if (!validateCreature(creature)) return null
+      sanitizeCustomSprites(creature)
       return {
         creatures: [creature],
         activeCreatureId: creature.id,
