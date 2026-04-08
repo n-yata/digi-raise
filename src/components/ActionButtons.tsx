@@ -123,13 +123,13 @@ export default function ActionButtons({
       {/* Evolution conditions (when can't evolve) */}
       {evolutionProgress.length > 0 && (
         <div className="mb-3 p-2 rounded-lg" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
-          <p style={{ fontSize: '0.7rem', color: '#aaa', marginBottom: 4, letterSpacing: '0.05em' }}>🔒 進化条件</p>
+          <p style={{ fontSize: '0.6rem', color: '#aaa', marginBottom: 4, letterSpacing: '0.05em' }}>🔒 進化条件</p>
           <div className="flex flex-wrap gap-2">
             {evolutionProgress.map((c) => (
               <span
                 key={c.label}
                 style={{
-                  fontSize: '0.9rem',
+                  fontSize: '0.5rem',
                   padding: '2px 6px',
                   borderRadius: 4,
                   background: c.met ? 'rgba(74,222,128,0.2)' : 'rgba(248,113,113,0.2)',

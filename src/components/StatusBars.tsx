@@ -15,10 +15,10 @@ function Bar({ label, value, max, color, icon }: BarProps) {
   return (
     <div className="mb-2">
       <div className="flex justify-between items-center mb-1">
-        <span className="text-xs flex items-center gap-1" style={{ fontSize: '0.6rem' }}>
+        <span className="text-xs flex items-center gap-1" style={{ fontSize: '0.55rem' }}>
           {icon} {label}
         </span>
-        <span className="text-xs tabular-nums" style={{ fontSize: '0.6rem', color }}>
+        <span className="text-xs tabular-nums" style={{ fontSize: '0.55rem', color }}>
           {Math.floor(value)}/{max}
         </span>
       </div>

@@ -75,7 +75,7 @@ export default function MainGame({
             onClick={onToggleDevMode}
             className="px-2 py-1 rounded font-pixel transition-all"
             style={{
-              fontSize: '0.65rem',
+              fontSize: '0.5rem',
               background: devMode ? '#ffd70033' : '#16213e',
               border: `1px solid ${devMode ? '#ffd700' : '#334155'}`,
               color: devMode ? '#ffd700' : '#64748b',
@@ -90,19 +90,19 @@ export default function MainGame({
         <div className="flex gap-2 mt-2">
           <span
             className="font-pixel px-2 py-0.5 rounded-full"
-            style={{ fontSize: '0.65rem', background: `${color}22`, color, border: `1px solid ${color}44` }}
+            style={{ fontSize: '0.5rem', background: `${color}22`, color, border: `1px solid ${color}44` }}
           >
             {creature.type.toUpperCase()}
           </span>
           {creature.isSleeping && (
             <span className="font-pixel px-2 py-0.5 rounded-full"
-              style={{ fontSize: '0.65rem', background: '#60a5fa22', color: '#60a5fa', border: '1px solid #60a5fa44' }}>
+              style={{ fontSize: '0.5rem', background: '#60a5fa22', color: '#60a5fa', border: '1px solid #60a5fa44' }}>
               💤 おやすみ中
             </span>
           )}
           {devMode && (
             <span className="font-pixel px-2 py-0.5 rounded-full"
-              style={{ fontSize: '0.65rem', background: '#ffd70022', color: '#ffd700', border: '1px solid #ffd70044' }}>
+              style={{ fontSize: '0.5rem', background: '#ffd70022', color: '#ffd700', border: '1px solid #ffd70044' }}>
               ⚡ 開発モード
             </span>
           )}
@@ -167,8 +167,8 @@ export default function MainGame({
           { label: '体重', value: creature.weight },
         ].map(({ label, value }) => (
           <div key={label} className="flex flex-col items-center">
-            <span className="font-pixel" style={{ fontSize: '0.65rem', color: '#64748b' }}>{label}</span>
-            <span className="font-pixel" style={{ fontSize: '0.65rem', color: '#e0e0e0' }}>{value}</span>
+            <span className="font-pixel" style={{ fontSize: '0.5rem', color: '#64748b' }}>{label}</span>
+            <span className="font-pixel" style={{ fontSize: '0.6rem', color: '#e0e0e0' }}>{value}</span>
           </div>
         ))}
       </div>
@@ -176,8 +176,8 @@ export default function MainGame({
       {/* EXP bar */}
       <div className="mx-4 mt-1">
         <div className="flex justify-between mb-0.5">
-          <span className="font-pixel" style={{ fontSize: '0.65rem', color: '#64748b' }}>EXP</span>
-          <span className="font-pixel" style={{ fontSize: '0.65rem', color: '#64748b' }}>
+          <span className="font-pixel" style={{ fontSize: '0.5rem', color: '#64748b' }}>EXP</span>
+          <span className="font-pixel" style={{ fontSize: '0.5rem', color: '#64748b' }}>
             {creature.exp}/{expNeeded}
           </span>
         </div>
@@ -199,10 +199,10 @@ export default function MainGame({
 
       {/* Age display */}
       <div className="mx-4 mt-1 flex justify-between">
-        <span className="font-pixel" style={{ fontSize: '0.65rem', color: '#64748b' }}>
+        <span className="font-pixel" style={{ fontSize: '0.55rem', color: '#64748b' }}>
           年齢: {Math.floor(creature.age)}日
         </span>
-        <span className="font-pixel" style={{ fontSize: '0.65rem', color: '#64748b' }}>
+        <span className="font-pixel" style={{ fontSize: '0.55rem', color: '#64748b' }}>
           幸福: {Math.floor(creature.happiness)}/100
         </span>
       </div>

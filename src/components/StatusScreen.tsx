@@ -85,10 +85,10 @@ export default function StatusScreen({ creature, allCreatures, activeCreatureId,
           <div style={{ fontSize: 40 }}>{TYPE_EMOJIS[creature.type]}</div>
           <div>
             <div className="font-pixel" style={{ fontSize: '1.15rem', color: '#e0e0e0' }}>{creature.name}</div>
-            <div className="font-pixel mt-1" style={{ fontSize: '1rem', color }}>
+            <div className="font-pixel mt-1" style={{ fontSize: '0.7rem', color }}>
               {creature.evolutionName}
             </div>
-            <div className="font-pixel mt-0.5" style={{ fontSize: '0.9rem', color: '#64748b' }}>
+            <div className="font-pixel mt-0.5" style={{ fontSize: '0.55rem', color: '#64748b' }}>
               {STAGE_NAMES[creature.evolutionStage]} | {creature.type}
             </div>
           </div>
@@ -104,8 +104,8 @@ export default function StatusScreen({ creature, allCreatures, activeCreatureId,
             className="flex justify-between items-center py-1.5"
             style={{ borderBottom: '1px solid #0f3460' }}
           >
-            <span className="font-pixel" style={{ fontSize: '0.9rem', color: '#64748b' }}>{label}</span>
-            <span className="font-pixel" style={{ fontSize: '0.75rem', color: '#e0e0e0' }}>{value}</span>
+            <span className="font-pixel" style={{ fontSize: '0.55rem', color: '#64748b' }}>{label}</span>
+            <span className="font-pixel" style={{ fontSize: '0.65rem', color: '#e0e0e0' }}>{value}</span>
           </div>
         ))}
       </div>
@@ -121,8 +121,8 @@ export default function StatusScreen({ creature, allCreatures, activeCreatureId,
           ].map(({ label, value, icon }) => (
             <div key={label} className="text-center">
               <div style={{ fontSize: 20 }}>{icon}</div>
-              <div className="font-pixel" style={{ fontSize: '0.9rem', color: '#64748b' }}>{label}</div>
-              <div className="font-pixel" style={{ fontSize: '0.9rem', color: '#e0e0e0' }}>{value}回</div>
+              <div className="font-pixel" style={{ fontSize: '0.5rem', color: '#64748b' }}>{label}</div>
+              <div className="font-pixel" style={{ fontSize: '0.65rem', color: '#e0e0e0' }}>{value}回</div>
             </div>
           ))}
         </div>
@@ -137,7 +137,7 @@ export default function StatusScreen({ creature, allCreatures, activeCreatureId,
               <span
                 className="font-pixel px-2 py-1 rounded"
                 style={{
-                  fontSize: '0.9rem',
+                  fontSize: '0.5rem',
                   background: i === creature.evolutionStage ? `${color}33` : 'transparent',
                   color: i === creature.evolutionStage ? color : i < creature.evolutionStage ? '#475569' : '#334155',
                   border: i === creature.evolutionStage ? `1px solid ${color}` : '1px solid transparent',
@@ -146,7 +146,7 @@ export default function StatusScreen({ creature, allCreatures, activeCreatureId,
                 {ename}
               </span>
               {i < evolutionPath.length - 1 && (
-                <span style={{ color: '#334155', fontSize: '1rem', alignSelf: 'center' }}>→</span>
+                <span style={{ color: '#334155', fontSize: '0.6rem', alignSelf: 'center' }}>→</span>
               )}
             </React.Fragment>
           ))}
@@ -168,10 +168,10 @@ export default function StatusScreen({ creature, allCreatures, activeCreatureId,
           {evolutionChecks.map(({ label, met, value, max }) => (
             <div key={label} className="flex items-center gap-2 mb-2">
               <span style={{ fontSize: 14 }}>{met ? '✅' : '❌'}</span>
-              <span className="font-pixel flex-1" style={{ fontSize: '0.9rem', color: met ? '#4ade80' : '#64748b' }}>
+              <span className="font-pixel flex-1" style={{ fontSize: '0.55rem', color: met ? '#4ade80' : '#64748b' }}>
                 {label}
               </span>
-              <span className="font-pixel" style={{ fontSize: '0.9rem', color: met ? '#4ade80' : '#94a3b8' }}>
+              <span className="font-pixel" style={{ fontSize: '0.55rem', color: met ? '#4ade80' : '#94a3b8' }}>
                 {typeof value === 'number' ? Math.floor(value * 10) / 10 : value}/{max}
               </span>
             </div>
@@ -192,8 +192,8 @@ export default function StatusScreen({ creature, allCreatures, activeCreatureId,
             <>
               <div style={{ fontSize: 22 }}>{isDead ? '🪦' : TYPE_EMOJIS[c.type]}</div>
               <div className="flex-1 min-w-0">
-                <div className="font-pixel" style={{ fontSize: '1rem', color: '#e0e0e0' }}>{c.name}</div>
-                <div className="font-pixel mt-0.5" style={{ fontSize: '0.9rem', color: isDead ? '#475569' : cColor }}>
+                <div className="font-pixel" style={{ fontSize: '0.65rem', color: '#e0e0e0' }}>{c.name}</div>
+                <div className="font-pixel mt-0.5" style={{ fontSize: '0.55rem', color: isDead ? '#475569' : cColor }}>
                   {c.evolutionName}
                 </div>
                 <div className="font-pixel mt-0.5" style={{ fontSize: '0.6rem', color: '#475569' }}>
@@ -263,7 +263,7 @@ export default function StatusScreen({ creature, allCreatures, activeCreatureId,
           disabled={!canAddCreature}
           className="w-full py-3 rounded-lg font-pixel transition-all active:scale-95 mt-1"
           style={{
-            fontSize: '1rem',
+            fontSize: '0.65rem',
             background: 'transparent',
             border: `1px dashed ${canAddCreature ? '#4fc3f766' : '#ffffff33'}`,
             color: canAddCreature ? '#4fc3f7' : '#ffffff44',
