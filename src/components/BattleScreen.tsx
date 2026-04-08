@@ -244,20 +244,20 @@ export default function BattleScreen({
       {/* ヘッダー */}
       <div className="px-4 pt-3 pb-2 flex items-center justify-between" style={{ borderBottom: '1px solid #0f346044' }}>
         <div className="flex items-center gap-2">
-          <div className="font-pixel" style={{ fontSize: '0.55rem', color: '#4fc3f7' }}>
+          <div className="font-pixel" style={{ fontSize: '0.75rem', color: '#4fc3f7' }}>
             ⚔️ {modeLabel} ターン {state.currentTurn + 1}
           </div>
         </div>
         <div className="flex items-center gap-2">
           {state.myParalyzed && (
             <span className="font-pixel px-2 py-0.5 rounded-full"
-              style={{ fontSize: '0.4rem', background: '#ffd70022', color: '#ffd700', border: '1px solid #ffd70044' }}>
+              style={{ fontSize: '0.65rem', background: '#ffd70022', color: '#ffd700', border: '1px solid #ffd70044' }}>
               ⚡麻痺
             </span>
           )}
           {effectsRef.current.myPoisonTurns > 0 && (
             <span className="font-pixel px-2 py-0.5 rounded-full"
-              style={{ fontSize: '0.4rem', background: '#4ade8022', color: '#4ade80', border: '1px solid #4ade8044' }}>
+              style={{ fontSize: '0.65rem', background: '#4ade8022', color: '#4ade80', border: '1px solid #4ade8044' }}>
               ☠毒{effectsRef.current.myPoisonTurns}T
             </span>
           )}
@@ -301,7 +301,7 @@ export default function BattleScreen({
         <div
           className="font-pixel mx-2"
           style={{
-            fontSize: '0.5rem',
+            fontSize: '0.7rem',
             color: '#f43f5e',
             textShadow: '0 0 10px #f43f5e88',
             fontWeight: 'bold',
@@ -338,7 +338,7 @@ export default function BattleScreen({
         }}
       >
         {recentLogs.length === 0 ? (
-          <div className="font-pixel text-center" style={{ fontSize: '0.45rem', color: '#64748b', paddingTop: 8 }}>
+          <div className="font-pixel text-center" style={{ fontSize: '0.65rem', color: '#64748b', paddingTop: 8 }}>
             バトル中...
           </div>
         ) : (
@@ -347,7 +347,7 @@ export default function BattleScreen({
               <div
                 key={i}
                 className="font-pixel"
-                style={{ fontSize: '0.45rem', color: i === recentLogs.length - 1 ? '#e0e0e0' : '#64748b' }}
+                style={{ fontSize: '0.65rem', color: i === recentLogs.length - 1 ? '#e0e0e0' : '#64748b' }}
               >
                 {log}
               </div>
@@ -365,7 +365,7 @@ export default function BattleScreen({
           type={myCreature.type}
         />
 
-        <div className="font-pixel text-center" style={{ fontSize: '0.45rem', color: '#64748b' }}>
+        <div className="font-pixel text-center" style={{ fontSize: '0.65rem', color: '#64748b' }}>
           {isSelecting ? 'アクションを選んでください' : state.phase === 'resolving' ? '解決中...' : state.phase === 'finished' ? 'バトル終了' : '待機中...'}
         </div>
 

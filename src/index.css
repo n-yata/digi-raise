@@ -3,6 +3,10 @@
 @tailwind utilities;
 
 @layer base {
+  html {
+    font-size: 22px;
+  }
+
   html, body, #root {
     height: 100%;
     margin: 0;
