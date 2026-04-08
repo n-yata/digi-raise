@@ -224,11 +224,20 @@ export default function CreatureSprite({ type, stage, animState, customSvg }: Cr
       {/* Main sprite */}
       <div className={`transition-all duration-300 ${getAnimClass()}`}>
         {customSvg ? (
-          // User-drawn SVG (only user's own drawings are used here, XSS risk is accepted)
-          <div
-            style={{ width: 100, height: 100 }}
-            dangerouslySetInnerHTML={{ __html: customSvg }}
-          />
+          customSvg.startsWith('data:image/png;base64,') ? (
+            // QR経由の対戦相手データ: imgタグで安全にレンダリング
+            <img
+              src={customSvg}
+              style={{ width: 100, height: 100, imageRendering: 'pixelated' }}
+              alt=""
+            />
+          ) : (
+            // ユーザー自身の描画SVG: dangerouslySetInnerHTML
+            <div
+              style={{ width: 100, height: 100 }}
+              dangerouslySetInnerHTML={{ __html: customSvg }}
+            />
+          )
         ) : (
           <PixelBody type={type} stage={stage} color={color} />
         )}
