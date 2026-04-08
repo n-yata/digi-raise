@@ -190,7 +190,7 @@ export default function QRCreatureScan({ myCreature, onOpponentScanned, onCancel
           <div className="flex justify-center py-2">
             {qrData ? (
               <div style={{ background: '#fff', padding: 10, borderRadius: 6 }}>
-                <QRCodeSVG value={qrData} size={180} level="L" />
+                <QRCodeSVG value={qrData} size={280} level="L" />
               </div>
             ) : (
               <div className="font-pixel" style={{ color: '#64748b', fontSize: '0.65rem', padding: 20 }}>
