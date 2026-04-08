@@ -5,31 +5,21 @@
     "context": ".."
   },
 
-  // Docker-outside-of-Docker: ホストの Docker を共有
-  // SAM local invoke と docker-compose (DynamoDB Local) に必要
-  "features": {
-    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}
-  },
-
   // ホストの認証情報・設定をマウント
   // Windows: USERPROFILE (C:\Users\xxx), Linux/macOS: HOME (/home/xxx)
   "mounts": [
     // Claude Code グローバル設定（メモリ書き込みが必要なので read-write）
     "source=${localEnv:HOME}${localEnv:USERPROFILE}/.claude,target=/home/vscode/.claude,type=bind,consistency=cached",
     // session-env はコンテナローカル tmpfs で上書き（ホスト側の権限問題を回避）
-    "target=/home/vscode/.claude/session-env,type=tmpfs,tmpfs-mode=1777",
-    // AWS 認証情報（read-only: コンテナから書き換えさせない）
-    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.aws,target=/home/vscode/.aws,type=bind,readonly",
-    // SAM ビルド成果物をボリュームに配置（バインドマウントの I/O ボトルネック回避）
-    "source=digi-raise-sam-build,target=/workspaces/digi-raise/backend/.aws-sam,type=volume"
+    "target=/home/vscode/.claude/session-env,type=tmpfs,tmpfs-mode=1777"
   ],
 
   // コンテナ起動前（ホスト側）: .claude ディレクトリの権限をコンテナ内 vscode(1000) に合わせる
   // 配列形式で bash を直接呼び出し、Windows の cmd.exe をバイパスする
   "initializeCommand": ["bash", "-c", "mkdir -p \"$HOME/.claude/session-env\" && chmod 700 \"$HOME/.claude\" && chmod 777 \"$HOME/.claude/session-env\""],
 
-  // コンテナ初回作成後にフロントエンド依存関係をインストール
-  "postCreateCommand": "cd /workspaces/digi-raise/frontend && npm install",
+  // コンテナ初回作成後に依存関係をインストール
+  "postCreateCommand": "npm install",
 
   // セキュリティ: 非 root ユーザーで実行
   "remoteUser": "vscode",
@@ -44,14 +34,10 @@
   ],
 
   // 開発サーバー用ポート
-  "forwardPorts": [5173, 8000],
+  "forwardPorts": [5173],
   "portsAttributes": {
     "5173": {
       "label": "Vite Dev Server",
-      "onAutoForward": "silent"
-    },
-    "8000": {
-      "label": "DynamoDB Local",
       "onAutoForward": "silent"
     }
   },
@@ -60,9 +46,7 @@
     "vscode": {
       "extensions": [
         "dbaeumer.vscode-eslint",
-        "esbenp.prettier-vscode",
-        "ms-azuretools.vscode-docker",
-        "amazonwebservices.aws-toolkit-vscode"
+        "esbenp.prettier-vscode"
       ],
       "settings": {
         "terminal.integrated.defaultProfile.linux": "bash"
