@@ -1,20 +1,28 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import type { Creature } from '../types/creature'
 import type { BattleRole, CreatureSnapshot } from '../types/battle'
 import { useBattleWebSocket } from '../hooks/useBattleWebSocket'
 import { useBattleState } from '../hooks/useBattleState'
+import type { UseWebRTCReturn } from '../hooks/useWebRTC'
+import type { UseBattleP2PReturn } from '../hooks/useBattleP2P'
 import { generateCpuCreature } from '../utils/cpuBattle'
+import QRSignaling from './QRSignaling'
 
 interface BattleLobbyScreenProps {
   creature: Creature
   onBattleStart: (role: BattleRole, opponentCreature: CreatureSnapshot, seed: number) => void
   onCpuBattleStart: (opponentCreature: CreatureSnapshot, seed: number) => void
+  onP2PBattleStart: (role: BattleRole, opponentCreature: CreatureSnapshot, seed: number) => void
   onCancel: () => void
+  /** App.tsxから渡されるWebRTCフック（接続を画面遷移またいで維持するため） */
+  webrtc: UseWebRTCReturn
+  /** App.tsxから渡されるP2Pバトルフック */
+  p2p: UseBattleP2PReturn
 }
 
-type LobbyTab = 'create' | 'join' | 'cpu'
+type LobbyTab = 'cpu' | 'p2p' | 'create' | 'join'
 
-export default function BattleLobbyScreen({ creature, onBattleStart, onCpuBattleStart, onCancel }: BattleLobbyScreenProps) {
+export default function BattleLobbyScreen({ creature, onBattleStart, onCpuBattleStart, onP2PBattleStart, onCancel, webrtc, p2p }: BattleLobbyScreenProps) {
   const [tab, setTab] = useState<LobbyTab>('cpu')
   const [joinCode, setJoinCode] = useState('')
   const [copied, setCopied] = useState(false)
@@ -25,8 +33,14 @@ export default function BattleLobbyScreen({ creature, onBattleStart, onCpuBattle
 
   const [cpuOpponent, setCpuOpponent] = useState<CreatureSnapshot | null>(null)
 
+  // WebSocket（既存オンライン対戦）
   const ws = useBattleWebSocket()
   const { state, processEvent } = useBattleState()
+
+  // P2P対戦
+  const [p2pConnected, setP2pConnected] = useState(false)
+  const [p2pOpponent, setP2pOpponent] = useState<CreatureSnapshot | null>(null)
+  const [p2pReady, setP2pReady] = useState(false)
 
   // CPU対戦相手を生成
   useEffect(() => {
@@ -77,7 +91,7 @@ export default function BattleLobbyScreen({ creature, onBattleStart, onCpuBattle
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab])
 
-  // イベント処理
+  // WebSocketイベント処理
   useEffect(() => {
     if (!ws.lastEvent) return
     processEvent(ws.lastEvent)
@@ -92,12 +106,51 @@ export default function BattleLobbyScreen({ creature, onBattleStart, onCpuBattle
     }
   }, [ws.lastEvent, processEvent])
 
-  // バトル開始トリガー
+  // WebSocketバトル開始トリガー
   useEffect(() => {
     if (seed !== null && battleRole !== null && opponentSnapshot !== null) {
       onBattleStart(battleRole, opponentSnapshot, seed)
     }
   }, [seed, battleRole, opponentSnapshot, onBattleStart])
+
+  // --- P2P イベント処理 ---
+  useEffect(() => {
+    if (!p2p.lastEvent) return
+    const ev = p2p.lastEvent
+
+    if (ev.event === 'opponent_joined') {
+      setP2pOpponent(ev.opponentCreature)
+    }
+
+    if (ev.event === 'battle_start') {
+      // P2Pバトル開始（p2pOpponentはすでにセットされているはず）
+      if (p2pOpponent) {
+        onP2PBattleStart(ev.yourRole, p2pOpponent, ev.seed)
+      }
+    }
+  }, [p2p.lastEvent, p2pOpponent, onP2PBattleStart])
+
+  /** P2P接続完了コールバック */
+  const handleP2PConnected = useCallback(() => {
+    setP2pConnected(true)
+    // 接続直後にクリーチャー情報を送信
+    p2p.startBattle({
+      name: creature.name,
+      evolutionStage: creature.evolutionStage,
+      type: creature.type,
+      hp: creature.hp,
+      maxHp: creature.maxHp,
+      atk: creature.atk,
+      def: creature.def,
+      spd: creature.spd,
+      level: creature.level,
+    })
+  }, [creature, p2p])
+
+  const handleP2PReady = () => {
+    p2p.sendReady()
+    setP2pReady(true)
+  }
 
   const handleCreateRoom = () => {
     ws.sendCreateRoom(creature)
@@ -127,6 +180,7 @@ export default function BattleLobbyScreen({ creature, onBattleStart, onCpuBattle
       ws.sendLeaveRoom(state.roomCode)
     }
     ws.disconnect()
+    webrtc.close()
     onCancel()
   }
 
@@ -158,7 +212,7 @@ export default function BattleLobbyScreen({ creature, onBattleStart, onCpuBattle
           </button>
         </div>
         {/* 接続状態（オンラインタブ時のみ表示） */}
-        {tab !== 'cpu' && (
+        {(tab === 'create' || tab === 'join') && (
           <div className="mt-2 flex items-center gap-2">
             <div
               className="rounded-full"
@@ -202,30 +256,30 @@ export default function BattleLobbyScreen({ creature, onBattleStart, onCpuBattle
       </div>
 
       {/* タブ */}
-      <div className="mx-4 mt-3 grid grid-cols-3 gap-1 rounded-lg overflow-hidden"
+      <div className="mx-4 mt-3 grid grid-cols-4 gap-1 rounded-lg overflow-hidden"
         style={{ background: '#16213e', border: '1px solid #0f3460' }}>
-        {(['cpu', 'create', 'join'] as LobbyTab[]).map(t => (
+        {(['cpu', 'p2p', 'create', 'join'] as LobbyTab[]).map(t => (
           <button
             key={t}
             onClick={() => setTab(t)}
             className="py-2 font-pixel transition-all"
             style={{
-              fontSize: '0.45rem',
+              fontSize: '0.4rem',
               background: tab === t ? '#0f3460' : 'transparent',
               color: tab === t ? '#4fc3f7' : '#64748b',
               border: 'none',
             }}
           >
-            {t === 'cpu' ? 'CPU対戦' : t === 'create' ? 'ルーム作成' : 'ルームに参加'}
+            {t === 'cpu' ? 'CPU' : t === 'p2p' ? 'P2P' : t === 'create' ? 'ルーム作成' : 'ルーム参加'}
           </button>
         ))}
       </div>
 
       {/* タブコンテンツ */}
       <div className="mx-4 mt-3 flex-1">
+        {/* CPU対戦 */}
         {tab === 'cpu' && cpuOpponent && (
           <div className="flex flex-col gap-3">
-            {/* CPU対戦相手情報 */}
             <div className="px-3 py-3 rounded-lg" style={{ background: '#16213e', border: '1px solid #0f3460' }}>
               <div className="font-pixel mb-2" style={{ fontSize: '0.45rem', color: '#64748b' }}>
                 対戦相手（CPU）
@@ -253,7 +307,6 @@ export default function BattleLobbyScreen({ creature, onBattleStart, onCpuBattle
               </div>
             </div>
 
-            {/* 対戦相手を変更 */}
             <button
               onClick={handleRegenerateCpu}
               className="w-full py-2 rounded-lg font-pixel transition-all active:scale-95"
@@ -267,7 +320,6 @@ export default function BattleLobbyScreen({ creature, onBattleStart, onCpuBattle
               対戦相手を変更
             </button>
 
-            {/* バトル開始 */}
             <button
               onClick={handleCpuBattleStart}
               className="w-full py-3 rounded-lg font-pixel transition-all active:scale-95 animate-pulse"
@@ -285,6 +337,76 @@ export default function BattleLobbyScreen({ creature, onBattleStart, onCpuBattle
           </div>
         )}
 
+        {/* P2P対戦 */}
+        {tab === 'p2p' && (
+          <div className="flex flex-col gap-3">
+            {!p2pConnected ? (
+              <QRSignaling
+                webrtc={webrtc}
+                onConnected={handleP2PConnected}
+                onCancel={() => setTab('cpu')}
+              />
+            ) : !p2pOpponent ? (
+              <div className="font-pixel text-center py-4" style={{ fontSize: '0.45rem', color: '#ffd700' }}>
+                <div className="animate-pulse">クリーチャー情報を交換中...</div>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-3">
+                {/* P2P対戦相手情報 */}
+                <div className="px-3 py-3 rounded-lg" style={{ background: '#16213e', border: '1px solid #4ade8044' }}>
+                  <div className="font-pixel mb-2" style={{ fontSize: '0.45rem', color: '#4ade80' }}>
+                    対戦相手（P2P接続済み）
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="font-pixel" style={{ fontSize: '0.6rem', color: '#e0e0e0' }}>
+                      {p2pOpponent.name}
+                    </span>
+                    <div className="flex gap-3">
+                      {[
+                        { label: 'HP', value: p2pOpponent.maxHp },
+                        { label: 'ATK', value: p2pOpponent.atk },
+                        { label: 'DEF', value: p2pOpponent.def },
+                        { label: 'SPD', value: p2pOpponent.spd },
+                      ].map(({ label, value }) => (
+                        <div key={label} className="flex flex-col items-center">
+                          <span className="font-pixel" style={{ fontSize: '0.35rem', color: '#64748b' }}>{label}</span>
+                          <span className="font-pixel" style={{ fontSize: '0.5rem', color: '#4fc3f7' }}>{value}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="font-pixel mt-2" style={{ fontSize: '0.4rem', color: '#64748b' }}>
+                    タイプ: {p2pOpponent.type} / Lv.{p2pOpponent.level}
+                  </div>
+                </div>
+
+                {/* P2Pバトル開始ボタン */}
+                {!p2pReady ? (
+                  <button
+                    onClick={handleP2PReady}
+                    className="w-full py-3 rounded-lg font-pixel transition-all active:scale-95 animate-pulse"
+                    style={{
+                      fontSize: '0.55rem',
+                      background: 'linear-gradient(90deg, #ffd700, #ff8c00, #ffd700)',
+                      backgroundSize: '200% 100%',
+                      border: '2px solid #ffd700',
+                      color: '#111',
+                      boxShadow: '0 0 20px #ffd70088',
+                    }}
+                  >
+                    ⚔️ バトル準備完了！
+                  </button>
+                ) : (
+                  <div className="font-pixel text-center" style={{ fontSize: '0.45rem', color: '#ffd700' }}>
+                    <div className="animate-pulse">相手の準備を待っています...</div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ルーム作成（既存WebSocket） */}
         {tab === 'create' && (
           <div className="flex flex-col gap-3">
             {!state.roomCode ? (
@@ -305,7 +427,6 @@ export default function BattleLobbyScreen({ creature, onBattleStart, onCpuBattle
               </button>
             ) : (
               <div className="flex flex-col gap-3">
-                {/* ルームコード */}
                 <div className="px-4 py-3 rounded-lg" style={{ background: '#16213e', border: '1px solid #4fc3f744' }}>
                   <div className="font-pixel mb-1" style={{ fontSize: '0.4rem', color: '#64748b' }}>
                     ルームコード
@@ -329,7 +450,6 @@ export default function BattleLobbyScreen({ creature, onBattleStart, onCpuBattle
                   </div>
                 </div>
 
-                {/* 相手の状態 */}
                 <div
                   className="px-3 py-2 rounded-lg flex items-center gap-2"
                   style={{ background: '#16213e', border: `1px solid ${opponentReady ? '#4ade8044' : '#0f3460'}` }}
@@ -349,7 +469,6 @@ export default function BattleLobbyScreen({ creature, onBattleStart, onCpuBattle
                   </span>
                 </div>
 
-                {/* バトル開始ボタン */}
                 {canStartReady && (
                   <button
                     onClick={handleReady}
@@ -376,6 +495,7 @@ export default function BattleLobbyScreen({ creature, onBattleStart, onCpuBattle
           </div>
         )}
 
+        {/* ルーム参加（既存WebSocket） */}
         {tab === 'join' && (
           <div className="flex flex-col gap-3">
             <div className="flex flex-col gap-1">
@@ -417,7 +537,6 @@ export default function BattleLobbyScreen({ creature, onBattleStart, onCpuBattle
               参加する
             </button>
 
-            {/* 参加後のready */}
             {state.roomCode && tab === 'join' && !isReady && (
               <button
                 onClick={handleReady}
