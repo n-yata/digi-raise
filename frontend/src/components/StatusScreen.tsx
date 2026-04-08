@@ -13,10 +13,14 @@ interface StatusScreenProps {
   onBack: () => void
   onLoad: (saveData: SaveData) => void
   onSelectCreature: (id: string) => void
+  onDeleteCreature: (id: string) => void
   onNewCreature: () => void
 }
 
-export default function StatusScreen({ creature, allCreatures, activeCreatureId, onBack, onLoad, onSelectCreature, onNewCreature }: StatusScreenProps) {
+const MAX_CREATURES = 5
+
+export default function StatusScreen({ creature, allCreatures, activeCreatureId, onBack, onLoad, onSelectCreature, onDeleteCreature, onNewCreature }: StatusScreenProps) {
+  const canAddCreature = allCreatures.length < MAX_CREATURES
   const color = TYPE_COLORS[creature.type]
   const expNeeded = EXP_TO_LEVEL(creature.level)
   const evolutionChecks = getEvolutionProgress(creature)
@@ -196,7 +200,7 @@ export default function StatusScreen({ creature, allCreatures, activeCreatureId,
                   {STAGE_NAMES[c.evolutionStage]}
                 </div>
               </div>
-              {isActive && (
+              {isActive ? (
                 <span
                   className="font-pixel px-2 py-1 rounded"
                   style={{
@@ -209,6 +213,21 @@ export default function StatusScreen({ creature, allCreatures, activeCreatureId,
                 >
                   育成中
                 </span>
+              ) : (
+                <button
+                  onClick={(e) => { e.stopPropagation(); onDeleteCreature(c.id) }}
+                  className="font-pixel px-2 py-1 rounded transition-all active:scale-95"
+                  style={{
+                    fontSize: '0.38rem',
+                    background: 'transparent',
+                    border: '1px solid #ef444466',
+                    color: '#ef4444',
+                    whiteSpace: 'nowrap',
+                    cursor: 'pointer',
+                  }}
+                >
+                  削除
+                </button>
               )}
             </>
           )
@@ -241,15 +260,19 @@ export default function StatusScreen({ creature, allCreatures, activeCreatureId,
         })}
         <button
           onClick={onNewCreature}
+          disabled={!canAddCreature}
           className="w-full py-3 rounded-lg font-pixel transition-all active:scale-95 mt-1"
           style={{
             fontSize: '0.5rem',
             background: 'transparent',
-            border: '1px dashed #4fc3f766',
-            color: '#4fc3f7',
+            border: `1px dashed ${canAddCreature ? '#4fc3f766' : '#ffffff33'}`,
+            color: canAddCreature ? '#4fc3f7' : '#ffffff44',
+            cursor: canAddCreature ? 'pointer' : 'not-allowed',
           }}
         >
-          ＋ 新しいクリーチャーを育てる
+          {canAddCreature
+            ? '＋ 新しいクリーチャーを育てる'
+            : `上限${MAX_CREATURES}体に達しています`}
         </button>
       </div>
 

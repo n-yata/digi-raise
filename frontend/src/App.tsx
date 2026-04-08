@@ -322,6 +322,19 @@ export default function App() {
     setHasExistingSave(false)
   }, [])
 
+  const handleDeleteCreature = useCallback((id: string) => {
+    if (id === activeCreatureId) return
+    const target = creatures.find(c => c.id === id)
+    if (!target) return
+    const label = target.isAlive ? target.name : `${target.name}（墓石）`
+    if (!window.confirm(`${label} を削除しますか？この操作は取り消せません。`)) return
+    setCreatures(prev => {
+      const newCreatures = prev.filter(c => c.id !== id)
+      saveSaveData({ creatures: newCreatures, activeCreatureId: activeCreatureId! })
+      return newCreatures
+    })
+  }, [creatures, activeCreatureId])
+
   const handleSelectCreature = useCallback((id: string) => {
     const target = creatures.find(c => c.id === id)
     if (!target || !target.isAlive) return
@@ -419,6 +432,7 @@ export default function App() {
           onBack={() => setScreen('main')}
           onLoad={handleLoadFromFile}
           onSelectCreature={handleSelectCreature}
+          onDeleteCreature={handleDeleteCreature}
           onNewCreature={() => setScreen('setup')}
         />
       )}
