@@ -68,7 +68,6 @@ export default function BattleLobbyScreen({ creature, onCpuBattleStart, onQrBatt
     def: creature.def,
     spd: creature.spd,
     level: creature.level,
-    customSvg: creature.customSprites?.[creature.evolutionStage],
   }
 
   return (

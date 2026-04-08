@@ -89,7 +89,7 @@ export default function BattleCreatureDisplay({
           type={type as CreatureType}
           stage={evolutionStage as EvolutionStage}
           animState={animState}
-          customSvg={customSvg}
+          customSvg={isOpponent ? undefined : customSvg}
         />
 
         {/* Poison overlay */}

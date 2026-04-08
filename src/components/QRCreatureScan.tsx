@@ -18,20 +18,8 @@ export default function QRCreatureScan({ myCreature, onOpponentScanned, onCancel
   const [mode, setMode] = useState<ScanMode>('choose')
   const [opponent, setOpponent] = useState<CreatureSnapshot | null>(null)
   const [scanError, setScanError] = useState<string | null>(null)
-  const [qrData, setQrData] = useState<string | null>(null)
   const scannerRef = useRef<Html5Qrcode | null>(null)
   const isStoppingRef = useRef(false)
-
-  // QRデータを非同期で生成
-  useEffect(() => {
-    if (mode !== 'show_qr') return
-    let cancelled = false
-    setQrData(null)
-    encodeCreatureForQR(myCreature).then(data => {
-      if (!cancelled) setQrData(data)
-    })
-    return () => { cancelled = true }
-  }, [mode, myCreature])
 
   const stopScanner = async () => {
     if (isStoppingRef.current) return
@@ -70,17 +58,15 @@ export default function QRCreatureScan({ myCreature, onOpponentScanned, onCancel
 
       const onSuccess = (decodedText: string) => {
         if (cancelled) return
-        void (async () => {
-          const parsed = await decodeCreatureFromQR(decodedText)
-          if (!parsed) {
-            setScanError('正しいクリーチャーデータではありません')
-            return
-          }
-          setScanError(null)
-          setOpponent(parsed)
-          void stopScanner()
-          setMode('scanned')
-        })()
+        const parsed = decodeCreatureFromQR(decodedText)
+        if (!parsed) {
+          setScanError('正しいクリーチャーデータではありません')
+          return
+        }
+        setScanError(null)
+        setOpponent(parsed)
+        void stopScanner()
+        setMode('scanned')
       }
 
       const onError = () => {
@@ -188,15 +174,9 @@ export default function QRCreatureScan({ myCreature, onOpponentScanned, onCancel
             あなたのクリーチャーQRコード
           </div>
           <div className="flex justify-center py-2">
-            {qrData ? (
-              <div style={{ background: '#fff', padding: 10, borderRadius: 6 }}>
-                <QRCodeSVG value={qrData} size={280} level="L" />
-              </div>
-            ) : (
-              <div className="font-pixel" style={{ color: '#64748b', fontSize: '0.65rem', padding: 20 }}>
-                QRコード生成中...
-              </div>
-            )}
+            <div style={{ background: '#fff', padding: 10, borderRadius: 6 }}>
+              <QRCodeSVG value={encodeCreatureForQR(myCreature)} size={220} />
+            </div>
           </div>
           <div className="font-pixel mt-2 text-center" style={{ fontSize: '0.65rem', color: '#64748b' }}>
             相手にこのQRを読み取ってもらってください
