@@ -255,8 +255,8 @@ export default function QRCreatureScan({ myCreature, onOpponentScanned, onCancel
                 { label: 'SPD', value: opponent.spd },
               ].map(({ label, value }) => (
                 <div key={label} className="flex flex-col items-center">
-                  <span className="font-pixel" style={{ fontSize: '0.75rem', color: '#64748b' }}>{label}</span>
-                  <span className="font-pixel" style={{ fontSize: '0.7rem', color: '#4fc3f7' }}>{value}</span>
+                  <span className="font-pixel" style={{ fontSize: '0.45rem', color: '#64748b' }}>{label}</span>
+                  <span className="font-pixel" style={{ fontSize: '0.65rem', color: '#4fc3f7' }}>{value}</span>
                 </div>
               ))}
             </div>

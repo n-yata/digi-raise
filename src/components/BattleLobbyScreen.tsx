@@ -102,7 +102,7 @@ export default function BattleLobbyScreen({ creature, onCpuBattleStart, onQrBatt
           あなたのクリーチャー
         </div>
         <div className="flex justify-between items-center">
-          <span className="font-pixel" style={{ fontSize: '0.85rem', color: '#e0e0e0' }}>
+          <span className="font-pixel" style={{ fontSize: '0.7rem', color: '#e0e0e0' }}>
             {creature.name}
           </span>
           <div className="flex gap-3">
@@ -113,8 +113,8 @@ export default function BattleLobbyScreen({ creature, onCpuBattleStart, onQrBatt
               { label: 'SPD', value: creature.spd },
             ].map(({ label, value }) => (
               <div key={label} className="flex flex-col items-center">
-                <span className="font-pixel" style={{ fontSize: '0.75rem', color: '#64748b' }}>{label}</span>
-                <span className="font-pixel" style={{ fontSize: '1rem', color: '#4fc3f7' }}>{value}</span>
+                <span className="font-pixel" style={{ fontSize: '0.45rem', color: '#64748b' }}>{label}</span>
+                <span className="font-pixel" style={{ fontSize: '0.65rem', color: '#4fc3f7' }}>{value}</span>
               </div>
             ))}
           </div>
@@ -154,7 +154,7 @@ export default function BattleLobbyScreen({ creature, onCpuBattleStart, onQrBatt
                 対戦相手（CPU）
               </div>
               <div className="flex justify-between items-center">
-                <span className="font-pixel" style={{ fontSize: '0.85rem', color: '#e0e0e0' }}>
+                <span className="font-pixel" style={{ fontSize: '0.7rem', color: '#e0e0e0' }}>
                   {cpuOpponent.name}
                 </span>
                 <div className="flex gap-3">
@@ -165,8 +165,8 @@ export default function BattleLobbyScreen({ creature, onCpuBattleStart, onQrBatt
                     { label: 'SPD', value: cpuOpponent.spd },
                   ].map(({ label, value }) => (
                     <div key={label} className="flex flex-col items-center">
-                      <span className="font-pixel" style={{ fontSize: '0.75rem', color: '#64748b' }}>{label}</span>
-                      <span className="font-pixel" style={{ fontSize: '1rem', color: '#4fc3f7' }}>{value}</span>
+                      <span className="font-pixel" style={{ fontSize: '0.45rem', color: '#64748b' }}>{label}</span>
+                      <span className="font-pixel" style={{ fontSize: '0.65rem', color: '#4fc3f7' }}>{value}</span>
                     </div>
                   ))}
                 </div>
