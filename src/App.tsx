@@ -362,7 +362,7 @@ export default function App() {
         style={{ background: '#1a1a2e' }}>
         <div className="text-center">
           <div className="text-5xl mb-4 animate-float">🥚</div>
-          <div className="font-pixel" style={{ fontSize: '0.55rem', color: '#4fc3f7' }}>
+          <div className="font-pixel" style={{ fontSize: '0.75rem', color: '#4fc3f7' }}>
             ロード中...
           </div>
         </div>

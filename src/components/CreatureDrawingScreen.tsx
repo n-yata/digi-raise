@@ -71,10 +71,10 @@ export default function CreatureDrawingScreen({
         className="px-4 pt-4 pb-3"
         style={{ borderBottom: `1px solid ${color}33` }}
       >
-        <div className="font-pixel text-center mb-1" style={{ fontSize: '0.7rem', color }}>
+        <div className="font-pixel text-center mb-1" style={{ fontSize: '1rem', color }}>
           {singleStage ? '新しい姿を描こう！' : 'クリーチャーを描こう！'}
         </div>
-        <div className="font-pixel text-center" style={{ fontSize: '0.45rem', color: '#64748b' }}>
+        <div className="font-pixel text-center" style={{ fontSize: '0.65rem', color: '#64748b' }}>
           {singleStage
             ? `${STAGE_NAMES[singleStage]}の姿を描いてください`
             : 'ステージ1〜5の姿を描いてください'}
@@ -82,7 +82,7 @@ export default function CreatureDrawingScreen({
         <div className="flex justify-center mt-2">
           <span
             className="font-pixel px-2 py-0.5 rounded-full"
-            style={{ fontSize: '0.4rem', background: `${color}22`, color, border: `1px solid ${color}44` }}
+            style={{ fontSize: '0.65rem', background: `${color}22`, color, border: `1px solid ${color}44` }}
           >
             {creatureType.toUpperCase()}
           </span>
@@ -103,7 +103,7 @@ export default function CreatureDrawingScreen({
               onClick={() => setActiveStage(stage)}
               className="flex-1 py-1.5 rounded-t font-pixel transition-all"
               style={{
-                fontSize: '0.38rem',
+                fontSize: '0.6rem',
                 background: isActive ? '#0f3460' : 'transparent',
                 border: `1px solid ${isActive ? color : '#334155'}`,
                 borderBottom: isActive ? `1px solid #0f3460` : `1px solid #334155`,
@@ -126,7 +126,7 @@ export default function CreatureDrawingScreen({
       {/* Drawing area */}
       <div className="flex-1 flex flex-col items-center py-4 px-2">
         {/* Stage label */}
-        <div className="font-pixel mb-3" style={{ fontSize: '0.55rem', color }}>
+        <div className="font-pixel mb-3" style={{ fontSize: '0.75rem', color }}>
           ステージ {activeStage} — {STAGE_NAMES[activeStage]}
         </div>
 
@@ -162,7 +162,7 @@ export default function CreatureDrawingScreen({
         </div>
 
         {/* Progress indicator */}
-        <div className="mt-3 font-pixel" style={{ fontSize: '0.4rem', color: '#64748b' }}>
+        <div className="mt-3 font-pixel" style={{ fontSize: '0.65rem', color: '#64748b' }}>
           {drawnCount} / {drawingStages.length} 枚描画済み
         </div>
       </div>
@@ -173,7 +173,7 @@ export default function CreatureDrawingScreen({
           onClick={onSkip}
           className="flex-1 py-3 rounded-xl font-pixel transition-all active:scale-95 hover:brightness-125"
           style={{
-            fontSize: '0.55rem',
+            fontSize: '0.75rem',
             background: '#16213e',
             border: '1px solid #334155',
             color: '#64748b',
@@ -186,7 +186,7 @@ export default function CreatureDrawingScreen({
           onClick={handleComplete}
           className="flex-1 py-3 rounded-xl font-pixel transition-all active:scale-95 hover:brightness-125"
           style={{
-            fontSize: '0.55rem',
+            fontSize: '0.75rem',
             background: `linear-gradient(135deg, ${color}44, ${color}22)`,
             border: `2px solid ${color}`,
             color: '#ffd700',

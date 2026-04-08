@@ -75,7 +75,7 @@ export default function DeathScreen({ creature, hasOtherAliveCreatures, onStartO
         className="w-full max-w-xs px-4 py-4 rounded-xl mb-6 text-center"
         style={{ background: '#16213e', border: '1px solid #1e293b' }}
       >
-        <p className="font-pixel" style={{ fontSize: '0.5rem', color: '#64748b', lineHeight: 2 }}>
+        <p className="font-pixel" style={{ fontSize: '0.7rem', color: '#64748b', lineHeight: 2 }}>
           もっと食べさせてあげれば<br />よかった...💧<br />
           また一緒に旅をしよう。
         </p>
@@ -86,14 +86,14 @@ export default function DeathScreen({ creature, hasOtherAliveCreatures, onStartO
         className="w-full max-w-xs px-4 py-4 rounded-xl mb-6"
         style={{ background: '#16213e', border: `1px solid ${color}33` }}
       >
-        <div className="font-pixel text-center mb-3" style={{ fontSize: '0.55rem', color }}>
+        <div className="font-pixel text-center mb-3" style={{ fontSize: '0.75rem', color }}>
           ── 記録 ──
         </div>
         <div className="grid grid-cols-2 gap-2">
           {achievements.map(({ label, value }) => (
             <div key={label} className="text-center">
-              <div className="font-pixel" style={{ fontSize: '0.4rem', color: '#475569' }}>{label}</div>
-              <div className="font-pixel" style={{ fontSize: '0.6rem', color: '#94a3b8' }}>{value}</div>
+              <div className="font-pixel" style={{ fontSize: '0.9rem', color: '#475569' }}>{label}</div>
+              <div className="font-pixel" style={{ fontSize: '0.85rem', color: '#94a3b8' }}>{value}</div>
             </div>
           ))}
         </div>
@@ -106,7 +106,7 @@ export default function DeathScreen({ creature, hasOtherAliveCreatures, onStartO
               onClick={onGoToCreatureList}
               className="w-full px-8 py-4 rounded-xl font-pixel transition-all active:scale-95 hover:brightness-125 bounce-in"
               style={{
-                fontSize: '0.65rem',
+                fontSize: '0.9rem',
                 background: 'linear-gradient(135deg, #1e3a5f, #0f3460)',
                 border: '2px solid #4fc3f7',
                 color: '#4fc3f7',
@@ -124,12 +124,12 @@ export default function DeathScreen({ creature, hasOtherAliveCreatures, onStartO
             }}
             className="w-full px-8 py-4 rounded-xl font-pixel transition-all active:scale-95 hover:brightness-110 bounce-in"
             style={hasOtherAliveCreatures ? {
-              fontSize: '0.55rem',
+              fontSize: '0.75rem',
               background: '#1a0a0a',
               border: '1px solid #7f1d1d',
               color: '#94a3b8',
             } : {
-              fontSize: '0.65rem',
+              fontSize: '0.9rem',
               background: 'linear-gradient(135deg, #1e3a5f, #0f3460)',
               border: '2px solid #4fc3f7',
               color: '#4fc3f7',

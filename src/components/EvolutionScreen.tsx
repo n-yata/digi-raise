@@ -51,7 +51,7 @@ export default function EvolutionScreen({ creature, evolvedFrom, onContinue }: E
             <div className="text-4xl absolute -top-8 animate-float" style={{ animationDelay: '0.15s' }}>🌟</div>
           </div>
 
-          <div className="font-pixel mb-2" style={{ fontSize: '0.6rem', color: '#64748b' }}>
+          <div className="font-pixel mb-2" style={{ fontSize: '0.85rem', color: '#64748b' }}>
             {TYPE_EMOJIS[creature.type]} {prevName} から...
           </div>
 
@@ -61,7 +61,7 @@ export default function EvolutionScreen({ creature, evolvedFrom, onContinue }: E
           >
             {newName}
             <br />
-            <span style={{ fontSize: '0.7rem', color }}>に進化した！</span>
+            <span style={{ fontSize: '1rem', color }}>に進化した！</span>
           </div>
 
           {/* New creature display */}
@@ -110,8 +110,8 @@ export default function EvolutionScreen({ creature, evolvedFrom, onContinue }: E
               { label: 'ステージ', value: STAGE_NAMES[creature.evolutionStage] },
             ].map(({ label, value }) => (
               <div key={label} className="text-center">
-                <div className="font-pixel" style={{ fontSize: '0.45rem', color: '#64748b' }}>{label}</div>
-                <div className="font-pixel" style={{ fontSize: '0.7rem', color }}>{value}</div>
+                <div className="font-pixel" style={{ fontSize: '0.9rem', color: '#64748b' }}>{label}</div>
+                <div className="font-pixel" style={{ fontSize: '1rem', color }}>{value}</div>
               </div>
             ))}
           </div>
@@ -121,7 +121,7 @@ export default function EvolutionScreen({ creature, evolvedFrom, onContinue }: E
               onClick={onContinue}
               className="px-8 py-4 rounded-xl font-pixel transition-all active:scale-95 hover:brightness-125 bounce-in"
               style={{
-                fontSize: '0.65rem',
+                fontSize: '0.9rem',
                 background: `linear-gradient(135deg, ${color}44, ${color}22)`,
                 border: `2px solid ${color}`,
                 color: '#ffd700',

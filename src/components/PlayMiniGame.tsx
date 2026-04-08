@@ -44,7 +44,7 @@ export default function PlayMiniGame({ creature, onResult }: Props) {
         <div className="text-center mb-2 font-pixel" style={{ fontSize: '0.7rem', color }}>
           🎮 あそぶ！
         </div>
-        <div className="text-center mb-5 font-pixel" style={{ fontSize: '0.5rem', color: '#94a3b8' }}>
+        <div className="text-center mb-5 font-pixel" style={{ fontSize: '0.7rem', color: '#94a3b8' }}>
           {done ? '\u00a0' : 'タップして遊ぼう！'}
         </div>
 

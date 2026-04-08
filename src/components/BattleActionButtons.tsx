@@ -79,7 +79,7 @@ export default function BattleActionButtons({
             <span
               className="font-pixel"
               style={{
-                fontSize: '0.4rem',
+                fontSize: '0.65rem',
                 color: isSelected ? '#fff' : btnDisabled ? '#666' : '#ccc',
                 letterSpacing: '0.03em',
                 textAlign: 'center',

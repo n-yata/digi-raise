@@ -44,7 +44,7 @@ function ActionBtn({ label, icon, onClick, disabled, accent = '#4fc3f7', pulse }
       }}
     >
       <span style={{ fontSize: 22 }}>{icon}</span>
-      <span style={{ fontSize: '0.5rem', color: disabled ? '#666' : '#ccc', letterSpacing: '0.05em' }}>
+      <span style={{ fontSize: '0.7rem', color: disabled ? '#666' : '#ccc', letterSpacing: '0.05em' }}>
         {label}
       </span>
     </button>
@@ -81,7 +81,7 @@ export default function ActionButtons({
             animation: 'evolveGradient 2s linear infinite, hatch 0.6s ease-in-out infinite alternate',
             border: '2px solid #ffd700',
             color: '#111',
-            fontSize: '0.65rem',
+            fontSize: '0.9rem',
             letterSpacing: '0.05em',
             boxShadow: '0 0 24px #ffd70099',
           }}
@@ -111,7 +111,7 @@ export default function ActionButtons({
             animation: 'evolveGradient 2s linear infinite, pulse 1s ease-in-out infinite',
             border: '2px solid #ffd700',
             color: '#111',
-            fontSize: '0.65rem',
+            fontSize: '0.9rem',
             letterSpacing: '0.05em',
             boxShadow: '0 0 20px #ffd70088',
           }}
@@ -123,13 +123,13 @@ export default function ActionButtons({
       {/* Evolution conditions (when can't evolve) */}
       {evolutionProgress.length > 0 && (
         <div className="mb-3 p-2 rounded-lg" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
-          <p style={{ fontSize: '0.5rem', color: '#aaa', marginBottom: 4, letterSpacing: '0.05em' }}>🔒 進化条件</p>
+          <p style={{ fontSize: '0.7rem', color: '#aaa', marginBottom: 4, letterSpacing: '0.05em' }}>🔒 進化条件</p>
           <div className="flex flex-wrap gap-2">
             {evolutionProgress.map((c) => (
               <span
                 key={c.label}
                 style={{
-                  fontSize: '0.45rem',
+                  fontSize: '0.9rem',
                   padding: '2px 6px',
                   borderRadius: 4,
                   background: c.met ? 'rgba(74,222,128,0.2)' : 'rgba(248,113,113,0.2)',

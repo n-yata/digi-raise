@@ -71,7 +71,7 @@ export default function TitleScreen({ hasExistingSave, onNewGame, onContinue }: 
       </div>
 
       {/* Tagline */}
-      <p className="font-pixel text-center mb-8" style={{ fontSize: '0.5rem', color: '#64748b', lineHeight: 2 }}>
+      <p className="font-pixel text-center mb-8" style={{ fontSize: '1rem', color: '#64748b', lineHeight: 2 }}>
         育てて・進化させて・最強へ
       </p>
 
@@ -82,7 +82,7 @@ export default function TitleScreen({ hasExistingSave, onNewGame, onContinue }: 
             onClick={onContinue}
             className="w-full py-4 rounded-lg font-pixel transition-all active:scale-95 hover:brightness-125"
             style={{
-              fontSize: '0.7rem',
+              fontSize: '1rem',
               background: 'linear-gradient(135deg, #1e3a5f, #0f3460)',
               border: '2px solid #4fc3f7',
               color: '#4fc3f7',
@@ -97,7 +97,7 @@ export default function TitleScreen({ hasExistingSave, onNewGame, onContinue }: 
           onClick={onNewGame}
           className="w-full py-4 rounded-lg font-pixel transition-all active:scale-95 hover:brightness-125"
           style={{
-            fontSize: '0.7rem',
+            fontSize: '1rem',
             background: 'linear-gradient(135deg, #3d1a00, #ff6b35cc)',
             border: '2px solid #ff6b35',
             color: '#ffd700',
@@ -110,7 +110,7 @@ export default function TitleScreen({ hasExistingSave, onNewGame, onContinue }: 
       </div>
 
       {/* Footer */}
-      <div className="mt-12 font-pixel text-center" style={{ fontSize: '0.4rem', color: '#2a3a4a' }}>
+      <div className="mt-12 font-pixel text-center" style={{ fontSize: '0.65rem', color: '#2a3a4a' }}>
         © 2026 DigiRaise — タマゴを孵せ！
       </div>
     </div>

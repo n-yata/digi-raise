@@ -41,7 +41,7 @@ export default function CreatureSetup({ onStart, onBack }: CreatureSetupProps) {
         style={{ background: 'linear-gradient(180deg, #0a0a1a 0%, #1a1a2e 100%)' }}
       >
         <div className="text-5xl mb-6 animate-float">🥚</div>
-        <h2 className="font-pixel text-center mb-8" style={{ fontSize: '0.75rem', color: '#ffd700' }}>
+        <h2 className="font-pixel text-center mb-8" style={{ fontSize: '1rem', color: '#ffd700' }}>
           なまえをつけてあげよう
         </h2>
 
@@ -55,7 +55,7 @@ export default function CreatureSetup({ onStart, onBack }: CreatureSetupProps) {
             placeholder="なまえ..."
             className="w-full px-4 py-3 rounded-lg font-pixel text-center outline-none"
             style={{
-              fontSize: '0.75rem',
+              fontSize: '1rem',
               background: '#16213e',
               border: '2px solid #0f3460',
               color: '#e0e0e0',
@@ -63,7 +63,7 @@ export default function CreatureSetup({ onStart, onBack }: CreatureSetupProps) {
             }}
             autoFocus
           />
-          <div className="text-right mt-1" style={{ fontSize: '0.5rem', color: '#64748b' }}>
+          <div className="text-right mt-1" style={{ fontSize: '0.7rem', color: '#64748b' }}>
             {name.length}/12
           </div>
         </div>
@@ -73,7 +73,7 @@ export default function CreatureSetup({ onStart, onBack }: CreatureSetupProps) {
             onClick={onBack}
             className="flex-1 py-3 rounded-lg font-pixel transition-all active:scale-95"
             style={{
-              fontSize: '0.6rem',
+              fontSize: '0.85rem',
               background: '#16213e',
               border: '2px solid #334155',
               color: '#94a3b8',
@@ -86,7 +86,7 @@ export default function CreatureSetup({ onStart, onBack }: CreatureSetupProps) {
             disabled={!name.trim()}
             className="flex-1 py-3 rounded-lg font-pixel transition-all active:scale-95"
             style={{
-              fontSize: '0.6rem',
+              fontSize: '0.85rem',
               background: name.trim() ? 'linear-gradient(135deg, #1e3a5f, #0f3460)' : '#111',
               border: `2px solid ${name.trim() ? '#ffd700' : '#334155'}`,
               color: name.trim() ? '#ffd700' : '#666',
@@ -108,12 +108,12 @@ export default function CreatureSetup({ onStart, onBack }: CreatureSetupProps) {
         {selectedType ? TYPE_EMOJIS[selectedType] : '🥚'}
       </div>
 
-      <h2 className="font-pixel text-center mb-1" style={{ fontSize: '0.75rem', color: '#ffd700' }}>
+      <h2 className="font-pixel text-center mb-1" style={{ fontSize: '1rem', color: '#ffd700' }}>
         「{name}」のタイプを選ぼう
       </h2>
 
       {selectedType && (
-        <p className="font-pixel text-center mb-4" style={{ fontSize: '0.5rem', color: TYPE_COLORS[selectedType] }}>
+        <p className="font-pixel text-center mb-4" style={{ fontSize: '0.7rem', color: TYPE_COLORS[selectedType] }}>
           {TYPE_DESCRIPTIONS[selectedType]}
         </p>
       )}
@@ -136,7 +136,7 @@ export default function CreatureSetup({ onStart, onBack }: CreatureSetupProps) {
               }}
             >
               <span style={{ fontSize: 28 }}>{TYPE_EMOJIS[type]}</span>
-              <span className="font-pixel" style={{ fontSize: '0.5rem', color: isSelected ? color : '#94a3b8' }}>
+              <span className="font-pixel" style={{ fontSize: '0.7rem', color: isSelected ? color : '#94a3b8' }}>
                 {type}
               </span>
             </button>
@@ -149,7 +149,7 @@ export default function CreatureSetup({ onStart, onBack }: CreatureSetupProps) {
           onClick={() => setStep('name')}
           className="flex-1 py-3 rounded-lg font-pixel transition-all active:scale-95"
           style={{
-            fontSize: '0.6rem',
+            fontSize: '0.85rem',
             background: '#16213e',
             border: '2px solid #334155',
             color: '#94a3b8',
@@ -162,7 +162,7 @@ export default function CreatureSetup({ onStart, onBack }: CreatureSetupProps) {
           disabled={!selectedType}
           className="flex-1 py-3 rounded-lg font-pixel transition-all active:scale-95"
           style={{
-            fontSize: '0.6rem',
+            fontSize: '0.85rem',
             background: selectedType ? `linear-gradient(135deg, ${TYPE_COLORS[selectedType]}44, ${TYPE_COLORS[selectedType]}22)` : '#111',
             border: `2px solid ${selectedType ? TYPE_COLORS[selectedType] : '#334155'}`,
             color: selectedType ? '#ffd700' : '#666',

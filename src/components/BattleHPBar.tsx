@@ -22,10 +22,10 @@ export default function BattleHPBar({ label, hp, maxHp, type }: BattleHPBarProps
       style={{ background: '#16213e', border: '1px solid #0f3460' }}
     >
       <div className="flex justify-between items-center mb-1">
-        <span className="font-pixel" style={{ fontSize: '0.5rem', color: '#e0e0e0' }}>
+        <span className="font-pixel" style={{ fontSize: '0.7rem', color: '#e0e0e0' }}>
           {label}
         </span>
-        <span className="font-pixel" style={{ fontSize: '0.45rem', color: '#94a3b8' }}>
+        <span className="font-pixel" style={{ fontSize: '0.65rem', color: '#94a3b8' }}>
           {type.toUpperCase()}
         </span>
       </div>
@@ -43,7 +43,7 @@ export default function BattleHPBar({ label, hp, maxHp, type }: BattleHPBarProps
             }}
           />
         </div>
-        <span className="font-pixel" style={{ fontSize: '0.45rem', color: '#e0e0e0', minWidth: 60, textAlign: 'right' }}>
+        <span className="font-pixel" style={{ fontSize: '0.65rem', color: '#e0e0e0', minWidth: 60, textAlign: 'right' }}>
           {hp} / {maxHp}
         </span>
       </div>

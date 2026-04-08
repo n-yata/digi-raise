@@ -53,7 +53,7 @@ export default function BattleResult({ winner, expGain, happinessChange, onClose
         </div>
 
         {/* メッセージ */}
-        <div className="font-pixel text-center" style={{ fontSize: '0.5rem', color: '#e0e0e0' }}>
+        <div className="font-pixel text-center" style={{ fontSize: '0.7rem', color: '#e0e0e0' }}>
           {message}
         </div>
 
@@ -63,18 +63,18 @@ export default function BattleResult({ winner, expGain, happinessChange, onClose
           style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}
         >
           <div className="flex justify-between items-center">
-            <span className="font-pixel" style={{ fontSize: '0.45rem', color: '#94a3b8' }}>
+            <span className="font-pixel" style={{ fontSize: '0.65rem', color: '#94a3b8' }}>
               EXP獲得
             </span>
-            <span className="font-pixel" style={{ fontSize: '0.55rem', color: '#4fc3f7' }}>
+            <span className="font-pixel" style={{ fontSize: '0.75rem', color: '#4fc3f7' }}>
               +{expGain}
             </span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="font-pixel" style={{ fontSize: '0.45rem', color: '#94a3b8' }}>
+            <span className="font-pixel" style={{ fontSize: '0.65rem', color: '#94a3b8' }}>
               幸福度
             </span>
-            <span className="font-pixel" style={{ fontSize: '0.55rem', color: happinessColor }}>
+            <span className="font-pixel" style={{ fontSize: '0.75rem', color: happinessColor }}>
               {happinessLabel}
             </span>
           </div>
@@ -85,7 +85,7 @@ export default function BattleResult({ winner, expGain, happinessChange, onClose
           onClick={onClose}
           className="w-full py-3 rounded-lg font-pixel transition-all active:scale-95"
           style={{
-            fontSize: '0.55rem',
+            fontSize: '0.75rem',
             background: `linear-gradient(135deg, ${titleColor}33, ${titleColor}22)`,
             border: `2px solid ${titleColor}66`,
             color: titleColor,

@@ -91,7 +91,7 @@ export default function FeedMiniGame({ creature, onDone }: Props) {
         {/* サブテキスト */}
         <div
           className="text-center mb-5 font-pixel"
-          style={{ fontSize: '0.5rem', color: '#94a3b8', minHeight: '1.2em' }}
+          style={{ fontSize: '0.7rem', color: '#94a3b8', minHeight: '1.2em' }}
         >
           {showComplete ? '\u00a0' : 'もぐもぐ中…'}
         </div>

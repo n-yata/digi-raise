@@ -68,7 +68,7 @@ export default function BattleCreatureDisplay({
       <div
         className="font-pixel mb-1"
         style={{
-          fontSize: '0.4rem',
+          fontSize: '0.65rem',
           color: isOpponent ? '#f87171' : '#4ade80',
           textShadow: `0 0 6px ${isOpponent ? '#f8717166' : '#4ade8066'}`,
         }}

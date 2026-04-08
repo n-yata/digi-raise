@@ -53,7 +53,7 @@ export default function TrainingMiniGame({ creature, onResult }: Props) {
         <div className="text-center mb-2 font-pixel" style={{ fontSize: '0.7rem', color }}>
           ⚔️ トレーニング！
         </div>
-        <div className="text-center mb-5 font-pixel" style={{ fontSize: '0.5rem', color: '#94a3b8' }}>
+        <div className="text-center mb-5 font-pixel" style={{ fontSize: '0.7rem', color: '#94a3b8' }}>
           {result ? '\u00a0' : '緑ゾーンでタップ！'}
         </div>
 

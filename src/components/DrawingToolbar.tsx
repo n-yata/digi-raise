@@ -58,7 +58,7 @@ export default function DrawingToolbar({
     >
       {/* Tool selection */}
       <div className="flex flex-col gap-1">
-        <span className="font-pixel" style={{ fontSize: '0.35rem', color: '#64748b' }}>ツール</span>
+        <span className="font-pixel" style={{ fontSize: '0.55rem', color: '#64748b' }}>ツール</span>
         <div className="flex flex-col gap-1">
           {TOOLS.map(t => (
             <button
@@ -67,14 +67,14 @@ export default function DrawingToolbar({
               title={t.label}
               className="flex items-center gap-1 px-2 py-1 rounded transition-all active:scale-95"
               style={{
-                fontSize: '0.5rem',
+                fontSize: '0.7rem',
                 background: tool === t.id ? '#0f3460' : 'transparent',
                 border: `1px solid ${tool === t.id ? '#4fc3f7' : '#334155'}`,
                 color: tool === t.id ? '#4fc3f7' : '#94a3b8',
               }}
             >
               <span style={{ fontSize: '0.9rem' }}>{t.emoji}</span>
-              <span className="font-pixel" style={{ fontSize: '0.38rem' }}>{t.label}</span>
+              <span className="font-pixel" style={{ fontSize: '0.6rem' }}>{t.label}</span>
             </button>
           ))}
         </div>
@@ -82,7 +82,7 @@ export default function DrawingToolbar({
 
       {/* Stroke width */}
       <div className="flex flex-col gap-1">
-        <span className="font-pixel" style={{ fontSize: '0.35rem', color: '#64748b' }}>サイズ</span>
+        <span className="font-pixel" style={{ fontSize: '0.55rem', color: '#64748b' }}>サイズ</span>
         <div className="flex gap-1">
           {STROKE_SIZES.map(s => (
             <button
@@ -91,7 +91,7 @@ export default function DrawingToolbar({
               title={s.label}
               className="flex-1 py-1 rounded font-pixel transition-all active:scale-95"
               style={{
-                fontSize: '0.38rem',
+                fontSize: '0.6rem',
                 background: strokeWidth === s.value ? '#0f3460' : 'transparent',
                 border: `1px solid ${strokeWidth === s.value ? '#4fc3f7' : '#334155'}`,
                 color: strokeWidth === s.value ? '#4fc3f7' : '#94a3b8',
@@ -105,7 +105,7 @@ export default function DrawingToolbar({
 
       {/* Color palette */}
       <div className="flex flex-col gap-1">
-        <span className="font-pixel" style={{ fontSize: '0.35rem', color: '#64748b' }}>色</span>
+        <span className="font-pixel" style={{ fontSize: '0.55rem', color: '#64748b' }}>色</span>
         <div
           className="grid gap-1"
           style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}
@@ -161,7 +161,7 @@ export default function DrawingToolbar({
         onClick={onUndo}
         className="w-full py-1.5 rounded font-pixel transition-all active:scale-95 hover:brightness-125"
         style={{
-          fontSize: '0.4rem',
+          fontSize: '0.65rem',
           background: '#0f3460',
           border: '1px solid #1a4a8a',
           color: '#94a3b8',
