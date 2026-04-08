@@ -37,6 +37,7 @@ export default function QRSignaling({ webrtc, onConnected, onCancel }: QRSignali
   const [clipboardInput, setClipboardInput] = useState('')
   const [connectingElapsed, setConnectingElapsed] = useState(0)
   const scannerRef = useRef<Html5Qrcode | null>(null)
+  const scanHandledRef = useRef(false)
   const connectionTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const connectionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const scannerContainerId = 'qr-scanner'
@@ -58,11 +59,16 @@ export default function QRSignaling({ webrtc, onConnected, onCancel }: QRSignali
     }
   }, [webrtc.connectionState, onConnected])
 
-  const stopScanner = useCallback(() => {
+  const stopScanner = useCallback(async () => {
     if (scannerRef.current) {
-      scannerRef.current.stop().catch(() => { /* ignore */ })
-      scannerRef.current.clear()
+      const scanner = scannerRef.current
       scannerRef.current = null
+      try {
+        await scanner.stop()
+      } catch { /* ignore */ }
+      try {
+        scanner.clear()
+      } catch { /* ignore */ }
     }
   }, [])
 
@@ -122,7 +128,7 @@ export default function QRSignaling({ webrtc, onConnected, onCancel }: QRSignali
 
   /** ゲスト: Offer読み取り後 → Answer生成 → QR表示 */
   const handleGuestScannedOffer = async (encodedOffer: string) => {
-    stopScanner()
+    await stopScanner()
     vibrate(100) // 読み取り成功フィードバック
     try {
       const encodedAnswer = await webrtc.acceptOffer(encodedOffer)
@@ -144,7 +150,7 @@ export default function QRSignaling({ webrtc, onConnected, onCancel }: QRSignali
 
   /** ホスト: Answer読み取り → 接続確立 */
   const handleHostScannedAnswer = async (encodedAnswer: string) => {
-    stopScanner()
+    await stopScanner()
     vibrate(100) // 読み取り成功フィードバック
     setPhase('connecting')
     startConnectionTimer()
@@ -162,6 +168,7 @@ export default function QRSignaling({ webrtc, onConnected, onCancel }: QRSignali
     const container = document.getElementById(scannerContainerId)
     if (!container) return
 
+    scanHandledRef.current = false
     const scanner = new Html5Qrcode(scannerContainerId)
     scannerRef.current = scanner
 
@@ -169,7 +176,15 @@ export default function QRSignaling({ webrtc, onConnected, onCancel }: QRSignali
       { facingMode: 'environment' },
       { fps: 10, qrbox: { width: 250, height: 250 } },
       (decodedText) => {
-        onScan(decodedText)
+        // 重複防止: 1回だけ処理する
+        if (scanHandledRef.current) return
+        scanHandledRef.current = true
+
+        // html5-qrcodeのコールバック内からstop()を直接呼ぶとデッドロックするため
+        // setTimeoutで次のフレームに遅延させる
+        setTimeout(() => {
+          onScan(decodedText)
+        }, 0)
       },
       () => { /* ignore scan failures */ },
     ).catch(() => {
