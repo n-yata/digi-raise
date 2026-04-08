@@ -68,6 +68,7 @@ export default function BattleLobbyScreen({ creature, onCpuBattleStart, onQrBatt
     def: creature.def,
     spd: creature.spd,
     level: creature.level,
+    customSvg: creature.customSprites?.[creature.evolutionStage],
   }
 
   return (
@@ -78,14 +79,14 @@ export default function BattleLobbyScreen({ creature, onCpuBattleStart, onQrBatt
       {/* Header */}
       <div className="px-4 pt-4 pb-3" style={{ borderBottom: '1px solid #0f346044' }}>
         <div className="flex items-center justify-between">
-          <div className="font-pixel" style={{ fontSize: '0.7rem', color: '#4fc3f7' }}>
+          <div className="font-pixel" style={{ fontSize: '1rem', color: '#4fc3f7' }}>
             バトルロビー
           </div>
           <button
             onClick={onCancel}
             className="font-pixel px-3 py-1 rounded transition-all active:scale-95"
             style={{
-              fontSize: '0.45rem',
+              fontSize: '0.65rem',
               background: 'rgba(248,113,113,0.1)',
               border: '1px solid #f8717166',
               color: '#f87171',
@@ -98,11 +99,11 @@ export default function BattleLobbyScreen({ creature, onCpuBattleStart, onQrBatt
 
       {/* 自分のクリーチャー情報 */}
       <div className="mx-4 mt-3 px-3 py-2 rounded-lg" style={{ background: '#16213e', border: '1px solid #0f3460' }}>
-        <div className="font-pixel mb-1" style={{ fontSize: '0.45rem', color: '#64748b' }}>
+        <div className="font-pixel mb-1" style={{ fontSize: '0.65rem', color: '#64748b' }}>
           あなたのクリーチャー
         </div>
         <div className="flex justify-between items-center">
-          <span className="font-pixel" style={{ fontSize: '0.6rem', color: '#e0e0e0' }}>
+          <span className="font-pixel" style={{ fontSize: '0.85rem', color: '#e0e0e0' }}>
             {creature.name}
           </span>
           <div className="flex gap-3">
@@ -113,8 +114,8 @@ export default function BattleLobbyScreen({ creature, onCpuBattleStart, onQrBatt
               { label: 'SPD', value: creature.spd },
             ].map(({ label, value }) => (
               <div key={label} className="flex flex-col items-center">
-                <span className="font-pixel" style={{ fontSize: '0.35rem', color: '#64748b' }}>{label}</span>
-                <span className="font-pixel" style={{ fontSize: '0.5rem', color: '#4fc3f7' }}>{value}</span>
+                <span className="font-pixel" style={{ fontSize: '0.75rem', color: '#64748b' }}>{label}</span>
+                <span className="font-pixel" style={{ fontSize: '1rem', color: '#4fc3f7' }}>{value}</span>
               </div>
             ))}
           </div>
@@ -132,7 +133,7 @@ export default function BattleLobbyScreen({ creature, onCpuBattleStart, onQrBatt
             onClick={() => setTab(t)}
             className="py-2 font-pixel transition-all"
             style={{
-              fontSize: '0.4rem',
+              fontSize: '0.65rem',
               background: tab === t ? '#0f3460' : 'transparent',
               color: tab === t ? '#4fc3f7' : '#64748b',
               border: 'none',
@@ -150,11 +151,11 @@ export default function BattleLobbyScreen({ creature, onCpuBattleStart, onQrBatt
         {tab === 'cpu' && cpuOpponent && (
           <div className="flex flex-col gap-3">
             <div className="px-3 py-3 rounded-lg" style={{ background: '#16213e', border: '1px solid #0f3460' }}>
-              <div className="font-pixel mb-2" style={{ fontSize: '0.45rem', color: '#64748b' }}>
+              <div className="font-pixel mb-2" style={{ fontSize: '0.65rem', color: '#64748b' }}>
                 対戦相手（CPU）
               </div>
               <div className="flex justify-between items-center">
-                <span className="font-pixel" style={{ fontSize: '0.6rem', color: '#e0e0e0' }}>
+                <span className="font-pixel" style={{ fontSize: '0.85rem', color: '#e0e0e0' }}>
                   {cpuOpponent.name}
                 </span>
                 <div className="flex gap-3">
@@ -165,13 +166,13 @@ export default function BattleLobbyScreen({ creature, onCpuBattleStart, onQrBatt
                     { label: 'SPD', value: cpuOpponent.spd },
                   ].map(({ label, value }) => (
                     <div key={label} className="flex flex-col items-center">
-                      <span className="font-pixel" style={{ fontSize: '0.35rem', color: '#64748b' }}>{label}</span>
-                      <span className="font-pixel" style={{ fontSize: '0.5rem', color: '#4fc3f7' }}>{value}</span>
+                      <span className="font-pixel" style={{ fontSize: '0.75rem', color: '#64748b' }}>{label}</span>
+                      <span className="font-pixel" style={{ fontSize: '1rem', color: '#4fc3f7' }}>{value}</span>
                     </div>
                   ))}
                 </div>
               </div>
-              <div className="font-pixel mt-2" style={{ fontSize: '0.4rem', color: '#64748b' }}>
+              <div className="font-pixel mt-2" style={{ fontSize: '0.65rem', color: '#64748b' }}>
                 タイプ: {cpuOpponent.type} / Lv.{cpuOpponent.level}
               </div>
             </div>
@@ -180,7 +181,7 @@ export default function BattleLobbyScreen({ creature, onCpuBattleStart, onQrBatt
               onClick={handleRegenerateCpu}
               className="w-full py-2 rounded-lg font-pixel transition-all active:scale-95"
               style={{
-                fontSize: '0.45rem',
+                fontSize: '0.65rem',
                 background: 'rgba(100, 116, 139, 0.1)',
                 border: '1px solid #64748b44',
                 color: '#64748b',
@@ -194,7 +195,7 @@ export default function BattleLobbyScreen({ creature, onCpuBattleStart, onQrBatt
               onClick={handleCpuBattleStart}
               className="w-full py-3 rounded-lg font-pixel transition-all active:scale-95 animate-pulse"
               style={{
-                fontSize: '0.55rem',
+                fontSize: '0.75rem',
                 background: 'linear-gradient(90deg, #ffd700, #ff8c00, #ffd700)',
                 backgroundSize: '200% 100%',
                 border: '2px solid #ffd700',

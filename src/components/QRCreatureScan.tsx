@@ -132,7 +132,7 @@ export default function QRCreatureScan({ myCreature, onOpponentScanned, onCancel
     fontFamily: 'inherit',
     cursor: 'pointer',
     transition: 'all 0.15s',
-    fontSize: '0.5rem',
+    fontSize: '0.7rem',
   }
 
   // ----- choose -----
@@ -184,7 +184,7 @@ export default function QRCreatureScan({ myCreature, onOpponentScanned, onCancel
     return (
       <div className="flex flex-col gap-3">
         <div style={cardStyle}>
-          <div className="font-pixel mb-2" style={{ fontSize: '0.45rem', color: '#4fc3f7' }}>
+          <div className="font-pixel mb-2" style={{ fontSize: '0.65rem', color: '#4fc3f7' }}>
             あなたのクリーチャーQRコード
           </div>
           <div className="flex justify-center py-2">
@@ -193,12 +193,12 @@ export default function QRCreatureScan({ myCreature, onOpponentScanned, onCancel
                 <QRCodeSVG value={qrData} size={180} level="L" />
               </div>
             ) : (
-              <div className="font-pixel" style={{ color: '#64748b', fontSize: '0.45rem', padding: 20 }}>
+              <div className="font-pixel" style={{ color: '#64748b', fontSize: '0.65rem', padding: 20 }}>
                 QRコード生成中...
               </div>
             )}
           </div>
-          <div className="font-pixel mt-2 text-center" style={{ fontSize: '0.4rem', color: '#64748b' }}>
+          <div className="font-pixel mt-2 text-center" style={{ fontSize: '0.65rem', color: '#64748b' }}>
             相手にこのQRを読み取ってもらってください
           </div>
         </div>
@@ -223,7 +223,7 @@ export default function QRCreatureScan({ myCreature, onOpponentScanned, onCancel
     return (
       <div className="flex flex-col gap-3">
         <div style={cardStyle}>
-          <div className="font-pixel mb-2" style={{ fontSize: '0.45rem', color: '#ffd700' }}>
+          <div className="font-pixel mb-2" style={{ fontSize: '0.65rem', color: '#ffd700' }}>
             相手のQRコードをスキャン
           </div>
           <div
@@ -233,7 +233,7 @@ export default function QRCreatureScan({ myCreature, onOpponentScanned, onCancel
           {scanError && (
             <div
               className="font-pixel mt-2"
-              style={{ fontSize: '0.4rem', color: '#f87171', background: 'rgba(248,113,113,0.1)', padding: '6px 8px', borderRadius: 4 }}
+              style={{ fontSize: '0.65rem', color: '#f87171', background: 'rgba(248,113,113,0.1)', padding: '6px 8px', borderRadius: 4 }}
             >
               {scanError}
             </div>
@@ -260,11 +260,11 @@ export default function QRCreatureScan({ myCreature, onOpponentScanned, onCancel
     return (
       <div className="flex flex-col gap-3">
         <div style={{ ...cardStyle, border: '1px solid #4ade8044' }}>
-          <div className="font-pixel mb-2" style={{ fontSize: '0.45rem', color: '#4ade80' }}>
+          <div className="font-pixel mb-2" style={{ fontSize: '0.65rem', color: '#4ade80' }}>
             スキャン成功！ 対戦相手
           </div>
           <div className="flex justify-between items-center">
-            <span className="font-pixel" style={{ fontSize: '0.6rem', color: '#e0e0e0' }}>
+            <span className="font-pixel" style={{ fontSize: '0.85rem', color: '#e0e0e0' }}>
               {opponent.name}
             </span>
             <div className="flex gap-3">
@@ -275,13 +275,13 @@ export default function QRCreatureScan({ myCreature, onOpponentScanned, onCancel
                 { label: 'SPD', value: opponent.spd },
               ].map(({ label, value }) => (
                 <div key={label} className="flex flex-col items-center">
-                  <span className="font-pixel" style={{ fontSize: '0.35rem', color: '#64748b' }}>{label}</span>
-                  <span className="font-pixel" style={{ fontSize: '0.5rem', color: '#4fc3f7' }}>{value}</span>
+                  <span className="font-pixel" style={{ fontSize: '0.75rem', color: '#64748b' }}>{label}</span>
+                  <span className="font-pixel" style={{ fontSize: '0.7rem', color: '#4fc3f7' }}>{value}</span>
                 </div>
               ))}
             </div>
           </div>
-          <div className="font-pixel mt-1" style={{ fontSize: '0.4rem', color: '#64748b' }}>
+          <div className="font-pixel mt-1" style={{ fontSize: '0.65rem', color: '#64748b' }}>
             タイプ: {opponent.type} / Lv.{opponent.level ?? 1}
           </div>
         </div>
@@ -290,7 +290,7 @@ export default function QRCreatureScan({ myCreature, onOpponentScanned, onCancel
           onClick={() => onOpponentScanned(opponent)}
           className="w-full py-3 rounded-lg font-pixel transition-all active:scale-95 animate-pulse"
           style={{
-            fontSize: '0.55rem',
+            fontSize: '0.75rem',
             background: 'linear-gradient(90deg, #ffd700, #ff8c00, #ffd700)',
             backgroundSize: '200% 100%',
             border: '2px solid #ffd700',
