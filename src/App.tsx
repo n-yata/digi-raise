@@ -16,9 +16,6 @@ import PlayMiniGame from './components/PlayMiniGame'
 import FeedMiniGame from './components/FeedMiniGame'
 import BattleLobbyScreen from './components/BattleLobbyScreen'
 import BattleScreen from './components/BattleScreen'
-import type { P2PBattleChannel } from './components/BattleScreen'
-import { useWebRTC } from './hooks/useWebRTC'
-import { useBattleP2P } from './hooks/useBattleP2P'
 import CreatureDrawingScreen from './components/CreatureDrawingScreen'
 import { feedCreature, trainCreature, playWithCreature, toggleSleep } from './utils/gameLogic'
 
@@ -45,20 +42,6 @@ export default function App() {
   const [battleRole, setBattleRole] = useState<BattleRole | null>(null)
   const [battleOpponent, setBattleOpponent] = useState<CreatureSnapshot | null>(null)
   const [battleSeed, setBattleSeed] = useState<number>(0)
-  const battleRoomCode = ''
-
-  // P2P battle state（App.tsxでhookを管理し、画面遷移をまたいで接続を維持）
-  const webrtc = useWebRTC()
-  const p2p = useBattleP2P(webrtc)
-  const [isP2PBattle, setIsP2PBattle] = useState(false)
-
-  // P2PBattleChannel: p2pフックのlastEventをリアクティブに追跡
-  const p2pChannel: P2PBattleChannel | undefined = isP2PBattle ? {
-    sendAction: p2p.sendAction,
-    lastEvent: p2p.lastEvent,
-    disconnect: p2p.disconnect,
-  } : undefined
-
   const creatureRef = useRef<Creature | null>(null)
   const devModeRef = useRef(devMode)
   const activeCreatureIdRef = useRef<string | null>(null)
@@ -276,32 +259,21 @@ export default function App() {
     setScreen('battle_lobby')
   }, [])
 
-  const [isCpuBattle, setIsCpuBattle] = useState(false)
-
-  const handleBattleStart = useCallback((role: BattleRole, opponentCreature: CreatureSnapshot, seed: number) => {
-    setBattleRole(role)
-    setBattleOpponent(opponentCreature)
-    setBattleSeed(seed)
-    setIsCpuBattle(false)
-    setIsP2PBattle(false)
-    setScreen('battle')
-  }, [])
+  const [battleMode, setBattleMode] = useState<'cpu' | 'qr'>('cpu')
 
   const handleCpuBattleStart = useCallback((opponentCreature: CreatureSnapshot, seed: number) => {
     setBattleRole('host')
     setBattleOpponent(opponentCreature)
     setBattleSeed(seed)
-    setIsCpuBattle(true)
-    setIsP2PBattle(false)
+    setBattleMode('cpu')
     setScreen('battle')
   }, [])
 
-  const handleP2PBattleStart = useCallback((role: BattleRole, opponentCreature: CreatureSnapshot, seed: number) => {
-    setBattleRole(role)
+  const handleQrBattleStart = useCallback((opponentCreature: CreatureSnapshot, seed: number) => {
+    setBattleRole('host')
     setBattleOpponent(opponentCreature)
     setBattleSeed(seed)
-    setIsCpuBattle(false)
-    setIsP2PBattle(true)
+    setBattleMode('qr')
     setScreen('battle')
   }, [])
 
@@ -474,12 +446,9 @@ export default function App() {
       {screen === 'battle_lobby' && activeCreature && (
         <BattleLobbyScreen
           creature={activeCreature}
-          onBattleStart={handleBattleStart}
           onCpuBattleStart={handleCpuBattleStart}
-          onP2PBattleStart={handleP2PBattleStart}
+          onQrBattleStart={handleQrBattleStart}
           onCancel={() => setScreen('main')}
-          webrtc={webrtc}
-          p2p={p2p}
         />
       )}
 
@@ -500,10 +469,8 @@ export default function App() {
           opponentCreature={battleOpponent}
           role={battleRole}
           seed={battleSeed}
-          roomCode={battleRoomCode}
           onBattleEnd={handleBattleEnd}
-          isCpuBattle={isCpuBattle}
-          p2pChannel={p2pChannel}
+          battleMode={battleMode}
         />
       )}
 

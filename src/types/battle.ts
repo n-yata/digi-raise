@@ -34,18 +34,12 @@ export interface BattleState {
   error: string | null
 }
 
-// WebSocketメッセージ型（サーバー→クライアント）
+// バトルイベント型（ローカルバトルで使用）
 export type ServerEvent =
-  | { event: 'room_created'; roomCode: string }
-  | { event: 'room_joined'; roomCode: string; hostCreature: CreatureSnapshot }
-  | { event: 'opponent_joined'; opponentCreature: CreatureSnapshot }
   | { event: 'battle_start'; seed: number; yourRole: BattleRole }
-  | { event: 'actions_locked'; hostAction: string; guestAction: string; seed: number }
   | { event: 'turn_resolved'; turnNumber: number }
   | { event: 'battle_end'; winner: 'host' | 'guest' | 'draw' }
-  | { event: 'opponent_disconnected' }
   | { event: 'error'; code: string; message: string }
-  | { event: 'pong' }
 
 export interface BattleResult {
   result: 'win' | 'lose' | 'draw'

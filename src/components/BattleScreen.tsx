@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
-import type { CreatureSnapshot, BattleRole, BattleResult, BattleAction, ServerEvent } from '../types/battle'
-import { useBattleWebSocket } from '../hooks/useBattleWebSocket'
+import type { CreatureSnapshot, BattleRole, BattleResult, BattleAction } from '../types/battle'
 import { useBattleState } from '../hooks/useBattleState'
 import { resolveTurn } from '../utils/battleLogic'
 import { selectCpuAction } from '../utils/cpuBattle'
@@ -10,23 +9,13 @@ import BattleResultModal from './BattleResult'
 import BattleCreatureDisplay from './BattleCreatureDisplay'
 import type { BattleEffectType } from './BattleCreatureDisplay'
 
-/** P2Pバトル用の通信インターフェース */
-export interface P2PBattleChannel {
-  sendAction: (action: BattleAction) => void
-  lastEvent: ServerEvent | null
-  disconnect: () => void
-}
-
 interface BattleScreenProps {
   myCreature: CreatureSnapshot
   opponentCreature: CreatureSnapshot
   role: BattleRole
   seed: number
-  roomCode: string
   onBattleEnd: (result: BattleResult) => void
-  isCpuBattle?: boolean
-  /** P2Pバトル時に外部から渡す通信チャネル */
-  p2pChannel?: P2PBattleChannel
+  battleMode: 'cpu' | 'qr'
 }
 
 const MAX_TURNS = 10
@@ -36,13 +25,9 @@ export default function BattleScreen({
   opponentCreature,
   role,
   seed: initialSeed,
-  roomCode,
   onBattleEnd,
-  isCpuBattle = false,
-  p2pChannel,
+  battleMode,
 }: BattleScreenProps) {
-  const isP2PBattle = !!p2pChannel
-  const ws = useBattleWebSocket()
   const { state, processEvent, selectAction, addLog, updateHp, updateEffects } = useBattleState()
 
   const [localMyHp, setLocalMyHp] = useState(myCreature.hp)
@@ -74,7 +59,6 @@ export default function BattleScreen({
 
   const myCreatureRef = useRef<CreatureSnapshot>({ ...myCreature })
   const opponentCreatureRef = useRef<CreatureSnapshot>({ ...opponentCreature })
-  const currentSeedRef = useRef(initialSeed)
   const roleRef = useRef(role)
 
   // エフェクトをトリガーする共通関数
@@ -92,16 +76,14 @@ export default function BattleScreen({
     prevMyHp: number,
     prevOpponentHp: number,
   ) => {
-    // 自分のアクションに対する相手へのエフェクト
     const opponentDmg = prevOpponentHp - resolution.opponentHpAfter
     const myDmg = prevMyHp - resolution.myHpAfter
 
-    // 相手のエフェクト（自分が与えた）
     if (myAction === 'attack') {
       setOpponentEffect('hit')
       if (opponentAction === 'guard' && opponentDmg <= 0) {
         setOpponentEffect('guard')
-        setOpponentDamageNumber(0) // GUARD!表示
+        setOpponentDamageNumber(0)
       } else {
         setOpponentDamageNumber(opponentDmg > 0 ? opponentDmg : null)
       }
@@ -113,7 +95,6 @@ export default function BattleScreen({
           setOpponentDamageNumber(opponentDmg)
         }, 300)
       }
-      // Water type heal
       if (myCreatureRef.current.type === 'Water' && resolution.myHpAfter > prevMyHp) {
         setTimeout(() => {
           setMyEffect('heal')
@@ -123,11 +104,10 @@ export default function BattleScreen({
     } else if (myAction === 'guard') {
       setMyEffect('guard')
       if (myDmg <= 0) {
-        setMyDamageNumber(0) // GUARD!
+        setMyDamageNumber(0)
       }
     }
 
-    // 自分へのエフェクト（相手が与えた）
     if (opponentAction === 'attack') {
       setTimeout(() => {
         setMyEffect('hit')
@@ -142,13 +122,11 @@ export default function BattleScreen({
       }, 400)
     }
 
-    // 毒・麻痺の持続表示
     setMyPoisonActive(resolution.myPoisonTurns > 0)
     setOpponentPoisonActive(resolution.opponentPoisonTurns > 0)
     setMyIsParalyzed(resolution.myParalyzed)
     setOpponentIsParalyzed(resolution.opponentParalyzed)
 
-    // エフェクトクリア
     setTimeout(() => {
       setMyEffect(null)
       setOpponentEffect(null)
@@ -157,128 +135,15 @@ export default function BattleScreen({
     }, 1200)
   }, [])
 
-  // CPU戦・P2P戦の初期化
+  // バトル初期化
   const battleInitialized = useRef(false)
   useEffect(() => {
     if (battleInitialized.current) return
-    if (isCpuBattle || isP2PBattle) {
-      battleInitialized.current = true
-      processEvent({ event: 'battle_start', seed: initialSeed, yourRole: role })
-    }
-  }, [isCpuBattle, isP2PBattle, initialSeed, role, processEvent])
+    battleInitialized.current = true
+    processEvent({ event: 'battle_start', seed: initialSeed, yourRole: role })
+  }, [initialSeed, role, processEvent])
 
-  // WebSocket接続（WebSocketオンライン戦のみ。CPU戦・P2P戦では不要）
-  useEffect(() => {
-    if (isCpuBattle || isP2PBattle) return
-    ws.connect(myCreature as unknown as Parameters<typeof ws.connect>[0]).catch(() => {
-      // ignore
-    })
-    return () => {
-      ws.disconnect()
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  // オンラインイベントの共通処理（WS / P2P 両方で使う）
-  const handleOnlineEvent = useCallback((ev: ServerEvent) => {
-    processEvent(ev)
-
-    if (ev.event === 'actions_locked') {
-      const hostAction = ev.hostAction as BattleAction
-      const guestAction = ev.guestAction as BattleAction
-      const myAction = roleRef.current === 'host' ? hostAction : guestAction
-      const opponentAction = roleRef.current === 'host' ? guestAction : hostAction
-
-      currentSeedRef.current = ev.seed
-
-      const prevMyHp = myCreatureRef.current.hp
-      const prevOpponentHp = opponentCreatureRef.current.hp
-
-      const resolution = resolveTurn(
-        myCreatureRef.current,
-        opponentCreatureRef.current,
-        myAction,
-        opponentAction,
-        roleRef.current,
-        ev.seed,
-        effectsRef.current
-      )
-
-      // エフェクトトリガー
-      triggerEffects(myAction, opponentAction, resolution, prevMyHp, prevOpponentHp)
-
-      // HP更新
-      setLocalMyHp(resolution.myHpAfter)
-      setLocalOpponentHp(resolution.opponentHpAfter)
-      myCreatureRef.current = { ...myCreatureRef.current, hp: resolution.myHpAfter }
-      opponentCreatureRef.current = { ...opponentCreatureRef.current, hp: resolution.opponentHpAfter }
-      updateHp(resolution.myHpAfter, resolution.opponentHpAfter)
-
-      // エフェクト更新
-      effectsRef.current = {
-        myPoisonTurns: resolution.myPoisonTurns,
-        opponentPoisonTurns: resolution.opponentPoisonTurns,
-        myParalyzed: resolution.myParalyzed,
-        opponentParalyzed: resolution.opponentParalyzed,
-        myDefBuff: resolution.myDefBuff,
-        opponentDefBuff: resolution.opponentDefBuff,
-        specialCooldown: myAction === 'special' ? 3 : Math.max(0, effectsRef.current.specialCooldown - 1),
-        opponentSpecialCooldown: opponentAction === 'special' ? 3 : Math.max(0, effectsRef.current.opponentSpecialCooldown - 1),
-      }
-      updateEffects({
-        myPoisonTurns: resolution.myPoisonTurns,
-        opponentPoisonTurns: resolution.opponentPoisonTurns,
-        myParalyzed: resolution.myParalyzed,
-        myDefBuff: resolution.myDefBuff,
-      })
-
-      // ログ追加
-      resolution.logMessages.forEach(msg => addLog(msg))
-
-      // アクションボタンリセット（次ターン用）
-      setActionButtonKey(k => k + 1)
-    }
-
-    if (ev.event === 'battle_end') {
-      const myWins = ev.winner === 'draw' ? false : (ev.winner === 'host') === (role === 'host')
-      const isDraw = ev.winner === 'draw'
-      const result: BattleResult = {
-        result: isDraw ? 'draw' : myWins ? 'win' : 'lose',
-        expGain: myWins ? 50 + (opponentCreature.level ?? 1) * 5 : isDraw ? 25 : 10,
-        happinessChange: myWins ? 20 : isDraw ? 0 : -10,
-        hpAfterBattle: localMyHp,
-      }
-      setBattleResult(result)
-      setShowResult(true)
-    }
-
-    // 切断時: 相手の勝利扱いではなく自分の勝利（既存仕様と同じ）
-    if (ev.event === 'opponent_disconnected') {
-      addLog('相手が切断しました')
-      const result: BattleResult = {
-        result: 'win',
-        expGain: 50 + (opponentCreature.level ?? 1) * 5,
-        happinessChange: 20,
-        hpAfterBattle: localMyHp,
-      }
-      setBattleResult(result)
-      setTimeout(() => setShowResult(true), 800)
-    }
-  }, [processEvent, addLog, updateHp, updateEffects, role, opponentCreature.level, localMyHp, triggerEffects])
-
-  // WebSocketイベント処理
-  useEffect(() => {
-    if (!ws.lastEvent || isP2PBattle) return
-    handleOnlineEvent(ws.lastEvent)
-  }, [ws.lastEvent, isP2PBattle, handleOnlineEvent])
-
-  // P2Pイベント処理
-  useEffect(() => {
-    if (!p2pChannel?.lastEvent) return
-    handleOnlineEvent(p2pChannel.lastEvent)
-  }, [p2pChannel?.lastEvent, handleOnlineEvent])
-
-  // CPU戦: プレイヤーのアクション選択後にCPUアクションを決定してターン解決
+  // ローカルターン解決（CPU戦・QR戦共通）
   const cpuTurnRef = useRef(0)
   const resolveCpuTurn = useCallback((myAction: BattleAction) => {
     const cpuAction = selectCpuAction(effectsRef.current.opponentSpecialCooldown)
@@ -298,17 +163,14 @@ export default function BattleScreen({
       effectsRef.current
     )
 
-    // エフェクトトリガー
     triggerEffects(myAction, cpuAction, resolution, prevMyHp, prevOpponentHp)
 
-    // HP更新
     setLocalMyHp(resolution.myHpAfter)
     setLocalOpponentHp(resolution.opponentHpAfter)
     myCreatureRef.current = { ...myCreatureRef.current, hp: resolution.myHpAfter }
     opponentCreatureRef.current = { ...opponentCreatureRef.current, hp: resolution.opponentHpAfter }
     updateHp(resolution.myHpAfter, resolution.opponentHpAfter)
 
-    // エフェクト更新
     effectsRef.current = {
       myPoisonTurns: resolution.myPoisonTurns,
       opponentPoisonTurns: resolution.opponentPoisonTurns,
@@ -326,13 +188,9 @@ export default function BattleScreen({
       myDefBuff: resolution.myDefBuff,
     })
 
-    // ログ追加
     resolution.logMessages.forEach(msg => addLog(msg))
-
-    // アクションボタンリセット
     setActionButtonKey(k => k + 1)
 
-    // バトル終了判定
     const turnNumber = cpuTurnRef.current
     if (resolution.myHpAfter <= 0 || resolution.opponentHpAfter <= 0 || turnNumber >= MAX_TURNS) {
       let winner: 'me' | 'opponent' | 'draw'
@@ -343,7 +201,6 @@ export default function BattleScreen({
       } else if (resolution.myHpAfter <= 0) {
         winner = 'opponent'
       } else {
-        // 最大ターン到達: HP残量比較
         winner = resolution.myHpAfter > resolution.opponentHpAfter ? 'me'
           : resolution.myHpAfter < resolution.opponentHpAfter ? 'opponent'
           : 'draw'
@@ -360,22 +217,12 @@ export default function BattleScreen({
       return
     }
 
-    // 次のターンへ: turn_resolvedイベントでアクションをクリアしフェーズをselectingに戻す
     processEvent({ event: 'turn_resolved', turnNumber: cpuTurnRef.current })
   }, [initialSeed, updateHp, updateEffects, addLog, opponentCreature.level, processEvent, triggerEffects])
 
   const handleSelectAction = (action: BattleAction) => {
     selectAction(action)
-    if (isCpuBattle) {
-      // CPU戦: 少し遅延させてターン解決（演出用）
-      setTimeout(() => resolveCpuTurn(action), 500)
-    } else if (isP2PBattle && p2pChannel) {
-      // P2P戦: DataChannel経由でアクション送信
-      p2pChannel.sendAction(action)
-    } else {
-      // WebSocket戦
-      ws.sendAction(roomCode, action)
-    }
+    setTimeout(() => resolveCpuTurn(action), 500)
   }
 
   const handleResultClose = () => {
@@ -384,8 +231,10 @@ export default function BattleScreen({
     }
   }
 
-  const isSelecting = isCpuBattle ? (state.phase === 'selecting' && !showResult) : state.phase === 'selecting'
+  const isSelecting = state.phase === 'selecting' && !showResult
   const recentLogs = state.battleLog.slice(-5)
+
+  const modeLabel = battleMode === 'cpu' ? 'CPUバトル' : 'QRバトル'
 
   return (
     <div
@@ -396,22 +245,8 @@ export default function BattleScreen({
       <div className="px-4 pt-3 pb-2 flex items-center justify-between" style={{ borderBottom: '1px solid #0f346044' }}>
         <div className="flex items-center gap-2">
           <div className="font-pixel" style={{ fontSize: '0.55rem', color: '#4fc3f7' }}>
-            ⚔️ {isCpuBattle ? 'CPUバトル' : isP2PBattle ? 'P2Pバトル' : 'バトル'} ターン {state.currentTurn + 1}
+            ⚔️ {modeLabel} ターン {state.currentTurn + 1}
           </div>
-          {/* P2P接続インジケーター */}
-          {isP2PBattle && (
-            <div
-              className="rounded-full"
-              title="P2P接続状態"
-              style={{
-                width: 8,
-                height: 8,
-                background: p2pChannel?.lastEvent?.event === 'opponent_disconnected' ? '#f87171' : '#4ade80',
-                boxShadow: p2pChannel?.lastEvent?.event === 'opponent_disconnected' ? 'none' : '0 0 6px #4ade80',
-                flexShrink: 0,
-              }}
-            />
-          )}
         </div>
         <div className="flex items-center gap-2">
           {state.myParalyzed && (
@@ -439,7 +274,7 @@ export default function BattleScreen({
         />
       </div>
 
-      {/* バトルフィールド: 両者のクリーチャー対面表示 */}
+      {/* バトルフィールド */}
       <div
         className="mx-4 mt-2 relative flex items-center justify-between px-4"
         style={{
@@ -448,7 +283,6 @@ export default function BattleScreen({
           borderRadius: 12,
         }}
       >
-        {/* 自分のクリーチャー（左側） */}
         <div className="flex-1" />
         <div style={{ transform: 'scale(0.75)', transformOrigin: 'center' }}>
           <BattleCreatureDisplay
@@ -464,7 +298,6 @@ export default function BattleScreen({
           />
         </div>
 
-        {/* VS divider */}
         <div
           className="font-pixel mx-2"
           style={{
@@ -477,7 +310,6 @@ export default function BattleScreen({
           VS
         </div>
 
-        {/* 対戦相手のクリーチャー（右側） */}
         <div style={{ transform: 'scale(0.75)', transformOrigin: 'center' }}>
           <BattleCreatureDisplay
             name={opponentCreature.name}
@@ -532,12 +364,10 @@ export default function BattleScreen({
           type={myCreature.type}
         />
 
-        {/* フェーズ表示 */}
         <div className="font-pixel text-center" style={{ fontSize: '0.45rem', color: '#64748b' }}>
           {isSelecting ? 'アクションを選んでください' : state.phase === 'resolving' ? '解決中...' : state.phase === 'finished' ? 'バトル終了' : '待機中...'}
         </div>
 
-        {/* アクションボタン */}
         <BattleActionButtons
           key={actionButtonKey}
           onSelect={handleSelectAction}

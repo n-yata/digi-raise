@@ -105,34 +105,11 @@ export function useBattleState() {
 
   const processEvent = useCallback((event: ServerEvent) => {
     switch (event.event) {
-      case 'room_created':
-        dispatch({ type: 'SET_ROOM_CODE', payload: event.roomCode })
-        dispatch({ type: 'SET_PHASE', payload: 'waiting' })
-        break
-
-      case 'room_joined':
-        dispatch({ type: 'SET_ROOM_CODE', payload: event.roomCode })
-        dispatch({ type: 'SET_PHASE', payload: 'waiting' })
-        break
-
-      case 'opponent_joined':
-        dispatch({ type: 'SET_OPPONENT_CREATURE', payload: event.opponentCreature })
-        dispatch({ type: 'SET_PHASE', payload: 'ready' })
-        break
-
       case 'battle_start':
         dispatch({ type: 'SET_ROLE', payload: event.yourRole })
         dispatch({ type: 'SET_PHASE', payload: 'selecting' })
         dispatch({ type: 'ADD_LOG', payload: 'バトル開始！' })
         break
-
-      case 'actions_locked': {
-        const hostAction = event.hostAction as BattleAction
-        const guestAction = event.guestAction as BattleAction
-        dispatch({ type: 'SET_OPPONENT_ACTION', payload: state.role === 'host' ? guestAction : hostAction })
-        dispatch({ type: 'SET_PHASE', payload: 'resolving' })
-        break
-      }
 
       case 'turn_resolved':
         dispatch({ type: 'INCREMENT_TURN' })
@@ -152,11 +129,6 @@ export function useBattleState() {
         dispatch({ type: 'SET_WINNER', payload: winner })
         break
       }
-
-      case 'opponent_disconnected':
-        dispatch({ type: 'SET_ERROR', payload: '相手が切断しました' })
-        dispatch({ type: 'SET_WINNER', payload: 'me' })
-        break
 
       case 'error':
         dispatch({ type: 'SET_ERROR', payload: event.message })
