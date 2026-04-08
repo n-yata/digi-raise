@@ -224,7 +224,7 @@ export default function CreatureSprite({ type, stage, animState, customSvg }: Cr
       {/* Main sprite */}
       <div className={`transition-all duration-300 ${getAnimClass()}`}>
         {customSvg ? (
-          customSvg.startsWith('data:image/png;base64,') ? (
+          customSvg.startsWith('data:image/') ? (
             // QR経由の対戦相手データ: imgタグで安全にレンダリング
             <img
               src={customSvg}
