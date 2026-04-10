@@ -82,3 +82,48 @@ onBattleStart: () => {
   tryTransitionToBattle()  // ← ここでも呼ぶ
 },
 ```
+
+---
+
+## 条件付き props で機能拡張前のコードが新機能を潰す
+
+### 現象
+
+オンラインバトルで相手の手書きクリーチャー画像が表示されなかった。バックエンドのデータ、フロントエンドの受信処理、型定義を全て確認しても問題が見つからず、長時間の調査になった。
+
+### 原因
+
+`BattleCreatureDisplay.tsx` に以下のコードがあった:
+
+```typescript
+// QR バトル時代の名残：相手の画像データがなかったため undefined に固定していた
+customSvg={isOpponent ? undefined : customSvg}
+```
+
+オンラインバトルで相手の `customSvg` を props に渡しても、コンポーネント内部で `isOpponent` の場合は **強制的に `undefined` に上書き** されていた。
+
+### 教訓
+
+1. **三項演算子で props を潰すパターンは危険**。機能拡張時に見落としやすい。条件付きで props を無効化する場合はコメントで理由を明記する
+2. **バグ調査はデータの流れの最下流（表示コンポーネント）から逆順に辿る** のが効率的。今回はバックエンド→WebSocket→状態管理→... と上流から調査したため遠回りになった
+3. **`grep` で props 名を検索して、全ての受け渡し箇所を確認する** のが最速。`customSvg` で検索すればすぐに `isOpponent ? undefined : customSvg` が見つかった
+
+---
+
+## PWA の Service Worker キャッシュが更新を妨げる
+
+### 現象
+
+コードを修正してデプロイしたのに、ブラウザに反映されない。`Ctrl+Shift+R`（ハードリロード）しても古いバンドルが表示される。
+
+### 原因
+
+PWA の Service Worker がキャッシュしたバンドルを返し続ける。通常のハードリロードでは Service Worker のキャッシュは消えない。
+
+### 対処
+
+1. DevTools (F12) → **Application** → **Service Workers** → **「Unregister」** をクリック
+2. **Application** → **Storage** → **「Clear site data」** をクリック
+3. ページをリロード
+
+開発中は Application → Service Workers → **「Update on reload」** にチェックを入れておくと毎回最新のバンドルが使われる。
