@@ -8,6 +8,7 @@ import BattleActionButtons from './BattleActionButtons'
 import BattleResultModal from './BattleResult'
 import BattleCreatureDisplay from './BattleCreatureDisplay'
 import type { BattleEffectType } from './BattleCreatureDisplay'
+import type { UseBattleWebSocketReturn } from '../hooks/useBattleWebSocket'
 
 interface BattleScreenProps {
   myCreature: CreatureSnapshot
@@ -15,7 +16,13 @@ interface BattleScreenProps {
   role: BattleRole
   seed: number
   onBattleEnd: (result: BattleResult) => void
-  battleMode: 'cpu' | 'qr'
+  battleMode: 'cpu' | 'qr' | 'online'
+  roomCode?: string
+  ws?: UseBattleWebSocketReturn
+  // オンラインモード: App.tsx が actions_locked を受け取ったときに呼ぶハンドラを登録するコールバック
+  onRegisterActionsLockedHandler?: (
+    handler: (hostAction: string, guestAction: string, seed: number, turnNumber: number) => void
+  ) => void
 }
 
 const MAX_TURNS = 10
@@ -27,6 +34,9 @@ export default function BattleScreen({
   seed: initialSeed,
   onBattleEnd,
   battleMode,
+  roomCode,
+  ws,
+  onRegisterActionsLockedHandler,
 }: BattleScreenProps) {
   const { state, processEvent, selectAction, addLog, updateHp, updateEffects } = useBattleState()
 
@@ -35,6 +45,10 @@ export default function BattleScreen({
   const [showResult, setShowResult] = useState(false)
   const [battleResult, setBattleResult] = useState<BattleResult | null>(null)
   const [actionButtonKey, setActionButtonKey] = useState(0)
+
+  // オンラインモード: アクション選択済みフラグ・切断通知
+  const [myActionSent, setMyActionSent] = useState(false)
+  const [disconnectCountdown, setDisconnectCountdown] = useState<number | null>(null)
 
   // エフェクト状態
   const [myEffect, setMyEffect] = useState<BattleEffectType>(null)
@@ -135,21 +149,13 @@ export default function BattleScreen({
     }, 1200)
   }, [])
 
-  // バトル初期化
-  const battleInitialized = useRef(false)
-  useEffect(() => {
-    if (battleInitialized.current) return
-    battleInitialized.current = true
-    processEvent({ event: 'battle_start', seed: initialSeed, yourRole: role })
-  }, [initialSeed, role, processEvent])
-
-  // ローカルターン解決（CPU戦・QR戦共通）
-  const cpuTurnRef = useRef(0)
-  const resolveCpuTurn = useCallback((myAction: BattleAction) => {
-    const cpuAction = selectCpuAction(effectsRef.current.opponentSpecialCooldown)
-    const seed = initialSeed + cpuTurnRef.current * 1000 + Date.now() % 1000
-    cpuTurnRef.current++
-
+  // ターン解決ロジック（共通）
+  const resolveOneTurn = useCallback((
+    myAction: BattleAction,
+    opponentAction: BattleAction,
+    seed: number,
+    turnNumber: number,
+  ) => {
     const prevMyHp = myCreatureRef.current.hp
     const prevOpponentHp = opponentCreatureRef.current.hp
 
@@ -157,13 +163,13 @@ export default function BattleScreen({
       myCreatureRef.current,
       opponentCreatureRef.current,
       myAction,
-      cpuAction,
+      opponentAction,
       roleRef.current,
       seed,
       effectsRef.current
     )
 
-    triggerEffects(myAction, cpuAction, resolution, prevMyHp, prevOpponentHp)
+    triggerEffects(myAction, opponentAction, resolution, prevMyHp, prevOpponentHp)
 
     setLocalMyHp(resolution.myHpAfter)
     setLocalOpponentHp(resolution.opponentHpAfter)
@@ -179,7 +185,7 @@ export default function BattleScreen({
       myDefBuff: resolution.myDefBuff,
       opponentDefBuff: resolution.opponentDefBuff,
       specialCooldown: myAction === 'special' ? 3 : Math.max(0, effectsRef.current.specialCooldown - 1),
-      opponentSpecialCooldown: cpuAction === 'special' ? 3 : Math.max(0, effectsRef.current.opponentSpecialCooldown - 1),
+      opponentSpecialCooldown: opponentAction === 'special' ? 3 : Math.max(0, effectsRef.current.opponentSpecialCooldown - 1),
     }
     updateEffects({
       myPoisonTurns: resolution.myPoisonTurns,
@@ -191,7 +197,6 @@ export default function BattleScreen({
     resolution.logMessages.forEach(msg => addLog(msg))
     setActionButtonKey(k => k + 1)
 
-    const turnNumber = cpuTurnRef.current
     if (resolution.myHpAfter <= 0 || resolution.opponentHpAfter <= 0 || turnNumber >= MAX_TURNS) {
       let winner: 'me' | 'opponent' | 'draw'
       if (resolution.myHpAfter <= 0 && resolution.opponentHpAfter <= 0) {
@@ -217,12 +222,61 @@ export default function BattleScreen({
       return
     }
 
-    processEvent({ event: 'turn_resolved', turnNumber: cpuTurnRef.current })
-  }, [initialSeed, updateHp, updateEffects, addLog, opponentCreature.level, processEvent, triggerEffects])
+    processEvent({ event: 'turn_resolved', turnNumber })
+  }, [updateHp, updateEffects, addLog, opponentCreature.level, processEvent, triggerEffects])
+
+  // バトル初期化
+  const battleInitialized = useRef(false)
+  useEffect(() => {
+    if (battleInitialized.current) return
+    battleInitialized.current = true
+    processEvent({ event: 'battle_start', seed: initialSeed, yourRole: role })
+  }, [initialSeed, role, processEvent])
+
+  // CPU/QRターン解決
+  const cpuTurnRef = useRef(0)
+  const resolveCpuTurn = useCallback((myAction: BattleAction) => {
+    const cpuAction = selectCpuAction(effectsRef.current.opponentSpecialCooldown)
+    const seed = initialSeed + cpuTurnRef.current * 1000 + Date.now() % 1000
+    cpuTurnRef.current++
+    resolveOneTurn(myAction, cpuAction, seed, cpuTurnRef.current)
+  }, [initialSeed, resolveOneTurn])
+
+  // オンラインモード: actions_locked ハンドラを App.tsx に登録
+  const handleActionsLocked = useCallback((
+    hostAction: string,
+    guestAction: string,
+    seed: number,
+    turnNumber: number,
+  ) => {
+    const myAction = (roleRef.current === 'host' ? hostAction : guestAction) as BattleAction
+    const opponentAction = (roleRef.current === 'host' ? guestAction : hostAction) as BattleAction
+    setMyActionSent(false)
+    resolveOneTurn(myAction, opponentAction, seed, turnNumber)
+  }, [resolveOneTurn])
+
+  // マウント時に App.tsx へハンドラを登録
+  useEffect(() => {
+    if (battleMode === 'online' && onRegisterActionsLockedHandler) {
+      onRegisterActionsLockedHandler(handleActionsLocked)
+    }
+  }, [battleMode, onRegisterActionsLockedHandler, handleActionsLocked])
+
+  // オンラインアクション選択
+  const handleOnlineSelectAction = useCallback((action: BattleAction) => {
+    if (!ws || !roomCode || myActionSent) return
+    selectAction(action)
+    ws.selectAction(roomCode, action)
+    setMyActionSent(true)
+  }, [ws, roomCode, myActionSent, selectAction])
 
   const handleSelectAction = (action: BattleAction) => {
-    selectAction(action)
-    setTimeout(() => resolveCpuTurn(action), 500)
+    if (battleMode === 'online') {
+      handleOnlineSelectAction(action)
+    } else {
+      selectAction(action)
+      setTimeout(() => resolveCpuTurn(action), 500)
+    }
   }
 
   const handleResultClose = () => {
@@ -231,10 +285,32 @@ export default function BattleScreen({
     }
   }
 
+  // 切断カウントダウン
+  useEffect(() => {
+    if (disconnectCountdown === null || disconnectCountdown <= 0) return
+    const timer = setTimeout(() => {
+      setDisconnectCountdown(prev => (prev !== null && prev > 0 ? prev - 1 : null))
+    }, 1000)
+    return () => clearTimeout(timer)
+  }, [disconnectCountdown])
+
+  // onlineWs の切断通知を受け取る（App.tsx 側の ws から伝播しない場合の補完）
+  // ws.isConnected が false になったら切断カウントダウンを開始
+  const prevIsConnected = useRef(true)
+  useEffect(() => {
+    if (battleMode !== 'online' || !ws) return
+    if (prevIsConnected.current && !ws.isConnected) {
+      setDisconnectCountdown(60)
+    } else if (!prevIsConnected.current && ws.isConnected) {
+      setDisconnectCountdown(null)
+    }
+    prevIsConnected.current = ws.isConnected
+  }, [battleMode, ws, ws?.isConnected])
+
   const isSelecting = state.phase === 'selecting' && !showResult
   const recentLogs = state.battleLog.slice(-5)
 
-  const modeLabel = battleMode === 'cpu' ? 'CPUバトル' : 'QRバトル'
+  const modeLabel = battleMode === 'cpu' ? 'CPUバトル' : battleMode === 'qr' ? 'QRバトル' : 'オンラインバトル'
 
   return (
     <div
@@ -263,6 +339,21 @@ export default function BattleScreen({
           )}
         </div>
       </div>
+
+      {/* 切断通知 */}
+      {disconnectCountdown !== null && disconnectCountdown > 0 && (
+        <div
+          className="mx-4 mt-2 px-3 py-2 rounded-lg font-pixel text-center"
+          style={{
+            fontSize: '0.65rem',
+            background: 'rgba(248,113,113,0.1)',
+            border: '1px solid #f8717166',
+            color: '#f87171',
+          }}
+        >
+          相手が切断中... 復帰待ち {disconnectCountdown}秒
+        </div>
+      )}
 
       {/* 対戦相手エリア */}
       <div className="mx-4 mt-2">
@@ -365,13 +456,21 @@ export default function BattleScreen({
         />
 
         <div className="font-pixel text-center" style={{ fontSize: '0.65rem', color: '#64748b' }}>
-          {isSelecting ? 'アクションを選んでください' : state.phase === 'resolving' ? '解決中...' : state.phase === 'finished' ? 'バトル終了' : '待機中...'}
+          {battleMode === 'online' && myActionSent
+            ? '相手のアクションを待っています...'
+            : isSelecting
+              ? 'アクションを選んでください'
+              : state.phase === 'resolving'
+                ? '解決中...'
+                : state.phase === 'finished'
+                  ? 'バトル終了'
+                  : '待機中...'}
         </div>
 
         <BattleActionButtons
           key={actionButtonKey}
           onSelect={handleSelectAction}
-          disabled={!isSelecting || state.myAction !== null}
+          disabled={!isSelecting || state.myAction !== null || (battleMode === 'online' && myActionSent)}
           specialCooldown={state.specialCooldown}
         />
       </div>
