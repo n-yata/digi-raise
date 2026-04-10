@@ -114,7 +114,7 @@ make clean       # dist/ 削除
 
 詳細は [`docs/specifications/spec-backend.md`](docs/specifications/spec-backend.md) を参照。
 
-- **WebSocket エンドポイント**: `wss://<REDACTED>.execute-api.ap-northeast-1.amazonaws.com/prod`
+- **WebSocket エンドポイント**: `frontend/.env` の `VITE_WS_ENDPOINT` に設定（SAM deploy の Outputs で確認）
 - **IaC**: AWS SAM（`backend/infra/template.yaml`）
 - Lambda 4つ: connect / disconnect / message / emergency-shutdown
 - DynamoDB 3テーブル: Connections / Rooms / Config

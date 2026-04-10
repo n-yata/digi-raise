@@ -2,10 +2,10 @@
 // フォーマット: "{timestamp}.{hmac_hex}"
 // クライアントサイドにシークレットが露出する前提（ビルド時埋め込み）
 
-const FALLBACK_SECRET = '<REDACTED_HMAC_SECRET>'
-
 function getSecretKey(): string {
-  return import.meta.env.VITE_WS_SECRET_KEY ?? FALLBACK_SECRET
+  const key = import.meta.env.VITE_WS_SECRET_KEY as string | undefined
+  if (!key) throw new Error('VITE_WS_SECRET_KEY is not set')
+  return key
 }
 
 export async function generateWsToken(): Promise<string> {

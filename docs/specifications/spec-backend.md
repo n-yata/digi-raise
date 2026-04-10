@@ -57,7 +57,8 @@
 ### WebSocket エンドポイント
 
 ```
-wss://<REDACTED>.execute-api.ap-northeast-1.amazonaws.com/prod
+wss://<API_ID>.execute-api.ap-northeast-1.amazonaws.com/prod
+（実際のURLは sam deploy の Outputs / frontend/.env の VITE_WS_ENDPOINT を参照）
 ```
 
 ### API Gateway スロットリング

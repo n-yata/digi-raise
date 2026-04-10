@@ -3,7 +3,7 @@ import type { BattleAction, BattleRole, CreatureSnapshot } from '../types/battle
 import type { Creature } from '../types/creature'
 import { generateWsToken } from '../utils/wsToken'
 
-const WS_ENDPOINT = 'wss://<REDACTED>.execute-api.ap-northeast-1.amazonaws.com/prod'
+const WS_ENDPOINT = import.meta.env.VITE_WS_ENDPOINT as string
 const PING_INTERVAL_MS = 30000
 const RECONNECT_TOKEN_KEY = 'ws_reconnect_token'
 
