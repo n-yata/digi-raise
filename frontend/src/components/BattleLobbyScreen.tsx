@@ -48,7 +48,7 @@ export default function BattleLobbyScreen({
   // バトル開始に必要なデータを ref で保持
   const pendingOpponentRef = useRef<CreatureSnapshot | null>(null)
   const pendingBattleRoleRef = useRef<BattleRole | null>(null)
-  const pendingBattleSeedRef = useRef<number>(0)
+  const pendingBattleSeedRef = useRef<number | null>(null)
   const roomCodeRef = useRef<string>('')
 
   // roomCode が変わったら ref も同期
@@ -61,7 +61,7 @@ export default function BattleLobbyScreen({
     const role = pendingBattleRoleRef.current
     const seed = pendingBattleSeedRef.current
     const code = roomCodeRef.current
-    if (opponent && role && seed && code) {
+    if (opponent && role && seed !== null && code) {
       onOnlineBattleReady(opponent, role, seed, code)
     }
   }, [onOnlineBattleReady])
@@ -78,6 +78,7 @@ export default function BattleLobbyScreen({
       onOpponentJoined: (opponentCreature: CreatureSnapshot) => {
         pendingOpponentRef.current = opponentCreature
         setOnlineState('ready')
+        tryTransitionToBattle()
       },
       onBattleStart: (seed: number, role: BattleRole) => {
         pendingBattleRoleRef.current = role
@@ -171,6 +172,8 @@ export default function BattleLobbyScreen({
     setOnlineState('connecting')
     try {
       await onlineWs.connect()
+      setRoomCode(code)
+      roomCodeRef.current = code
       onlineWs.joinRoom(code, creature)
     } catch {
       setOnlineError('接続に失敗しました。もう一度お試しください。')
@@ -191,7 +194,7 @@ export default function BattleLobbyScreen({
     setOnlineError(null)
     pendingOpponentRef.current = null
     pendingBattleRoleRef.current = null
-    pendingBattleSeedRef.current = 0
+    pendingBattleSeedRef.current = null
   }, [onlineWs])
 
   const mySnapshot: CreatureSnapshot = {
