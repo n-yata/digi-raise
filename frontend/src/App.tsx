@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
+import DOMPurify from 'dompurify'
 import type { Creature, GameScreen, EvolutionStage } from './types/creature'
 import type { BattleRole, CreatureSnapshot, BattleResult } from './types/battle'
 import { applyTimeUpdate } from './utils/gameLogic'
@@ -165,7 +166,13 @@ export default function App() {
   const handleDrawingComplete = useCallback((sprites: Partial<Record<EvolutionStage, string>>) => {
     const base = pendingCreature ?? activeCreature
     if (!base) return
-    const mergedSprites = { ...base.customSprites, ...sprites }
+    // Sanitize SVG strings to prevent XSS
+    const sanitizedSprites: Partial<Record<EvolutionStage, string>> = {}
+    for (const [key, svg] of Object.entries(sprites)) {
+      sanitizedSprites[Number(key) as EvolutionStage] =
+        DOMPurify.sanitize(svg, { USE_PROFILES: { svg: true } })
+    }
+    const mergedSprites = { ...base.customSprites, ...sanitizedSprites }
     const withSprites: Creature = { ...base, customSprites: mergedSprites }
     persistActiveCreature(withSprites)
     setPendingCreature(null)
