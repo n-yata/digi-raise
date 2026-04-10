@@ -387,16 +387,16 @@ describe('applyTimeUpdate', () => {
     expect(result.age).toBe(3)
   })
 
-  it('睡眠中(isSleeping:true)のとき hp が ticks×5 回復する', () => {
+  it('睡眠中(isSleeping:true)のとき hp が ticks×25 回復する', () => {
     const creature = makeCreature({
       lastUpdated: BASE_TIME,
       isSleeping: true,
-      hp: 20,
-      maxHp: 40,
+      hp: 100,
+      maxHp: 150,
     })
     vi.spyOn(Date, 'now').mockReturnValue(BASE_TIME + 1000 * 60 * 30) // 1 tick
     const result = applyTimeUpdate(creature, false)
-    expect(result.hp).toBe(25) // 20 + 5
+    expect(result.hp).toBe(125) // 100 + 25
   })
 
   it('睡眠中の hp 回復は maxHp を超えない', () => {

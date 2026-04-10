@@ -7,22 +7,24 @@
 
 ```
 digi-raise/
-├── src/               # ソースコード（React + TypeScript）
-│   ├── components/    # React コンポーネント
-│   ├── hooks/         # カスタムフック
-│   ├── types/         # 型定義
-│   ├── utils/         # ユーティリティ
-│   ├── data/          # 静的データ
-│   ├── main.tsx       # エントリーポイント
-│   └── index.css      # グローバルスタイル
-├── public/            # 静的アセット
-├── docs/              # 仕様書・設計ドキュメント
-├── .github/           # GitHub Actions ワークフロー
-├── index.html         # エントリー HTML
-├── package.json       # 依存関係・スクリプト
-├── vite.config.ts     # Vite 設定
-├── tsconfig.json      # TypeScript 設定
-├── tailwind.config.js # Tailwind CSS 設定
+├── frontend/              # フロントエンド（React + TypeScript + Vite）
+│   ├── src/               # ソースコード
+│   │   ├── components/    # React コンポーネント
+│   │   ├── hooks/         # カスタムフック
+│   │   ├── types/         # 型定義
+│   │   ├── utils/         # ユーティリティ
+│   │   ├── data/          # 静的データ
+│   │   ├── main.tsx       # エントリーポイント
+│   │   └── index.css      # グローバルスタイル
+│   ├── public/            # 静的アセット
+│   ├── index.html         # エントリー HTML
+│   ├── package.json       # 依存関係・スクリプト
+│   ├── vite.config.ts     # Vite 設定
+│   ├── tsconfig.json      # TypeScript 設定
+│   └── tailwind.config.js # Tailwind CSS 設定
+├── backend/               # バックエンド（Go / AWS Lambda）※未作成
+├── docs/                  # 仕様書・設計ドキュメント
+├── .github/               # GitHub Actions ワークフロー
 └── CLAUDE.md
 ```
 
@@ -34,7 +36,10 @@ React + TypeScript + Vite で構築し、GitHub Pages にデプロイする。
 
 ## 開発コマンド
 
+フロントエンドのコマンドは `frontend/` ディレクトリで実行する。
+
 ```bash
+cd frontend
 npm run dev      # 開発サーバー起動 (localhost:5173)
 npm run build    # TypeScript チェック + Vite ビルド
 npm run preview  # ビルド成果物のプレビュー
@@ -62,8 +67,8 @@ npm run test:run # テスト実行
 
 ## 実装上の注意
 
-- `GameState` 型は `src/types/creature.ts` に定義。`creatures: Creature[]` + `activeCreatureId: string | null` で複数クリーチャーを管理する。
-- 状態管理の中枢は `App.tsx`（useState群）。`useGameState.ts` は削除済み。
+- `GameState` 型は `frontend/src/types/creature.ts` に定義。`creatures: Creature[]` + `activeCreatureId: string | null` で複数クリーチャーを管理する。
+- 状態管理の中枢は `frontend/src/App.tsx`（useState群）。`useGameState.ts` は削除済み。
 - クリーチャーの保存は `SaveData { creatures, activeCreatureId }` を固定キー `"saveData"` で IndexedDB に一括保存（`storage.ts`）。
 - 非アクティブのクリーチャーは時間停止。切り替え時に `lastUpdated` を現在時刻にリセットする。
 - 死亡クリーチャーは `isAlive: false` の状態でリストに墓石として残る。個別削除も可能。
@@ -73,4 +78,4 @@ npm run test:run # テスト実行
 - devMode は `App.tsx` のヘッダー「DEV」ボタンで切り替え。時間スケール: 30分 → 30秒。
 - バトルロジック（ダメージ計算・ターン解決）はフロントエンドで完結。バトルはアクティブクリーチャーで自動参加。
 - QRバトル: 相手クリーチャーデータをQRコード経由で取得し、CPU AIで相手アクションを自動選択してローカルバトル。
-- タイプ相性マトリクスは `src/utils/battleLogic.ts` の `TYPE_ADVANTAGE` が正。有利: ×1.2、不利: ×0.8。
+- タイプ相性マトリクスは `frontend/src/utils/battleLogic.ts` の `TYPE_ADVANTAGE` が正。有利: ×1.2、不利: ×0.8。

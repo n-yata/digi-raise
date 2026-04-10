@@ -5,9 +5,7 @@ import type { Creature } from '../types/creature'
 
 // storage モジュールをモック
 vi.mock('../utils/storage', () => ({
-  saveCreature: vi.fn().mockResolvedValue(undefined),
-  deleteCreature: vi.fn().mockResolvedValue(undefined),
-  loadCreature: vi.fn().mockResolvedValue(null),
+  saveSaveData: vi.fn().mockResolvedValue(undefined),
 }))
 
 // gameLogic の applyTimeUpdate をモック（返す値を制御しやすくする）
@@ -31,7 +29,7 @@ vi.mock('../utils/evolution', () => ({
 import { useTimeUpdate } from './useTimeUpdate'
 import { applyTimeUpdate } from '../utils/gameLogic'
 import { canEvolve } from '../utils/evolution'
-import { saveCreature } from '../utils/storage'
+import { saveSaveData } from '../utils/storage'
 
 const mockApplyTimeUpdate = vi.mocked(applyTimeUpdate)
 const mockCanEvolve = vi.mocked(canEvolve)
@@ -179,7 +177,7 @@ describe('useTimeUpdate', () => {
         vi.advanceTimersByTime(30000)
       })
 
-      expect(saveCreature).toHaveBeenCalledTimes(1)
+      expect(saveSaveData).toHaveBeenCalledTimes(1)
     })
   })
 
