@@ -75,6 +75,18 @@ make deploy      # sam deploy（samconfig.toml 使用）
 make clean       # dist/ 削除
 ```
 
+Windows Git Bash では AWS CLI / SAM CLI 実行時にパスが変換される問題がある:
+```bash
+# NG: /digi-raise/... が C:/Program Files/Git/... に変換される
+aws ssm put-parameter --name "/digi-raise/hmac-secret-key" ...
+
+# OK: MSYS_NO_PATHCONV=1 を付ける
+MSYS_NO_PATHCONV=1 aws ssm put-parameter --name "/digi-raise/hmac-secret-key" ...
+
+# SAM CLI は sam.cmd を使う（sam コマンドは Git Bash で見つからない）
+MSYS_NO_PATHCONV=1 sam.cmd deploy ...
+```
+
 デプロイ・運用の詳細コマンドは [`docs/specifications/spec-backend.md`](docs/specifications/spec-backend.md) を参照。
 
 ## 仕様書の更新ルール
@@ -119,3 +131,15 @@ make clean       # dist/ 削除
 - Lambda 4つ: connect / disconnect / message / emergency-shutdown
 - DynamoDB 3テーブル: Connections / Rooms / Config
 - ダメージ計算はフロントエンド実行。サーバーは乱数シード配信・ターン管理・マッチングを担当
+- creature データは `json.RawMessage`（DynamoDB Binary 型）でそのまま保存・転送。サーバーは中身を解釈しない（スキーマ変更に強い）
+- API Gateway WebSocket メッセージサイズ上限: クライアント→サーバー 32KB / サーバー→クライアント 128KB
+- Lambda 同時実行数のアカウント上限は 50（ReservedConcurrentExecutions は設定不可）
+- `frontend/.env` に `VITE_WS_ENDPOINT` と `VITE_WS_SECRET_KEY` を設定。GitHub Actions では Secrets から注入（`deploy.yml` の `env` セクション）
+
+## 開発時の注意
+
+詳細は [`docs/knowledge/`](docs/knowledge/) を参照。
+
+- **PWA キャッシュ**: コード変更がブラウザに反映されない場合、DevTools → Application → Service Workers → Unregister → Clear site data → リロード
+- **バグ調査の順序**: 表示コンポーネント（最下流）から逆順に辿る。上流（バックエンド）から調べると遠回りになりやすい
+- **URL/シークレットのハードコード禁止**: 環境変数（`VITE_*` / `os.Getenv`）経由で取得。`.env` + `.gitignore` で管理。フォールバック値もソースに含めない
