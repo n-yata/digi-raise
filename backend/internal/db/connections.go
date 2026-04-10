@@ -122,3 +122,59 @@ func (t *ConnectionsTable) UpdateRoomCode(ctx context.Context, connID, roomCode 
 
 	return nil
 }
+
+// IncrementMessageCount は messageCount をアトミックにインクリメントし、更新後の値を返す
+// DynamoDB の UpdateItem + ADD を使用し、同時に lastPingAt を更新する
+func (t *ConnectionsTable) IncrementMessageCount(ctx context.Context, connID string) (int, error) {
+	now := time.Now().Unix()
+	out, err := t.client.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+		TableName: aws.String(t.tableName),
+		Key: map[string]types.AttributeValue{
+			"connectionId": &types.AttributeValueMemberS{Value: connID},
+		},
+		UpdateExpression: aws.String("ADD messageCount :inc SET lastPingAt = :now"),
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":inc": &types.AttributeValueMemberN{Value: "1"},
+			":now": &types.AttributeValueMemberN{Value: fmt.Sprintf("%d", now)},
+		},
+		ReturnValues: types.ReturnValueUpdatedNew,
+	})
+	if err != nil {
+		return 0, fmt.Errorf("increment messageCount: %w", err)
+	}
+
+	countAttr, ok := out.Attributes["messageCount"]
+	if !ok {
+		return 0, fmt.Errorf("messageCount not found in updated attributes")
+	}
+	countN, ok := countAttr.(*types.AttributeValueMemberN)
+	if !ok {
+		return 0, fmt.Errorf("messageCount has unexpected type")
+	}
+
+	var count int
+	if _, err := fmt.Sscanf(countN.Value, "%d", &count); err != nil {
+		return 0, fmt.Errorf("parse messageCount %q: %w", countN.Value, err)
+	}
+
+	return count, nil
+}
+
+// ResetMessageCount は messageCount を 0 にリセットする
+func (t *ConnectionsTable) ResetMessageCount(ctx context.Context, connID string) error {
+	_, err := t.client.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+		TableName: aws.String(t.tableName),
+		Key: map[string]types.AttributeValue{
+			"connectionId": &types.AttributeValueMemberS{Value: connID},
+		},
+		UpdateExpression: aws.String("SET messageCount = :zero"),
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":zero": &types.AttributeValueMemberN{Value: "0"},
+		},
+	})
+	if err != nil {
+		return fmt.Errorf("reset messageCount: %w", err)
+	}
+
+	return nil
+}
