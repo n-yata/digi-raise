@@ -66,12 +66,11 @@ export default function TrainingMiniGame({ creature, onResult }: Props) {
     clearAllTimers()
     activeMoleRef.current = null
     setActiveMole(null)
-    setPhase('result')
     const finalScore = scoreRef.current
     const success = finalScore >= SUCCESS_THRESHOLD
     setResult(success ? 'success' : 'fail')
-    endTimerRef.current = setTimeout(() => onResult(success), 1500)
-  }, [clearAllTimers, onResult])
+    setPhase('result')
+  }, [clearAllTimers])
 
   // Countdown phase
   useEffect(() => {
@@ -117,6 +116,16 @@ export default function TrainingMiniGame({ creature, onResult }: Props) {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase])
+
+  // Result phase → call onResult after delay
+  useEffect(() => {
+    if (phase !== 'result' || result === null) return
+    const success = result === 'success'
+    endTimerRef.current = setTimeout(() => onResult(success), 1500)
+    return () => {
+      if (endTimerRef.current) clearTimeout(endTimerRef.current)
+    }
+  }, [phase, result, onResult])
 
   // Unmount cleanup
   useEffect(() => {
