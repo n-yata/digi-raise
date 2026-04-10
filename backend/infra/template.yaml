@@ -55,12 +55,12 @@ Resources:
       StageName: prod
       AutoDeploy: true
       DefaultRouteSettings:
-        ThrottlingRateLimit: 200
-        ThrottlingBurstLimit: 400
+        ThrottlingRateLimit: 20
+        ThrottlingBurstLimit: 50
       RouteSettings:
         $connect:
-          ThrottlingRateLimit: 10
-          ThrottlingBurstLimit: 20
+          ThrottlingRateLimit: 2
+          ThrottlingBurstLimit: 5
 
   # $connect route
   ConnectRoute:
@@ -288,7 +288,7 @@ Resources:
     Type: AWS::CloudWatch::Alarm
     Properties:
       AlarmName: digi-raise-connection-spike
-      AlarmDescription: WebSocket connection count exceeded 500
+      AlarmDescription: WebSocket connection count exceeded 50
       Namespace: AWS/ApiGateway
       MetricName: ConnectCount
       Dimensions:
@@ -299,7 +299,7 @@ Resources:
       Statistic: Sum
       Period: 60
       EvaluationPeriods: 1
-      Threshold: 500
+      Threshold: 50
       ComparisonOperator: GreaterThanThreshold
       TreatMissingData: notBreaching
       AlarmActions:
@@ -311,7 +311,7 @@ Resources:
     Type: AWS::CloudWatch::Alarm
     Properties:
       AlarmName: digi-raise-lambda-spike
-      AlarmDescription: Lambda invocation count exceeded 10,000 per hour
+      AlarmDescription: Lambda invocation count exceeded 1,000 per hour
       # Sum of all 4 Lambda functions combined (using Metric Math)
       Metrics:
         - Id: connect_invocations
@@ -361,7 +361,7 @@ Resources:
         - Id: total_invocations
           Expression: "connect_invocations + disconnect_invocations + message_invocations + shutdown_invocations"
           ReturnData: true
-      Threshold: 10000
+      Threshold: 1000
       ComparisonOperator: GreaterThanThreshold
       EvaluationPeriods: 1
       TreatMissingData: notBreaching
