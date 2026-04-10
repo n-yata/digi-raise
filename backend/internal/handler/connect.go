@@ -13,15 +13,15 @@ import (
 
 // ConnectHandler は $connect ルートのリクエストを処理する
 type ConnectHandler struct {
-	connections *db.ConnectionsTable
-	config      *db.ConfigTable
+	connections db.ConnectionStore
+	config      db.ConfigStore
 	auth        *auth.Verifier
-	rooms       *db.RoomsTable
-	apigw       *apigw.Client
+	rooms       db.RoomStore
+	apigw       apigw.MessageSender
 }
 
 // NewConnectHandler は新しい ConnectHandler を作成する
-func NewConnectHandler(connections *db.ConnectionsTable, config *db.ConfigTable, auth *auth.Verifier, rooms *db.RoomsTable, apigwClient *apigw.Client) *ConnectHandler {
+func NewConnectHandler(connections db.ConnectionStore, config db.ConfigStore, auth *auth.Verifier, rooms db.RoomStore, apigwClient apigw.MessageSender) *ConnectHandler {
 	return &ConnectHandler{
 		connections: connections,
 		config:      config,

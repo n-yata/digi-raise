@@ -13,6 +13,7 @@ import (
 	"github.com/n-yata/digi-raise/backend/internal/db"
 )
 
+
 const (
 	roomCodeLength   = 6
 	maxCreateRetries = 5
@@ -47,7 +48,7 @@ func generateRoomCode() (string, error) {
 // 2. rooms テーブルで条件付き PutItem（重複チェック）
 // 3. 重複していたら再生成（最大5回）
 // 4. connections テーブルの roomCode を更新
-func CreateRoom(ctx context.Context, rooms *db.RoomsTable, connections *db.ConnectionsTable, connID string, creature json.RawMessage) (string, error) {
+func CreateRoom(ctx context.Context, rooms db.RoomStore, connections db.ConnectionStore, connID string, creature json.RawMessage) (string, error) {
 	for i := 0; i < maxCreateRetries; i++ {
 		code, err := generateRoomCode()
 		if err != nil {
@@ -78,7 +79,7 @@ func CreateRoom(ctx context.Context, rooms *db.RoomsTable, connections *db.Conne
 // 2. connections テーブルの roomCode を更新
 // 3. ホストに {"event":"opponent_joined","opponentCreature":guestCreature} を送信
 // 4. ゲストに {"event":"opponent_joined","opponentCreature":hostCreature} を送信
-func JoinRoom(ctx context.Context, rooms *db.RoomsTable, connections *db.ConnectionsTable, apigwClient *apigw.Client, connID string, roomCode string, creature json.RawMessage) error {
+func JoinRoom(ctx context.Context, rooms db.RoomStore, connections db.ConnectionStore, apigwClient apigw.MessageSender, connID string, roomCode string, creature json.RawMessage) error {
 	updatedRoom, err := rooms.JoinRoom(ctx, roomCode, connID, creature)
 	if err != nil {
 		return fmt.Errorf("join room: %w", err)

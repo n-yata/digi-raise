@@ -14,13 +14,13 @@ import (
 
 // DisconnectHandler は $disconnect ルートのリクエストを処理する
 type DisconnectHandler struct {
-	connections *db.ConnectionsTable
-	rooms       *db.RoomsTable
-	apigw       *apigw.Client
+	connections db.ConnectionStore
+	rooms       db.RoomStore
+	apigw       apigw.MessageSender
 }
 
 // NewDisconnectHandler は新しい DisconnectHandler を作成する
-func NewDisconnectHandler(connections *db.ConnectionsTable, rooms *db.RoomsTable, apigwClient *apigw.Client) *DisconnectHandler {
+func NewDisconnectHandler(connections db.ConnectionStore, rooms db.RoomStore, apigwClient apigw.MessageSender) *DisconnectHandler {
 	return &DisconnectHandler{
 		connections: connections,
 		rooms:       rooms,

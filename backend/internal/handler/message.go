@@ -18,13 +18,13 @@ import (
 
 // MessageHandler は $default ルートの全メッセージを処理する
 type MessageHandler struct {
-	connections *db.ConnectionsTable
-	rooms       *db.RoomsTable
-	apigw       *apigw.Client
+	connections db.ConnectionStore
+	rooms       db.RoomStore
+	apigw       apigw.MessageSender
 }
 
 // NewMessageHandler は新しい MessageHandler を作成する
-func NewMessageHandler(connections *db.ConnectionsTable, rooms *db.RoomsTable, apigwClient *apigw.Client) *MessageHandler {
+func NewMessageHandler(connections db.ConnectionStore, rooms db.RoomStore, apigwClient apigw.MessageSender) *MessageHandler {
 	return &MessageHandler{
 		connections: connections,
 		rooms:       rooms,
