@@ -57,6 +57,10 @@ Resources:
       DefaultRouteSettings:
         ThrottlingRateLimit: 200
         ThrottlingBurstLimit: 400
+      RouteSettings:
+        $connect:
+          ThrottlingRateLimit: 10
+          ThrottlingBurstLimit: 20
 
   # $connect route
   ConnectRoute:
@@ -73,15 +77,6 @@ Resources:
       ApiId: !Ref WebSocketApi
       IntegrationType: AWS_PROXY
       IntegrationUri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ConnectFunction.Arn}/invocations"
-
-  ConnectRouteSettings:
-    Type: AWS::ApiGatewayV2::RouteSettings
-    Properties:
-      ApiId: !Ref WebSocketApi
-      StageName: !Ref WebSocketStage
-      RouteKey: $connect
-      ThrottlingRateLimit: 10
-      ThrottlingBurstLimit: 20
 
   # $disconnect route
   DisconnectRoute:
