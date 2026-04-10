@@ -55,30 +55,6 @@ make test        # Go テスト実行
 make clean       # ビルド成果物を削除
 ```
 
-### バックエンドのデプロイ
-
-```bash
-cd backend
-
-# 初回: SSM Parameter Store にシークレットキーを作成
-MSYS_NO_PATHCONV=1 aws ssm put-parameter \
-  --name "/digi-raise/hmac-secret-key" \
-  --type "String" \
-  --value "<ランダムな文字列>" \
-  --region ap-northeast-1
-
-# ビルド + デプロイ
-make build
-MSYS_NO_PATHCONV=1 sam.cmd deploy \
-  --template-file infra/template.yaml \
-  --stack-name digi-raise-battle \
-  --resolve-s3 --s3-prefix digi-raise-battle \
-  --region ap-northeast-1 \
-  --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
-  --parameter-overrides "AlertEmail=<通知先メール>" \
-  --no-confirm-changeset
-```
-
 ## デプロイ
 
 ### フロントエンド
@@ -89,29 +65,9 @@ GitHub Pages でホスティング。`main` ブランチへの push で GitHub A
 
 ### バックエンド
 
-AWS SAM でデプロイ。リージョン: ap-northeast-1
+AWS SAM でデプロイ。詳細は [`docs/specifications/spec-backend.md`](docs/specifications/spec-backend.md) を参照。
 
-WebSocket エンドポイント: `wss://<REDACTED>.execute-api.ap-northeast-1.amazonaws.com/prod`
-
-## アーキテクチャ
-
-```
-┌──────────────────────────────┐
-│  GitHub Pages (PWA)          │
-│  React + TypeScript + Vite   │
-└──────────┬───────────────────┘
-           │ WebSocket (wss://)
-┌──────────▼───────────────────┐
-│  API Gateway WebSocket API   │
-│  ├── $connect    → Lambda    │
-│  ├── $disconnect → Lambda    │
-│  └── $default    → Lambda    │
-└──────────┬───────────────────┘
-           │
-┌──────────▼───────────────────┐
-│  DynamoDB                    │
-│  ├── Connections (接続管理)  │
-│  ├── Rooms (ルーム・バトル)  │
-│  └── Config (設定)           │
-└──────────────────────────────┘
+```bash
+cd backend
+make build && sam.cmd deploy --template-file infra/template.yaml ...
 ```

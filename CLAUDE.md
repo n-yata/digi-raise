@@ -2,6 +2,7 @@
 
 仕様書は以下を参照:
 - フロントエンド仕様: [`docs/specifications/spec-frontend.md`](docs/specifications/spec-frontend.md)
+- バックエンド仕様: [`docs/specifications/spec-backend.md`](docs/specifications/spec-backend.md)
 - バトル機能実装計画: [`docs/plans/battle-feature.md`](docs/plans/battle-feature.md)
 
 ## ディレクトリ構成
@@ -50,7 +51,6 @@ digi-raise/
 - **フロントエンド**: React + TypeScript + Vite → GitHub Pages にデプロイ
 - **バックエンド**: Go + AWS Lambda + API Gateway WebSocket API → SAM でデプロイ
 - **バトル**: CPU戦（フロントエンド完結）+ オンラインバトル（WebSocket 経由）
-- **ダメージ計算**: フロントエンドで実行。サーバーは乱数シード配信・ターン管理・マッチングを担当
 
 ## 開発コマンド
 
@@ -75,17 +75,7 @@ make deploy      # sam deploy（samconfig.toml 使用）
 make clean       # dist/ 削除
 ```
 
-手動デプロイ（Windows Git Bash）:
-```bash
-MSYS_NO_PATHCONV=1 sam.cmd deploy \
-  --template-file infra/template.yaml \
-  --stack-name digi-raise-battle \
-  --resolve-s3 --s3-prefix digi-raise-battle \
-  --region ap-northeast-1 \
-  --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
-  --parameter-overrides "AlertEmail=<メールアドレス>" \
-  --no-confirm-changeset
-```
+デプロイ・運用の詳細コマンドは [`docs/specifications/spec-backend.md`](docs/specifications/spec-backend.md) を参照。
 
 ## 仕様書の更新ルール
 
@@ -122,64 +112,10 @@ MSYS_NO_PATHCONV=1 sam.cmd deploy \
 
 ## バックエンド（WebSocket バトル）
 
-### アーキテクチャ
-
-```
-GitHub Pages (PWA) ←→ API Gateway WebSocket API ←→ Lambda (Go) ←→ DynamoDB
-```
+詳細は [`docs/specifications/spec-backend.md`](docs/specifications/spec-backend.md) を参照。
 
 - **WebSocket エンドポイント**: `wss://<REDACTED>.execute-api.ap-northeast-1.amazonaws.com/prod`
-- **ランタイム**: provided.al2023（Go カスタムランタイム）
 - **IaC**: AWS SAM（`backend/infra/template.yaml`）
-
-### Lambda 関数
-
-| 関数 | ルート | 役割 |
-|------|--------|------|
-| connect | $connect | HMAC 認証、メンテナンスチェック、再接続処理 |
-| disconnect | $disconnect | ルームクリーンアップ、再接続猶予（60秒） |
-| message | $default | メッセージルーティング、レート制限、バトルロジック |
-| emergency-shutdown | SNS | 異常検知時にメンテナンスモード有効化 |
-
-### DynamoDB テーブル
-
-| テーブル | PK | 用途 |
-|---------|-----|------|
-| DigiRaiseConnections | connectionId | WebSocket 接続管理（TTL: 1時間） |
-| DigiRaiseRooms | roomCode | ルーム・バトル状態管理（TTL: 2時間） |
-| DigiRaiseConfig | configKey | メンテナンスモード等の設定 |
-
-### メッセージフロー
-
-1. `create_room` → 6桁ルームコード生成 → `room_created` 返却
-2. `join_room` → ルーム参加 → 双方に `opponent_joined`
-3. `ready` → 両者 ready → `battle_start`（seed + role）
-4. `select_action` → 両者選択完了 → `actions_locked`（両アクション + seed）
-5. フロントエンドでダメージ計算・HP更新
-
-### セキュリティ
-
-- HMAC-SHA256 トークン検証（`$connect` 時、±60秒有効）
-- メッセージレート制限（60msg 超過で 429）
-- アクション二重送信防止（DynamoDB 条件式）
-- 再接続トークン: `crypto/rand` 16バイト、60秒有効期限 + race condition 対策
-- 自動遮断: CloudWatch Alarm → SNS → emergency-shutdown Lambda → メンテナンスモード
-
-### 運用コマンド
-
-```bash
-# メンテナンスモード解除
-MSYS_NO_PATHCONV=1 aws dynamodb put-item \
-  --table-name DigiRaiseConfig \
-  --item '{"configKey":{"S":"maintenance_mode"},"value":{"S":"false"}}' \
-  --region ap-northeast-1
-
-# メンテナンスモード手動有効化
-MSYS_NO_PATHCONV=1 aws dynamodb put-item \
-  --table-name DigiRaiseConfig \
-  --item '{"configKey":{"S":"maintenance_mode"},"value":{"S":"true"}}' \
-  --region ap-northeast-1
-
-# CloudWatch ログ確認
-aws logs tail /aws/lambda/digi-raise-battle-message --region ap-northeast-1 --follow
-```
+- Lambda 4つ: connect / disconnect / message / emergency-shutdown
+- DynamoDB 3テーブル: Connections / Rooms / Config
+- ダメージ計算はフロントエンド実行。サーバーは乱数シード配信・ターン管理・マッチングを担当
