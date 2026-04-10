@@ -2,10 +2,13 @@ package handler
 
 import (
 	"context"
+	"crypto/rand"
 	"encoding/json"
 	"errors"
 	"log"
+	"math/big"
 	"net/http"
+	"time"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/n-yata/digi-raise/backend/internal/apigw"
@@ -245,22 +248,253 @@ func (h *MessageHandler) handleLeaveRoom(ctx context.Context, connID string, msg
 	})
 }
 
-// handleReady は ready アクションのスタブ（Step 4 で実装）
+// handleReady は ready アクションを処理する
 func (h *MessageHandler) handleReady(ctx context.Context, connID string, msg incomingMessage) error {
-	return h.apigw.SendJSON(ctx, connID, map[string]any{
-		"event":   "error",
-		"code":    "NOT_IMPLEMENTED",
-		"message": "ready is not yet implemented",
-	})
+	// 1. roomCode のバリデーション
+	if !isValidRoomCode(msg.RoomCode) {
+		log.Printf("message: ready: invalid roomCode=%q connId=%s", msg.RoomCode, connID)
+		return h.apigw.SendJSON(ctx, connID, map[string]any{
+			"event":   "error",
+			"code":    "INVALID_ROOM_CODE",
+			"message": "invalid room code",
+		})
+	}
+
+	// 2. 現在のルームを取得
+	room, err := h.rooms.GetRoom(ctx, msg.RoomCode)
+	if err != nil {
+		log.Printf("message: ready: failed to get room connId=%s roomCode=%s: %v", connID, msg.RoomCode, err)
+		return err
+	}
+	if room == nil {
+		log.Printf("message: ready: room not found connId=%s roomCode=%s", connID, msg.RoomCode)
+		return h.apigw.SendJSON(ctx, connID, map[string]any{
+			"event":   "error",
+			"code":    "ROOM_NOT_FOUND",
+			"message": "room not found",
+		})
+	}
+
+	// 3. status チェック（"ready" 状態のみ受け付ける）
+	if room.Status != "ready" {
+		log.Printf("message: ready: invalid room status=%s connId=%s roomCode=%s", room.Status, connID, msg.RoomCode)
+		return h.apigw.SendJSON(ctx, connID, map[string]any{
+			"event":   "error",
+			"code":    "INVALID_ROOM_STATUS",
+			"message": "room is not in ready status",
+		})
+	}
+
+	// 4. connID から自分の role を特定
+	role := getRoleForConn(connID, room)
+	if role == "" {
+		log.Printf("message: ready: cannot determine role connId=%s roomCode=%s", connID, msg.RoomCode)
+		return h.apigw.SendJSON(ctx, connID, map[string]any{
+			"event":   "error",
+			"code":    "NOT_IN_ROOM",
+			"message": "you are not a member of this room",
+		})
+	}
+
+	// 5. ready フラグをセット（ALL_NEW で更新後のレコードを取得）
+	updatedRoom, err := h.rooms.SetPlayerReady(ctx, msg.RoomCode, role)
+	if err != nil {
+		log.Printf("message: ready: failed to set ready role=%s connId=%s roomCode=%s: %v", role, connID, msg.RoomCode, err)
+		return err
+	}
+
+	// 6. 両者 ready かどうか判定
+	bothReady := updatedRoom.HostReady && updatedRoom.GuestReady
+	log.Printf("message: ready: role=%s roomCode=%s bothReady=%v", role, msg.RoomCode, bothReady)
+
+	// 7. 相手待ちの場合は何もしない
+	if !bothReady {
+		return nil
+	}
+
+	// 8. 両者 ready → バトル開始
+	// a. ステータスを "battling" に変更
+	if err := h.rooms.StartBattle(ctx, msg.RoomCode); err != nil {
+		log.Printf("message: ready: failed to start battle roomCode=%s: %v", msg.RoomCode, err)
+		return err
+	}
+
+	// b. seed を生成（JavaScript の安全な整数範囲内: 0 〜 2^53-1）
+	seedBig, err := rand.Int(rand.Reader, big.NewInt(1<<53))
+	if err != nil {
+		log.Printf("message: ready: failed to generate seed roomCode=%s: %v", msg.RoomCode, err)
+		return err
+	}
+	seed := seedBig.Int64()
+
+	// c. ホストに battle_start を送信
+	if sendErr := h.apigw.SendJSON(ctx, updatedRoom.HostConnectionID, map[string]any{
+		"event":    "battle_start",
+		"seed":     seed,
+		"yourRole": "host",
+	}); sendErr != nil {
+		log.Printf("message: ready: failed to notify host roomCode=%s: %v", msg.RoomCode, sendErr)
+	}
+
+	// d. ゲストに battle_start を送信
+	if sendErr := h.apigw.SendJSON(ctx, updatedRoom.GuestConnectionID, map[string]any{
+		"event":    "battle_start",
+		"seed":     seed,
+		"yourRole": "guest",
+	}); sendErr != nil {
+		log.Printf("message: ready: failed to notify guest roomCode=%s: %v", msg.RoomCode, sendErr)
+	}
+
+	log.Printf("message: ready: battle started roomCode=%s seed=%d", msg.RoomCode, seed)
+	return nil
 }
 
-// handleSelectAction は select_action アクションのスタブ（Step 4 で実装）
+// handleSelectAction は select_action アクションを処理する
 func (h *MessageHandler) handleSelectAction(ctx context.Context, connID string, msg incomingMessage) error {
-	return h.apigw.SendJSON(ctx, connID, map[string]any{
-		"event":   "error",
-		"code":    "NOT_IMPLEMENTED",
-		"message": "select_action is not yet implemented",
-	})
+	// 1. roomCode バリデーション
+	if !isValidRoomCode(msg.RoomCode) {
+		log.Printf("message: select_action: invalid roomCode=%q connId=%s", msg.RoomCode, connID)
+		return h.apigw.SendJSON(ctx, connID, map[string]any{
+			"event":   "error",
+			"code":    "INVALID_ROOM_CODE",
+			"message": "invalid room code",
+		})
+	}
+
+	// 2. battleAction バリデーション
+	if !isValidBattleAction(msg.BattleAction) {
+		log.Printf("message: select_action: invalid battleAction=%q connId=%s", msg.BattleAction, connID)
+		return h.apigw.SendJSON(ctx, connID, map[string]any{
+			"event":   "error",
+			"code":    "INVALID_ACTION",
+			"message": "invalid battle action",
+		})
+	}
+
+	// 3. ルームを取得
+	room, err := h.rooms.GetRoom(ctx, msg.RoomCode)
+	if err != nil {
+		log.Printf("message: select_action: failed to get room connId=%s roomCode=%s: %v", connID, msg.RoomCode, err)
+		return err
+	}
+
+	// 4. ルームが存在しない or status != "battling" → エラー
+	if room == nil {
+		log.Printf("message: select_action: room not found connId=%s roomCode=%s", connID, msg.RoomCode)
+		return h.apigw.SendJSON(ctx, connID, map[string]any{
+			"event":   "error",
+			"code":    "ROOM_NOT_FOUND",
+			"message": "room not found",
+		})
+	}
+	if room.Status != "battling" {
+		log.Printf("message: select_action: invalid room status=%s connId=%s roomCode=%s", room.Status, connID, msg.RoomCode)
+		return h.apigw.SendJSON(ctx, connID, map[string]any{
+			"event":   "error",
+			"code":    "INVALID_ROOM_STATUS",
+			"message": "room is not in battling status",
+		})
+	}
+
+	// 5. connID から role を特定
+	role := getRoleForConn(connID, room)
+	if role == "" {
+		log.Printf("message: select_action: cannot determine role connId=%s roomCode=%s", connID, msg.RoomCode)
+		return h.apigw.SendJSON(ctx, connID, map[string]any{
+			"event":   "error",
+			"code":    "NOT_IN_ROOM",
+			"message": "you are not a member of this room",
+		})
+	}
+
+	// 6. パッシブタイムアウトチェック（30秒超過で未選択側に guard を強制）
+	room = h.checkActionTimeout(ctx, room)
+
+	// 7. アクションをセット
+	updatedRoom, err := h.rooms.SetAction(ctx, msg.RoomCode, role, msg.BattleAction)
+	if err != nil {
+		log.Printf("message: select_action: failed to set action role=%s connId=%s roomCode=%s: %v", role, connID, msg.RoomCode, err)
+		return err
+	}
+
+	// 8. 両者のアクションが揃っているか判定
+	bothReady := updatedRoom.HostAction != "" && updatedRoom.GuestAction != ""
+	log.Printf("message: select_action: role=%s action=%s roomCode=%s bothReady=%v", role, msg.BattleAction, msg.RoomCode, bothReady)
+
+	// 9. 相手待ちなら何もしない
+	if !bothReady {
+		return nil
+	}
+
+	// 10. 両者揃ったら actions_locked イベントを送信してターンを進める
+
+	// a. crypto/rand で turnSeed を生成（JavaScript 安全整数範囲: 0 〜 2^53-1）
+	seedBig, err := rand.Int(rand.Reader, big.NewInt(1<<53))
+	if err != nil {
+		log.Printf("message: select_action: failed to generate seed roomCode=%s: %v", msg.RoomCode, err)
+		return err
+	}
+	seed := seedBig.Int64()
+
+	payload := map[string]any{
+		"event":       "actions_locked",
+		"hostAction":  updatedRoom.HostAction,
+		"guestAction": updatedRoom.GuestAction,
+		"seed":        seed,
+		"turnNumber":  updatedRoom.CurrentTurn,
+	}
+
+	// b. 両者に actions_locked を送信
+	if sendErr := h.apigw.SendJSON(ctx, updatedRoom.HostConnectionID, payload); sendErr != nil {
+		log.Printf("message: select_action: failed to notify host roomCode=%s: %v", msg.RoomCode, sendErr)
+	}
+	if sendErr := h.apigw.SendJSON(ctx, updatedRoom.GuestConnectionID, payload); sendErr != nil {
+		log.Printf("message: select_action: failed to notify guest roomCode=%s: %v", msg.RoomCode, sendErr)
+	}
+
+	// c. ターンを進める
+	if err := h.rooms.AdvanceTurn(ctx, msg.RoomCode); err != nil {
+		log.Printf("message: select_action: failed to advance turn roomCode=%s: %v", msg.RoomCode, err)
+		return err
+	}
+
+	log.Printf("message: select_action: turn advanced roomCode=%s turnNumber=%d seed=%d", msg.RoomCode, updatedRoom.CurrentTurn, seed)
+	return nil
+}
+
+// checkActionTimeout はパッシブタイムアウトをチェックし、30秒超過時に未選択側に guard を強制する
+func (h *MessageHandler) checkActionTimeout(ctx context.Context, room *db.RoomRecord) *db.RoomRecord {
+	if room.TurnStartedAt == nil {
+		return room
+	}
+	elapsed := time.Now().Unix() - *room.TurnStartedAt
+	if elapsed <= 30 {
+		return room // タイムアウトしていない
+	}
+
+	log.Printf("message: select_action: timeout detected elapsed=%ds roomCode=%s", elapsed, room.RoomCode)
+
+	// 未選択側に guard を強制
+	if room.HostAction == "" {
+		if _, err := h.rooms.SetAction(ctx, room.RoomCode, "host", "guard"); err != nil {
+			log.Printf("message: select_action: failed to force guard for host roomCode=%s: %v", room.RoomCode, err)
+		} else {
+			room.HostAction = "guard"
+		}
+	}
+	if room.GuestAction == "" {
+		if _, err := h.rooms.SetAction(ctx, room.RoomCode, "guest", "guard"); err != nil {
+			log.Printf("message: select_action: failed to force guard for guest roomCode=%s: %v", room.RoomCode, err)
+		} else {
+			room.GuestAction = "guard"
+		}
+	}
+	return room
+}
+
+// isValidBattleAction はバトルアクションのバリデーションを行う
+func isValidBattleAction(action string) bool {
+	return action == "attack" || action == "guard" || action == "special"
 }
 
 // isValidRoomCode はルームコードのフォーマットを検証する（6桁英数字）
@@ -283,6 +517,17 @@ func getOpponentConnID(connID string, room *db.RoomRecord) string {
 	}
 	if room.GuestConnectionID == connID {
 		return room.HostConnectionID
+	}
+	return ""
+}
+
+// getRoleForConn は connID が host か guest かを返す。どちらでもなければ空文字を返す
+func getRoleForConn(connID string, room *db.RoomRecord) string {
+	if room.HostConnectionID == connID {
+		return "host"
+	}
+	if room.GuestConnectionID == connID {
+		return "guest"
 	}
 	return ""
 }

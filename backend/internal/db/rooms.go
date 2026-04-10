@@ -29,6 +29,10 @@ type RoomRecord struct {
 	GuestConnectionID string          `dynamodbav:"guestConnectionId,omitempty"`
 	HostCreature      json.RawMessage `dynamodbav:"hostCreature,omitempty"`
 	GuestCreature     json.RawMessage `dynamodbav:"guestCreature,omitempty"`
+	HostReady         bool            `dynamodbav:"hostReady"`
+	GuestReady        bool            `dynamodbav:"guestReady"`
+	HostAction        string          `dynamodbav:"hostAction,omitempty"`
+	GuestAction       string          `dynamodbav:"guestAction,omitempty"`
 	DisconnectedAt    *int64          `dynamodbav:"disconnectedAt,omitempty"`
 	DisconnectedRole  string          `dynamodbav:"disconnectedRole,omitempty"`
 	ReconnectToken    string          `dynamodbav:"reconnectToken,omitempty"`
@@ -187,6 +191,147 @@ func (t *RoomsTable) JoinRoom(ctx context.Context, roomCode, guestConnID string,
 		return nil, fmt.Errorf("unmarshal updated room record: %w", err)
 	}
 	return &record, nil
+}
+
+// SetPlayerReady はプレイヤーの ready フラグをセットし、更新後のルームレコードを返す
+// role は "host" または "guest"
+// ReturnValues: ALL_NEW で更新後のレコードを取得し、両者 ready かを呼び出し元で判定できるようにする
+func (t *RoomsTable) SetPlayerReady(ctx context.Context, roomCode, role string) (*RoomRecord, error) {
+	var updateExpr string
+	switch role {
+	case "host":
+		updateExpr = "SET hostReady = :true"
+	case "guest":
+		updateExpr = "SET guestReady = :true"
+	default:
+		return nil, fmt.Errorf("invalid role: %s", role)
+	}
+
+	out, err := t.client.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+		TableName: aws.String(t.tableName),
+		Key: map[string]types.AttributeValue{
+			"roomCode": &types.AttributeValueMemberS{Value: roomCode},
+		},
+		UpdateExpression: aws.String(updateExpr),
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":true": &types.AttributeValueMemberBOOL{Value: true},
+		},
+		ReturnValues: types.ReturnValueAllNew,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("set player ready (role=%s): %w", role, err)
+	}
+
+	var record RoomRecord
+	if err := attributevalue.UnmarshalMap(out.Attributes, &record); err != nil {
+		return nil, fmt.Errorf("unmarshal updated room record: %w", err)
+	}
+	return &record, nil
+}
+
+// StartBattle はルームのステータスを "battling" に変更し、バトル初期状態をセットする
+// ConditionExpression: status = "ready"（二重開始防止）
+func (t *RoomsTable) StartBattle(ctx context.Context, roomCode string) error {
+	now := time.Now().Unix()
+	_, err := t.client.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+		TableName: aws.String(t.tableName),
+		Key: map[string]types.AttributeValue{
+			"roomCode": &types.AttributeValueMemberS{Value: roomCode},
+		},
+		ConditionExpression: aws.String("#s = :ready"),
+		UpdateExpression:    aws.String("SET #s = :battling, currentTurn = :one, turnPhase = :select, turnStartedAt = :now"),
+		ExpressionAttributeNames: map[string]string{
+			"#s": "status",
+		},
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":ready":    &types.AttributeValueMemberS{Value: "ready"},
+			":battling": &types.AttributeValueMemberS{Value: "battling"},
+			":one":      &types.AttributeValueMemberN{Value: "1"},
+			":select":   &types.AttributeValueMemberS{Value: "select"},
+			":now":      &types.AttributeValueMemberN{Value: fmt.Sprintf("%d", now)},
+		},
+	})
+	if err != nil {
+		var condErr *types.ConditionalCheckFailedException
+		if errors.As(err, &condErr) {
+			// 既に battling に移行済み（二重開始）は正常扱い
+			return nil
+		}
+		return fmt.Errorf("start battle: %w", err)
+	}
+	return nil
+}
+
+// SetAction はプレイヤーのアクションをセットし、更新後のルームレコードを返す
+// role = "host" → SET hostAction = action
+// role = "guest" → SET guestAction = action
+// ConditionExpression: status = "battling"（バトル中でなければ拒否）
+// ReturnValues: ALL_NEW
+func (t *RoomsTable) SetAction(ctx context.Context, roomCode, role, action string) (*RoomRecord, error) {
+	var updateExpr string
+	var condExpr string
+	switch role {
+	case "host":
+		updateExpr = "SET hostAction = :action"
+		condExpr = "#s = :battling AND attribute_not_exists(hostAction)"
+	case "guest":
+		updateExpr = "SET guestAction = :action"
+		condExpr = "#s = :battling AND attribute_not_exists(guestAction)"
+	default:
+		return nil, fmt.Errorf("invalid role: %s", role)
+	}
+
+	out, err := t.client.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+		TableName: aws.String(t.tableName),
+		Key: map[string]types.AttributeValue{
+			"roomCode": &types.AttributeValueMemberS{Value: roomCode},
+		},
+		ConditionExpression: aws.String(condExpr),
+		UpdateExpression:    aws.String(updateExpr),
+		ExpressionAttributeNames: map[string]string{
+			"#s": "status",
+		},
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":battling": &types.AttributeValueMemberS{Value: "battling"},
+			":action":   &types.AttributeValueMemberS{Value: action},
+		},
+		ReturnValues: types.ReturnValueAllNew,
+	})
+	if err != nil {
+		var condErr *types.ConditionalCheckFailedException
+		if errors.As(err, &condErr) {
+			return nil, fmt.Errorf("room is not in battling status")
+		}
+		return nil, fmt.Errorf("set action (role=%s): %w", role, err)
+	}
+
+	var record RoomRecord
+	if err := attributevalue.UnmarshalMap(out.Attributes, &record); err != nil {
+		return nil, fmt.Errorf("unmarshal updated room record: %w", err)
+	}
+	return &record, nil
+}
+
+// AdvanceTurn はターンを進める
+// currentTurn を +1、hostAction と guestAction を削除、turnPhase = "select"、turnStartedAt = now
+func (t *RoomsTable) AdvanceTurn(ctx context.Context, roomCode string) error {
+	now := time.Now().Unix()
+	_, err := t.client.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+		TableName: aws.String(t.tableName),
+		Key: map[string]types.AttributeValue{
+			"roomCode": &types.AttributeValueMemberS{Value: roomCode},
+		},
+		UpdateExpression: aws.String("SET currentTurn = currentTurn + :one, turnPhase = :select, turnStartedAt = :now REMOVE hostAction, guestAction"),
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":one":    &types.AttributeValueMemberN{Value: "1"},
+			":select": &types.AttributeValueMemberS{Value: "select"},
+			":now":    &types.AttributeValueMemberN{Value: fmt.Sprintf("%d", now)},
+		},
+	})
+	if err != nil {
+		return fmt.Errorf("advance turn: %w", err)
+	}
+	return nil
 }
 
 // SetFinished はバトルを終了させる（winner を設定、status = "finished"）
