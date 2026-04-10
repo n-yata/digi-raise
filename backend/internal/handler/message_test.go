@@ -191,7 +191,7 @@ func TestMessageHandler_CreateRoom(t *testing.T) {
 		sender := &mockMessageSender{}
 		h := NewMessageHandler(connStore, roomStore, sender)
 
-		creature := json.RawMessage(`{"name":"TestMon","hp":100}`)
+		creature := json.RawMessage(`{"id":"test-1","name":"TestMon","type":"Fire","hp":40,"maxHp":40,"atk":10,"def":8,"spd":8,"level":5,"evolutionStage":1,"evolutionName":"TestEvo","wins":0,"losses":0}`)
 		body, _ := json.Marshal(map[string]any{
 			"action":   "create_room",
 			"creature": creature,
@@ -228,7 +228,7 @@ func TestMessageHandler_CreateRoom(t *testing.T) {
 		sender := &mockMessageSender{}
 		h := NewMessageHandler(connStore, roomStore, sender)
 
-		body := `{"action":"create_room","creature":{"name":"TestMon"}}`
+		body := `{"action":"create_room","creature":{"id":"test-1","name":"TestMon","type":"Fire","hp":40,"maxHp":40,"atk":10,"def":8,"spd":8,"level":5,"evolutionStage":1,"evolutionName":"TestEvo","wins":0,"losses":0}}`
 
 		resp, err := h.Handle(context.Background(), makeMessageRequest("conn-1", body))
 
@@ -316,7 +316,7 @@ func TestMessageHandler_JoinRoom(t *testing.T) {
 		sender := &mockMessageSender{}
 		h := NewMessageHandler(connStore, roomStore, sender)
 
-		body := `{"action":"join_room","roomCode":"ABC234"}`
+		body := `{"action":"join_room","roomCode":"ABC234","creature":{"id":"test-1","name":"TestMon","type":"Fire","hp":40,"maxHp":40,"atk":10,"def":8,"spd":8,"level":5,"evolutionStage":1,"evolutionName":"TestEvo","wins":0,"losses":0}}`
 		resp, err := h.Handle(context.Background(), makeMessageRequest("conn-1", body))
 
 		if err != nil {

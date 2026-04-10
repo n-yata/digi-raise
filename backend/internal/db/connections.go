@@ -105,17 +105,31 @@ func (t *ConnectionsTable) Delete(ctx context.Context, connID string) error {
 }
 
 // UpdateRoomCode は接続レコードの roomCode を更新する
+// 空文字列の場合は GSI キーの制約により REMOVE を使用する
 func (t *ConnectionsTable) UpdateRoomCode(ctx context.Context, connID, roomCode string) error {
-	_, err := t.client.UpdateItem(ctx, &dynamodb.UpdateItemInput{
-		TableName: aws.String(t.tableName),
-		Key: map[string]types.AttributeValue{
-			"connectionId": &types.AttributeValueMemberS{Value: connID},
-		},
-		UpdateExpression: aws.String("SET roomCode = :roomCode"),
-		ExpressionAttributeValues: map[string]types.AttributeValue{
-			":roomCode": &types.AttributeValueMemberS{Value: roomCode},
-		},
-	})
+	var input *dynamodb.UpdateItemInput
+	if roomCode == "" {
+		input = &dynamodb.UpdateItemInput{
+			TableName: aws.String(t.tableName),
+			Key: map[string]types.AttributeValue{
+				"connectionId": &types.AttributeValueMemberS{Value: connID},
+			},
+			UpdateExpression: aws.String("REMOVE roomCode"),
+		}
+	} else {
+		input = &dynamodb.UpdateItemInput{
+			TableName: aws.String(t.tableName),
+			Key: map[string]types.AttributeValue{
+				"connectionId": &types.AttributeValueMemberS{Value: connID},
+			},
+			UpdateExpression: aws.String("SET roomCode = :roomCode"),
+			ExpressionAttributeValues: map[string]types.AttributeValue{
+				":roomCode": &types.AttributeValueMemberS{Value: roomCode},
+			},
+		}
+	}
+
+	_, err := t.client.UpdateItem(ctx, input)
 	if err != nil {
 		return fmt.Errorf("update roomCode: %w", err)
 	}

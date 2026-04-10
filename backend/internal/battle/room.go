@@ -21,7 +21,7 @@ const (
 	roomCodeChars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
 
 	// maxCreaturePayloadBytes はクリーチャーペイロードの最大サイズ
-	maxCreaturePayloadBytes = 4096
+	maxCreaturePayloadBytes = 16384
 )
 
 // validCreatureData はクライアントから受信するクリーチャーデータの期待される形状を定義する
