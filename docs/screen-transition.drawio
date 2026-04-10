@@ -1,0 +1,97 @@
+<mxfile>
+  <diagram name="画面遷移図" id="screen-transition">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="600">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="title" value="🎮 タイトル画面&#xa;(title)" style="rounded=1;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="310" y="20" width="150" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="setup" value="🥚 セットアップ&#xa;(setup)&#xa;名前→タイプ選択" style="rounded=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="310" y="120" width="150" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="main" value="🏠 メインゲーム&#xa;(main)&#xa;育成・ステータス表示" style="rounded=1;whiteSpace=wrap;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="310" y="240" width="150" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="status" value="📊 ステータス&#xa;(status)&#xa;一覧・切替・削除" style="rounded=1;whiteSpace=wrap;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="80" y="240" width="150" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="evolution" value="✨ 進化演出&#xa;(evolution)" style="rounded=1;whiteSpace=wrap;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="560" y="160" width="140" height="45" as="geometry"/>
+        </mxCell>
+        <mxCell id="drawing" value="🎨 お絵描き&#xa;(drawing)&#xa;64x64ピクセルアート" style="rounded=1;whiteSpace=wrap;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="560" y="245" width="140" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="death" value="💀 死亡画面&#xa;(death)" style="rounded=1;whiteSpace=wrap;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=1;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="80" y="370" width="150" height="45" as="geometry"/>
+        </mxCell>
+        <mxCell id="lobby" value="⚔️ バトルロビー&#xa;(battle_lobby)&#xa;作成・参加・CPU" style="rounded=1;whiteSpace=wrap;fillColor=#ffe6cc;strokeColor=#d79b00;fontStyle=1;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="310" y="370" width="150" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="battle" value="⚔️ バトル&#xa;(battle)&#xa;ターン制バトル" style="rounded=1;whiteSpace=wrap;fillColor=#ffe6cc;strokeColor=#d79b00;fontStyle=1;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="560" y="370" width="140" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="e1" value="ゲーム開始" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#6c8ebf;fontSize=9;fontColor=#6c8ebf;" edge="1" parent="1" source="title" target="setup">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e2" value="作成完了" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#82b366;fontSize=9;fontColor=#82b366;" edge="1" parent="1" source="setup" target="main">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e3" value="ステータス" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#9673a6;fontSize=9;fontColor=#9673a6;exitX=0;exitY=0.4;exitDx=0;exitDy=0;entryX=1;entryY=0.4;entryDx=0;entryDy=0;" edge="1" parent="1" source="main" target="status">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e3b" value="戻る" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#9673a6;fontSize=9;fontColor=#9673a6;dashed=1;exitX=1;exitY=0.6;exitDx=0;exitDy=0;entryX=0;entryY=0.6;entryDx=0;entryDy=0;" edge="1" parent="1" source="status" target="main">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e4" value="新規作成" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#9673a6;fontSize=9;fontColor=#9673a6;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="status" target="setup">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="155" y="148"/></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e5" value="進化条件達成" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#b85450;fontSize=9;fontColor=#b85450;exitX=1;exitY=0;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="main" target="evolution">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="510" y="240"/><mxPoint x="510" y="183"/></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e6" value="演出完了" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#b85450;fontSize=9;fontColor=#b85450;" edge="1" parent="1" source="evolution" target="drawing">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e7" value="描画完了/スキップ" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#b85450;fontSize=9;fontColor=#b85450;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="drawing" target="main">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="510" y="273"/><mxPoint x="510" y="268"/></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e8" value="HP≤0" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#666666;fontSize=9;fontColor=#666666;exitX=0;exitY=1;exitDx=0;exitDy=0;entryX=1;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="main" target="death">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e9" value="生存あり" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#666666;fontSize=9;fontColor=#666666;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="death" target="status">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e10" value="全滅" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#666666;fontSize=9;fontColor=#666666;dashed=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="death" target="setup">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="30" y="393"/><mxPoint x="30" y="175"/><mxPoint x="310" y="175"/></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e11" value="バトル" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#d79b00;fontSize=9;fontColor=#d79b00;" edge="1" parent="1" source="main" target="lobby">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e12" value="バトル開始" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#d79b00;fontSize=9;fontColor=#d79b00;" edge="1" parent="1" source="lobby" target="battle">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e13" value="キャンセル" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#d79b00;fontSize=9;fontColor=#d79b00;dashed=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="lobby" target="main">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="420" y="340"/><mxPoint x="420" y="340"/></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e14" value="バトル終了" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#d79b00;fontSize=9;fontColor=#d79b00;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="battle" target="main">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="740" y="398"/><mxPoint x="740" y="268"/></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="legend" value="凡例&#xa;─── 通常遷移&#xa;- - - 戻る/条件付き" style="text;html=0;fontSize=9;fillColor=#f5f5f5;strokeColor=#cccccc;rounded=1;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="670" y="20" width="130" height="55" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

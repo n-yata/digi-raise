@@ -1,0 +1,143 @@
+<mxfile>
+  <diagram name="タイトル・セットアップ" id="page1">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="800" pageHeight="500">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="s1f" value="" style="rounded=1;fillColor=#0f172a;strokeColor=#334155;strokeWidth=2;" vertex="1" parent="1"><mxGeometry x="20" y="40" width="220" height="400" as="geometry"/></mxCell>
+        <mxCell id="s1t" value="① タイトル画面 (title)" style="text;fontSize=11;fontStyle=1;fillColor=none;strokeColor=none;fontColor=#6c8ebf;" vertex="1" parent="1"><mxGeometry x="30" y="10" width="200" height="20" as="geometry"/></mxCell>
+        <mxCell id="s1logo" value="🎮 DIGI-RAISE" style="text;fontSize=14;fontStyle=1;fillColor=none;strokeColor=none;fontColor=#ffffff;" vertex="1" parent="1"><mxGeometry x="45" y="110" width="170" height="25" as="geometry"/></mxCell>
+        <mxCell id="s1sub" value="デジモン風クリーチャー育成ゲーム" style="text;fontSize=7;fillColor=none;strokeColor=none;fontColor=#94a3b8;" vertex="1" parent="1"><mxGeometry x="40" y="138" width="180" height="15" as="geometry"/></mxCell>
+        <mxCell id="s1b1" value="はじめから" style="rounded=1;fillColor=#3b82f6;strokeColor=none;fontColor=#ffffff;fontSize=9;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="45" y="210" width="170" height="32" as="geometry"/></mxCell>
+        <mxCell id="s1b2" value="つづきから" style="rounded=1;fillColor=#1e40af;strokeColor=#3b82f6;fontColor=#ffffff;fontSize=9;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="45" y="255" width="170" height="32" as="geometry"/></mxCell>
+        <mxCell id="s1b3" value="セーブインポート" style="rounded=1;fillColor=#1e293b;strokeColor=#475569;fontColor=#94a3b8;fontSize=8;" vertex="1" parent="1"><mxGeometry x="45" y="300" width="170" height="28" as="geometry"/></mxCell>
+
+        <mxCell id="s2f" value="" style="rounded=1;fillColor=#0f172a;strokeColor=#334155;strokeWidth=2;" vertex="1" parent="1"><mxGeometry x="270" y="40" width="220" height="400" as="geometry"/></mxCell>
+        <mxCell id="s2t" value="② セットアップ画面 (setup)" style="text;fontSize=11;fontStyle=1;fillColor=none;strokeColor=none;fontColor=#82b366;" vertex="1" parent="1"><mxGeometry x="280" y="10" width="200" height="20" as="geometry"/></mxCell>
+        <mxCell id="s2h" value="名前を入力" style="text;fontSize=9;fontStyle=1;fillColor=none;strokeColor=none;fontColor=#ffffff;" vertex="1" parent="1"><mxGeometry x="330" y="55" width="100" height="18" as="geometry"/></mxCell>
+        <mxCell id="s2in" value="クリーチャーの名前" style="rounded=1;fillColor=#1e293b;strokeColor=#475569;fontColor=#94a3b8;fontSize=8;" vertex="1" parent="1"><mxGeometry x="290" y="78" width="180" height="28" as="geometry"/></mxCell>
+        <mxCell id="s2h2" value="タイプを選択" style="text;fontSize=9;fontStyle=1;fillColor=none;strokeColor=none;fontColor=#ffffff;" vertex="1" parent="1"><mxGeometry x="330" y="118" width="100" height="18" as="geometry"/></mxCell>
+        <mxCell id="s2t1" value="🔥 Fire" style="rounded=1;fillColor=#1e293b;strokeColor=#ef4444;fontColor=#fff;fontSize=8;" vertex="1" parent="1"><mxGeometry x="290" y="142" width="85" height="28" as="geometry"/></mxCell>
+        <mxCell id="s2t2" value="💧 Water" style="rounded=1;fillColor=#1e293b;strokeColor=#3b82f6;fontColor=#fff;fontSize=8;" vertex="1" parent="1"><mxGeometry x="385" y="142" width="85" height="28" as="geometry"/></mxCell>
+        <mxCell id="s2t3" value="🌿 Plant" style="rounded=1;fillColor=#1e293b;strokeColor=#22c55e;fontColor=#fff;fontSize=8;" vertex="1" parent="1"><mxGeometry x="290" y="178" width="85" height="28" as="geometry"/></mxCell>
+        <mxCell id="s2t4" value="⚡ Thunder" style="rounded=1;fillColor=#1e293b;strokeColor=#eab308;fontColor=#fff;fontSize=8;" vertex="1" parent="1"><mxGeometry x="385" y="178" width="85" height="28" as="geometry"/></mxCell>
+        <mxCell id="s2t5" value="🌑 Dark" style="rounded=1;fillColor=#1e293b;strokeColor=#8b5cf6;fontColor=#fff;fontSize=8;" vertex="1" parent="1"><mxGeometry x="290" y="214" width="85" height="28" as="geometry"/></mxCell>
+        <mxCell id="s2t6" value="✨ Light" style="rounded=1;fillColor=#1e293b;strokeColor=#f59e0b;fontColor=#fff;fontSize=8;" vertex="1" parent="1"><mxGeometry x="385" y="214" width="85" height="28" as="geometry"/></mxCell>
+        <mxCell id="s2desc" value="[タイプ説明テキスト]" style="text;fontSize=7;fillColor=none;strokeColor=none;fontColor=#94a3b8;align=center;" vertex="1" parent="1"><mxGeometry x="320" y="255" width="120" height="15" as="geometry"/></mxCell>
+        <mxCell id="s2go" value="ゲームスタート！" style="rounded=1;fillColor=#22c55e;strokeColor=none;fontColor=#ffffff;fontSize=9;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="300" y="290" width="170" height="32" as="geometry"/></mxCell>
+        <mxCell id="s2bk" value="← もどる" style="rounded=1;fillColor=#1e293b;strokeColor=#475569;fontColor=#94a3b8;fontSize=8;" vertex="1" parent="1"><mxGeometry x="300" y="335" width="170" height="26" as="geometry"/></mxCell>
+
+        <mxCell id="s3f" value="" style="rounded=1;fillColor=#0f172a;strokeColor=#334155;strokeWidth=2;" vertex="1" parent="1"><mxGeometry x="520" y="40" width="240" height="400" as="geometry"/></mxCell>
+        <mxCell id="s3t" value="③ メインゲーム画面 (main)" style="text;fontSize=11;fontStyle=1;fillColor=none;strokeColor=none;fontColor=#d6b656;" vertex="1" parent="1"><mxGeometry x="530" y="10" width="220" height="20" as="geometry"/></mxCell>
+        <mxCell id="s3hd" value="ピクモン Lv.5 🔥FIRE       DEV" style="rounded=0;fillColor=#1e293b;strokeColor=#334155;fontColor=#fff;fontSize=7;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="530" y="50" width="220" height="22" as="geometry"/></mxCell>
+        <mxCell id="s3hp" value="HP ████████░░ 120/150" style="text;fontSize=7;fillColor=none;strokeColor=none;fontColor=#22c55e;" vertex="1" parent="1"><mxGeometry x="535" y="78" width="200" height="12" as="geometry"/></mxCell>
+        <mxCell id="s3hg" value="満腹 ██████░░░░" style="text;fontSize=7;fillColor=none;strokeColor=none;fontColor=#f59e0b;" vertex="1" parent="1"><mxGeometry x="535" y="92" width="200" height="12" as="geometry"/></mxCell>
+        <mxCell id="s3hp2" value="幸福 ████████░░" style="text;fontSize=7;fillColor=none;strokeColor=none;fontColor=#ec4899;" vertex="1" parent="1"><mxGeometry x="535" y="106" width="200" height="12" as="geometry"/></mxCell>
+        <mxCell id="s3cr" value="🐾&#xa;[クリーチャー&#xa;スプライト]" style="rounded=1;fillColor=#1e293b;strokeColor=#334155;fontColor=#94a3b8;fontSize=8;dashed=1;" vertex="1" parent="1"><mxGeometry x="580" y="125" width="120" height="85" as="geometry"/></mxCell>
+        <mxCell id="s3st" value="ATK:12  DEF:8  SPD:10  体重:5" style="text;fontSize=6;fillColor=none;strokeColor=none;fontColor=#94a3b8;align=center;" vertex="1" parent="1"><mxGeometry x="555" y="215" width="180" height="12" as="geometry"/></mxCell>
+        <mxCell id="s3mg" value="[メッセージポップアップ]" style="rounded=1;fillColor=#1e293b;strokeColor=#475569;fontColor=#94a3b8;fontSize=7;dashed=1;" vertex="1" parent="1"><mxGeometry x="555" y="232" width="160" height="20" as="geometry"/></mxCell>
+        <mxCell id="s3f1" value="🍖 ごはん" style="rounded=1;fillColor=#1e293b;strokeColor=#f59e0b;fontColor=#f59e0b;fontSize=7;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="535" y="262" width="105" height="26" as="geometry"/></mxCell>
+        <mxCell id="s3f2" value="⚔️ トレーニング" style="rounded=1;fillColor=#1e293b;strokeColor=#ef4444;fontColor=#ef4444;fontSize=7;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="645" y="262" width="105" height="26" as="geometry"/></mxCell>
+        <mxCell id="s3f3" value="🎮 あそぶ" style="rounded=1;fillColor=#1e293b;strokeColor=#22c55e;fontColor=#22c55e;fontSize=7;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="535" y="295" width="105" height="26" as="geometry"/></mxCell>
+        <mxCell id="s3f4" value="💤 ねる" style="rounded=1;fillColor=#1e293b;strokeColor=#8b5cf6;fontColor=#8b5cf6;fontSize=7;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="645" y="295" width="105" height="26" as="geometry"/></mxCell>
+        <mxCell id="s3f5" value="📊 ステータス" style="rounded=1;fillColor=#1e293b;strokeColor=#475569;fontColor=#94a3b8;fontSize=7;" vertex="1" parent="1"><mxGeometry x="535" y="330" width="105" height="26" as="geometry"/></mxCell>
+        <mxCell id="s3f6" value="⚔️ バトル" style="rounded=1;fillColor=#1e293b;strokeColor=#d97706;fontColor=#d97706;fontSize=7;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="645" y="330" width="105" height="26" as="geometry"/></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram name="バトル・ステータス" id="page2">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="800" pageHeight="500">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="s4f" value="" style="rounded=1;fillColor=#0f172a;strokeColor=#334155;strokeWidth=2;" vertex="1" parent="1"><mxGeometry x="20" y="40" width="220" height="400" as="geometry"/></mxCell>
+        <mxCell id="s4t" value="④ バトルロビー (battle_lobby)" style="text;fontSize=10;fontStyle=1;fillColor=none;strokeColor=none;fontColor=#d79b00;" vertex="1" parent="1"><mxGeometry x="30" y="10" width="200" height="20" as="geometry"/></mxCell>
+        <mxCell id="s4tb1" value="ルーム作成" style="rounded=0;fillColor=#334155;strokeColor=#475569;fontColor=#fff;fontSize=7;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="30" y="50" width="65" height="22" as="geometry"/></mxCell>
+        <mxCell id="s4tb2" value="ルーム参加" style="rounded=0;fillColor=#1e293b;strokeColor=#475569;fontColor=#94a3b8;fontSize=7;" vertex="1" parent="1"><mxGeometry x="95" y="50" width="65" height="22" as="geometry"/></mxCell>
+        <mxCell id="s4tb3" value="CPU対戦" style="rounded=0;fillColor=#1e293b;strokeColor=#475569;fontColor=#94a3b8;fontSize=7;" vertex="1" parent="1"><mxGeometry x="160" y="50" width="65" height="22" as="geometry"/></mxCell>
+        <mxCell id="s4cd" value="" style="rounded=1;fillColor=#1e293b;strokeColor=#475569;" vertex="1" parent="1"><mxGeometry x="45" y="90" width="170" height="70" as="geometry"/></mxCell>
+        <mxCell id="s4cl" value="ルームコード" style="text;fontSize=7;fillColor=none;strokeColor=none;fontColor=#94a3b8;align=center;" vertex="1" parent="1"><mxGeometry x="80" y="95" width="100" height="12" as="geometry"/></mxCell>
+        <mxCell id="s4cv" value="ABC123" style="text;fontSize=16;fontStyle=1;fillColor=none;strokeColor=none;fontColor=#f59e0b;align=center;" vertex="1" parent="1"><mxGeometry x="65" y="110" width="130" height="22" as="geometry"/></mxCell>
+        <mxCell id="s4cp" value="📋 コピー" style="rounded=1;fillColor=#334155;strokeColor=none;fontColor=#94a3b8;fontSize=6;align=center;" vertex="1" parent="1"><mxGeometry x="90" y="135" width="80" height="18" as="geometry"/></mxCell>
+        <mxCell id="s4w" value="相手の参加を待っています..." style="text;fontSize=7;fillColor=none;strokeColor=none;fontColor=#94a3b8;align=center;" vertex="1" parent="1"><mxGeometry x="45" y="180" width="170" height="15" as="geometry"/></mxCell>
+        <mxCell id="s4go" value="バトル開始" style="rounded=1;fillColor=#475569;strokeColor=none;fontColor=#94a3b8;fontSize=9;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="45" y="220" width="170" height="32" as="geometry"/></mxCell>
+        <mxCell id="s4bk" value="← もどる" style="rounded=1;fillColor=#1e293b;strokeColor=#475569;fontColor=#94a3b8;fontSize=8;" vertex="1" parent="1"><mxGeometry x="45" y="265" width="170" height="26" as="geometry"/></mxCell>
+
+        <mxCell id="s5f" value="" style="rounded=1;fillColor=#0f172a;strokeColor=#334155;strokeWidth=2;" vertex="1" parent="1"><mxGeometry x="270" y="40" width="220" height="400" as="geometry"/></mxCell>
+        <mxCell id="s5t" value="⑤ バトル画面 (battle)" style="text;fontSize=11;fontStyle=1;fillColor=none;strokeColor=none;fontColor=#d79b00;" vertex="1" parent="1"><mxGeometry x="280" y="10" width="200" height="20" as="geometry"/></mxCell>
+        <mxCell id="s5on" value="相手クリーチャー Lv.7" style="text;fontSize=7;fillColor=none;strokeColor=none;fontColor=#f87171;" vertex="1" parent="1"><mxGeometry x="285" y="52" width="120" height="12" as="geometry"/></mxCell>
+        <mxCell id="s5oh" value="" style="rounded=1;fillColor=#ef4444;strokeColor=#334155;" vertex="1" parent="1"><mxGeometry x="285" y="66" width="160" height="8" as="geometry"/></mxCell>
+        <mxCell id="s5me" value="🐾" style="rounded=1;fillColor=#1e293b;strokeColor=#3b82f6;fontColor=#fff;fontSize=18;" vertex="1" parent="1"><mxGeometry x="290" y="90" width="70" height="70" as="geometry"/></mxCell>
+        <mxCell id="s5vs" value="VS" style="text;fontSize=11;fontStyle=1;fillColor=none;strokeColor=none;fontColor=#ffffff;" vertex="1" parent="1"><mxGeometry x="365" y="112" width="25" height="18" as="geometry"/></mxCell>
+        <mxCell id="s5op" value="👾" style="rounded=1;fillColor=#1e293b;strokeColor=#ef4444;fontColor=#fff;fontSize=18;" vertex="1" parent="1"><mxGeometry x="400" y="90" width="70" height="70" as="geometry"/></mxCell>
+        <mxCell id="s5lg" value="[バトルログ 最新5件]&#xa;ピクモンの攻撃！&#xa;相手に15ダメージ！" style="rounded=1;fillColor=#1e293b;strokeColor=#334155;fontColor=#94a3b8;fontSize=6;align=left;spacingLeft=4;" vertex="1" parent="1"><mxGeometry x="285" y="175" width="190" height="50" as="geometry"/></mxCell>
+        <mxCell id="s5mn" value="ピクモン Lv.5" style="text;fontSize=7;fillColor=none;strokeColor=none;fontColor=#60a5fa;" vertex="1" parent="1"><mxGeometry x="285" y="235" width="100" height="12" as="geometry"/></mxCell>
+        <mxCell id="s5mh" value="" style="rounded=1;fillColor=#3b82f6;strokeColor=#334155;" vertex="1" parent="1"><mxGeometry x="285" y="249" width="130" height="8" as="geometry"/></mxCell>
+        <mxCell id="s5a1" value="⚔️ こうげき" style="rounded=1;fillColor=#1e293b;strokeColor=#ef4444;fontColor=#ef4444;fontSize=7;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="285" y="270" width="60" height="26" as="geometry"/></mxCell>
+        <mxCell id="s5a2" value="🛡️ ぼうぎょ" style="rounded=1;fillColor=#1e293b;strokeColor=#3b82f6;fontColor=#3b82f6;fontSize=7;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="350" y="270" width="60" height="26" as="geometry"/></mxCell>
+        <mxCell id="s5a3" value="💥 とくしゅ" style="rounded=1;fillColor=#1e293b;strokeColor=#f59e0b;fontColor=#f59e0b;fontSize=7;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="415" y="270" width="60" height="26" as="geometry"/></mxCell>
+        <mxCell id="s5tn" value="ターン 3/10" style="text;fontSize=6;fillColor=none;strokeColor=none;fontColor=#475569;align=center;" vertex="1" parent="1"><mxGeometry x="340" y="300" width="80" height="12" as="geometry"/></mxCell>
+
+        <mxCell id="s6f" value="" style="rounded=1;fillColor=#0f172a;strokeColor=#334155;strokeWidth=2;" vertex="1" parent="1"><mxGeometry x="520" y="40" width="240" height="400" as="geometry"/></mxCell>
+        <mxCell id="s6t" value="⑥ ステータス画面 (status)" style="text;fontSize=11;fontStyle=1;fillColor=none;strokeColor=none;fontColor=#9673a6;" vertex="1" parent="1"><mxGeometry x="530" y="10" width="220" height="20" as="geometry"/></mxCell>
+        <mxCell id="s6h" value="クリーチャー一覧" style="text;fontSize=8;fontStyle=1;fillColor=none;strokeColor=none;fontColor=#fff;" vertex="1" parent="1"><mxGeometry x="590" y="50" width="100" height="15" as="geometry"/></mxCell>
+        <mxCell id="s6c1" value="🐾 ピクモン Lv.5 🔥 [アクティブ]" style="rounded=1;fillColor=#1e293b;strokeColor=#3b82f6;fontColor=#fff;fontSize=7;align=left;spacingLeft=6;" vertex="1" parent="1"><mxGeometry x="535" y="70" width="210" height="28" as="geometry"/></mxCell>
+        <mxCell id="s6c2" value="🐾 アクアン Lv.3 💧" style="rounded=1;fillColor=#1e293b;strokeColor=#475569;fontColor=#94a3b8;fontSize=7;align=left;spacingLeft=6;" vertex="1" parent="1"><mxGeometry x="535" y="104" width="185" height="28" as="geometry"/></mxCell>
+        <mxCell id="s6d2" value="🗑" style="rounded=1;fillColor=#7f1d1d;strokeColor=none;fontColor=#fff;fontSize=8;" vertex="1" parent="1"><mxGeometry x="725" y="107" width="20" height="22" as="geometry"/></mxCell>
+        <mxCell id="s6c3" value="💀 リーフン [墓石]" style="rounded=1;fillColor=#1e293b;strokeColor=#475569;fontColor=#666;fontSize=7;align=left;spacingLeft=6;" vertex="1" parent="1"><mxGeometry x="535" y="138" width="185" height="28" as="geometry"/></mxCell>
+        <mxCell id="s6d3" value="🗑" style="rounded=1;fillColor=#7f1d1d;strokeColor=none;fontColor=#fff;fontSize=8;" vertex="1" parent="1"><mxGeometry x="725" y="141" width="20" height="22" as="geometry"/></mxCell>
+        <mxCell id="s6nw" value="＋ 新しいクリーチャーを育てる" style="rounded=1;fillColor=#1e293b;strokeColor=#22c55e;fontColor=#22c55e;fontSize=8;fontStyle=1;dashed=1;" vertex="1" parent="1"><mxGeometry x="535" y="180" width="210" height="28" as="geometry"/></mxCell>
+        <mxCell id="s6ex" value="📤 エクスポート" style="rounded=1;fillColor=#1e293b;strokeColor=#475569;fontColor=#94a3b8;fontSize=7;" vertex="1" parent="1"><mxGeometry x="535" y="220" width="100" height="24" as="geometry"/></mxCell>
+        <mxCell id="s6im" value="📥 インポート" style="rounded=1;fillColor=#1e293b;strokeColor=#475569;fontColor=#94a3b8;fontSize=7;" vertex="1" parent="1"><mxGeometry x="645" y="220" width="100" height="24" as="geometry"/></mxCell>
+        <mxCell id="s6dt" value="[選択中の詳細ステータス]&#xa;HP:120/150 EXP:340&#xa;ATK:12 DEF:8 SPD:10&#xa;Age:3日 戦績:5勝2敗" style="rounded=1;fillColor=#1e293b;strokeColor=#334155;fontColor=#94a3b8;fontSize=6;align=left;spacingLeft=6;" vertex="1" parent="1"><mxGeometry x="535" y="258" width="210" height="55" as="geometry"/></mxCell>
+        <mxCell id="s6bk" value="← もどる" style="rounded=1;fillColor=#1e293b;strokeColor=#475569;fontColor=#94a3b8;fontSize=8;" vertex="1" parent="1"><mxGeometry x="535" y="330" width="210" height="26" as="geometry"/></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram name="ミニゲーム・お絵描き" id="page3">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="800" pageHeight="500">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="m1f" value="" style="rounded=1;fillColor=#0f172a;strokeColor=#ef4444;strokeWidth=2;" vertex="1" parent="1"><mxGeometry x="20" y="40" width="220" height="380" as="geometry"/></mxCell>
+        <mxCell id="m1t" value="⚔️ トレーニング（もぐらたたき）" style="text;fontSize=9;fontStyle=1;fillColor=none;strokeColor=none;fontColor=#ef4444;" vertex="1" parent="1"><mxGeometry x="30" y="10" width="200" height="18" as="geometry"/></mxCell>
+        <mxCell id="m1i" value="もぐらを叩け！" style="text;fontSize=7;fillColor=none;strokeColor=none;fontColor=#94a3b8;align=center;" vertex="1" parent="1"><mxGeometry x="65" y="50" width="100" height="15" as="geometry"/></mxCell>
+        <mxCell id="m1s" value="スコア: 3    残り: 5s" style="text;fontSize=7;fillColor=none;strokeColor=none;fontColor=#94a3b8;align=center;" vertex="1" parent="1"><mxGeometry x="55" y="68" width="130" height="15" as="geometry"/></mxCell>
+        <mxCell id="g1" value="" style="rounded=1;fillColor=#0f172a;strokeColor=#334155;" vertex="1" parent="1"><mxGeometry x="40" y="95" width="55" height="50" as="geometry"/></mxCell>
+        <mxCell id="g2" value="🐾" style="rounded=1;fillColor=#0f172a;strokeColor=#ef4444;fontSize=16;" vertex="1" parent="1"><mxGeometry x="103" y="95" width="55" height="50" as="geometry"/></mxCell>
+        <mxCell id="g3" value="" style="rounded=1;fillColor=#0f172a;strokeColor=#334155;" vertex="1" parent="1"><mxGeometry x="166" y="95" width="55" height="50" as="geometry"/></mxCell>
+        <mxCell id="g4" value="🐾" style="rounded=1;fillColor=#0f172a;strokeColor=#ef4444;fontSize=16;" vertex="1" parent="1"><mxGeometry x="40" y="153" width="55" height="50" as="geometry"/></mxCell>
+        <mxCell id="g5" value="" style="rounded=1;fillColor=#0f172a;strokeColor=#334155;" vertex="1" parent="1"><mxGeometry x="103" y="153" width="55" height="50" as="geometry"/></mxCell>
+        <mxCell id="g6" value="" style="rounded=1;fillColor=#0f172a;strokeColor=#334155;" vertex="1" parent="1"><mxGeometry x="166" y="153" width="55" height="50" as="geometry"/></mxCell>
+        <mxCell id="g7" value="" style="rounded=1;fillColor=#0f172a;strokeColor=#334155;" vertex="1" parent="1"><mxGeometry x="40" y="211" width="55" height="50" as="geometry"/></mxCell>
+        <mxCell id="g8" value="" style="rounded=1;fillColor=#0f172a;strokeColor=#334155;" vertex="1" parent="1"><mxGeometry x="103" y="211" width="55" height="50" as="geometry"/></mxCell>
+        <mxCell id="g9" value="🐾" style="rounded=1;fillColor=#0f172a;strokeColor=#ef4444;fontSize=16;" vertex="1" parent="1"><mxGeometry x="166" y="211" width="55" height="50" as="geometry"/></mxCell>
+        <mxCell id="m1r" value="成功: 5匹以上 → ステ+1〜3, EXP+20&#xa;失敗: 4匹以下 → ステ+0〜1, EXP+5" style="text;fontSize=6;fillColor=none;strokeColor=none;fontColor=#94a3b8;align=center;" vertex="1" parent="1"><mxGeometry x="30" y="275" width="200" height="25" as="geometry"/></mxCell>
+
+        <mxCell id="m2f" value="" style="rounded=1;fillColor=#0f172a;strokeColor=#22c55e;strokeWidth=2;" vertex="1" parent="1"><mxGeometry x="270" y="40" width="220" height="380" as="geometry"/></mxCell>
+        <mxCell id="m2t" value="🎮 あそぶ（神経衰弱）" style="text;fontSize=9;fontStyle=1;fillColor=none;strokeColor=none;fontColor=#22c55e;" vertex="1" parent="1"><mxGeometry x="310" y="10" width="160" height="18" as="geometry"/></mxCell>
+        <mxCell id="m2i" value="ペアを見つけよう！" style="text;fontSize=7;fillColor=none;strokeColor=none;fontColor=#94a3b8;align=center;" vertex="1" parent="1"><mxGeometry x="320" y="50" width="120" height="15" as="geometry"/></mxCell>
+        <mxCell id="m2s" value="残り: 2ペア    手数: 3" style="text;fontSize=7;fillColor=none;strokeColor=none;fontColor=#94a3b8;align=center;" vertex="1" parent="1"><mxGeometry x="310" y="68" width="140" height="15" as="geometry"/></mxCell>
+        <mxCell id="c1" value="?" style="rounded=1;fillColor=#0f172a;strokeColor=#334155;fontColor=#475569;fontSize=12;" vertex="1" parent="1"><mxGeometry x="296" y="95" width="55" height="55" as="geometry"/></mxCell>
+        <mxCell id="c2" value="🔥" style="rounded=1;fillColor=#1e3a5f;strokeColor=#22c55e;fontSize=16;" vertex="1" parent="1"><mxGeometry x="359" y="95" width="55" height="55" as="geometry"/></mxCell>
+        <mxCell id="c3" value="?" style="rounded=1;fillColor=#0f172a;strokeColor=#334155;fontColor=#475569;fontSize=12;" vertex="1" parent="1"><mxGeometry x="422" y="95" width="55" height="55" as="geometry"/></mxCell>
+        <mxCell id="c4" value="🌋" style="rounded=1;fillColor=#1e3a5f;strokeColor=#22c55e;fontSize=16;" vertex="1" parent="1"><mxGeometry x="296" y="160" width="55" height="55" as="geometry"/></mxCell>
+        <mxCell id="c5" value="?" style="rounded=1;fillColor=#0f172a;strokeColor=#334155;fontColor=#475569;fontSize=12;" vertex="1" parent="1"><mxGeometry x="359" y="160" width="55" height="55" as="geometry"/></mxCell>
+        <mxCell id="c6" value="✓" style="rounded=1;fillColor=none;strokeColor=#22c55e;fontColor=#22c55e;fontSize=12;opacity=30;dashed=1;" vertex="1" parent="1"><mxGeometry x="422" y="160" width="55" height="55" as="geometry"/></mxCell>
+        <mxCell id="m2r" value="成功(8手以内): happiness+20, hunger-5&#xa;失敗(9手以上): happiness+5, hunger-5&#xa;※EXPなし" style="text;fontSize=6;fillColor=none;strokeColor=none;fontColor=#94a3b8;align=center;" vertex="1" parent="1"><mxGeometry x="280" y="232" width="200" height="30" as="geometry"/></mxCell>
+
+        <mxCell id="m3f" value="" style="rounded=1;fillColor=#0f172a;strokeColor=#b85450;strokeWidth=2;" vertex="1" parent="1"><mxGeometry x="520" y="40" width="240" height="380" as="geometry"/></mxCell>
+        <mxCell id="m3t" value="🎨 お絵描き画面 (drawing)" style="text;fontSize=9;fontStyle=1;fillColor=none;strokeColor=none;fontColor=#b85450;" vertex="1" parent="1"><mxGeometry x="555" y="10" width="180" height="18" as="geometry"/></mxCell>
+        <mxCell id="m3i" value="チャイルドの姿を描こう！" style="text;fontSize=7;fillColor=none;strokeColor=none;fontColor=#94a3b8;align=center;" vertex="1" parent="1"><mxGeometry x="570" y="50" width="140" height="15" as="geometry"/></mxCell>
+        <mxCell id="m3cv" value="64×64&#xa;ピクセルアート&#xa;キャンバス" style="rounded=0;fillColor=#1e293b;strokeColor=#475569;fontColor=#94a3b8;fontSize=8;dashed=1;" vertex="1" parent="1"><mxGeometry x="565" y="75" width="150" height="130" as="geometry"/></mxCell>
+        <mxCell id="m3p1" value="✏️ ペン" style="rounded=1;fillColor=#334155;strokeColor=#b85450;fontColor=#fff;fontSize=7;" vertex="1" parent="1"><mxGeometry x="565" y="218" width="46" height="20" as="geometry"/></mxCell>
+        <mxCell id="m3p2" value="🧹 消し" style="rounded=1;fillColor=#1e293b;strokeColor=#475569;fontColor=#94a3b8;fontSize=7;" vertex="1" parent="1"><mxGeometry x="617" y="218" width="46" height="20" as="geometry"/></mxCell>
+        <mxCell id="m3p3" value="🪣 塗り" style="rounded=1;fillColor=#1e293b;strokeColor=#475569;fontColor=#94a3b8;fontSize=7;" vertex="1" parent="1"><mxGeometry x="669" y="218" width="46" height="20" as="geometry"/></mxCell>
+        <mxCell id="m3pl" value="[カラーパレット]" style="text;fontSize=6;fillColor=none;strokeColor=none;fontColor=#475569;align=center;" vertex="1" parent="1"><mxGeometry x="590" y="245" width="100" height="12" as="geometry"/></mxCell>
+        <mxCell id="m3ok" value="完成！" style="rounded=1;fillColor=#22c55e;strokeColor=none;fontColor=#fff;fontSize=8;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="565" y="268" width="72" height="26" as="geometry"/></mxCell>
+        <mxCell id="m3sk" value="スキップ" style="rounded=1;fillColor=#1e293b;strokeColor=#475569;fontColor=#94a3b8;fontSize=8;" vertex="1" parent="1"><mxGeometry x="645" y="268" width="72" height="26" as="geometry"/></mxCell>
+        <mxCell id="m3n" value="表示サイズ（ステージ別）:&#xa;タマゴ100px → ベイビー160px&#xa;→ チャイルド200px → アダルト240px&#xa;→ パーフェクト270px → アルティメット300px" style="text;fontSize=5;fillColor=none;strokeColor=none;fontColor=#475569;align=left;spacingLeft=4;" vertex="1" parent="1"><mxGeometry x="535" y="310" width="200" height="40" as="geometry"/></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
