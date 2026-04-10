@@ -76,7 +76,12 @@ export default function BattleLobbyScreen({
         setOnlineError(null)
       },
       onOpponentJoined: (opponentCreature: CreatureSnapshot) => {
-        pendingOpponentRef.current = opponentCreature
+        // サーバーから来る customSprites を customSvg に変換
+        const raw = opponentCreature as CreatureSnapshot & { customSprites?: Record<string, string> }
+        if (raw.customSprites && !raw.customSvg) {
+          raw.customSvg = raw.customSprites[String(raw.evolutionStage)]
+        }
+        pendingOpponentRef.current = raw
         setOnlineState('ready')
         tryTransitionToBattle()
       },
