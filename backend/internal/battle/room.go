@@ -26,19 +26,20 @@ const (
 
 // validCreatureData はクライアントから受信するクリーチャーデータの期待される形状を定義する
 type validCreatureData struct {
-	ID             string `json:"id"`
-	Name           string `json:"name"`
-	Type           string `json:"type"`
-	HP             int    `json:"hp"`
-	MaxHP          int    `json:"maxHp"`
-	ATK            int    `json:"atk"`
-	DEF            int    `json:"def"`
-	SPD            int    `json:"spd"`
-	Level          int    `json:"level"`
-	EvolutionStage int    `json:"evolutionStage"`
-	EvolutionName  string `json:"evolutionName"`
-	Wins           int    `json:"wins"`
-	Losses         int    `json:"losses"`
+	ID             string                     `json:"id"`
+	Name           string                     `json:"name"`
+	Type           string                     `json:"type"`
+	HP             int                        `json:"hp"`
+	MaxHP          int                        `json:"maxHp"`
+	ATK            int                        `json:"atk"`
+	DEF            int                        `json:"def"`
+	SPD            int                        `json:"spd"`
+	Level          int                        `json:"level"`
+	EvolutionStage int                        `json:"evolutionStage"`
+	EvolutionName  string                     `json:"evolutionName"`
+	Wins           int                        `json:"wins"`
+	Losses         int                        `json:"losses"`
+	CustomSprites  map[string]string          `json:"customSprites,omitempty"`
 }
 
 var validTypes = map[string]bool{
