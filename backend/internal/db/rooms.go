@@ -334,6 +334,66 @@ func (t *RoomsTable) AdvanceTurn(ctx context.Context, roomCode string) error {
 	return nil
 }
 
+// VerifyReconnectToken は roomCode と reconnectToken の組み合わせを検証し、ルームレコードを返す
+// - ルームが存在しない → error
+// - room.ReconnectToken != token → error
+// - room.DisconnectedAt == nil → error（切断されていない）
+// - 検証成功 → ルームレコードを返す
+func (t *RoomsTable) VerifyReconnectToken(ctx context.Context, roomCode, token string) (*RoomRecord, error) {
+	room, err := t.GetRoom(ctx, roomCode)
+	if err != nil {
+		return nil, fmt.Errorf("verify reconnect token: %w", err)
+	}
+	if room == nil {
+		return nil, fmt.Errorf("invalid credentials")
+	}
+	if room.DisconnectedAt == nil {
+		return nil, fmt.Errorf("invalid credentials")
+	}
+	if room.ReconnectToken != token {
+		return nil, fmt.Errorf("invalid credentials")
+	}
+	// 60秒の有効期限チェック
+	elapsed := time.Now().Unix() - *room.DisconnectedAt
+	if elapsed > 60 {
+		return nil, fmt.Errorf("reconnect token expired")
+	}
+	return room, nil
+}
+
+// ClearDisconnected は再接続成功時に切断情報をクリアし、新しい connectionID を設定する
+// role に応じて hostConnectionId または guestConnectionId を新しい connectionID で更新する
+// disconnectedAt, disconnectedRole, reconnectToken を削除する
+func (t *RoomsTable) ClearDisconnected(ctx context.Context, roomCode, role, newConnID, reconnectToken string) error {
+	var updateExpr string
+	switch role {
+	case "host":
+		updateExpr = "SET hostConnectionId = :newConnID REMOVE disconnectedAt, disconnectedRole, reconnectToken"
+	case "guest":
+		updateExpr = "SET guestConnectionId = :newConnID REMOVE disconnectedAt, disconnectedRole, reconnectToken"
+	default:
+		return fmt.Errorf("invalid role: %s", role)
+	}
+
+	_, err := t.client.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+		TableName: aws.String(t.tableName),
+		Key: map[string]types.AttributeValue{
+			"roomCode": &types.AttributeValueMemberS{Value: roomCode},
+		},
+		ConditionExpression: aws.String("disconnectedRole = :role AND reconnectToken = :token"),
+		UpdateExpression:    aws.String(updateExpr),
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":newConnID": &types.AttributeValueMemberS{Value: newConnID},
+			":role":      &types.AttributeValueMemberS{Value: role},
+			":token":     &types.AttributeValueMemberS{Value: reconnectToken},
+		},
+	})
+	if err != nil {
+		return fmt.Errorf("clear disconnected (role=%s): %w", role, err)
+	}
+	return nil
+}
+
 // SetFinished はバトルを終了させる（winner を設定、status = "finished"）
 func (t *RoomsTable) SetFinished(ctx context.Context, roomCode, winner string) error {
 	_, err := t.client.UpdateItem(ctx, &dynamodb.UpdateItemInput{

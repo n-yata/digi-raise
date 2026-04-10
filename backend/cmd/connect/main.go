@@ -8,6 +8,7 @@ import (
 	awsconfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/n-yata/digi-raise/backend/internal/apigw"
 	"github.com/n-yata/digi-raise/backend/internal/auth"
 	"github.com/n-yata/digi-raise/backend/internal/db"
 	"github.com/n-yata/digi-raise/backend/internal/handler"
@@ -17,7 +18,9 @@ func main() {
 	// 環境変数の取得
 	connectionsTable := mustGetenv("CONNECTIONS_TABLE")
 	configTable := mustGetenv("CONFIG_TABLE")
+	roomsTable := mustGetenv("ROOMS_TABLE")
 	secretKey := mustGetenv("SECRET_KEY")
+	apiGatewayEndpoint := mustGetenv("API_GATEWAY_ENDPOINT")
 
 	// AWS 設定のロード（コールドスタート時に一度だけ実行）
 	cfg, err := awsconfig.LoadDefaultConfig(context.Background())
@@ -31,10 +34,12 @@ func main() {
 	// 各コンポーネントの初期化
 	connections := db.NewConnectionsTable(dynamoClient, connectionsTable)
 	config := db.NewConfigTable(dynamoClient, configTable)
+	rooms := db.NewRoomsTable(dynamoClient, roomsTable)
 	verifier := auth.NewVerifier(secretKey)
+	apigwClient := apigw.NewClient(cfg, apiGatewayEndpoint)
 
 	// ConnectHandler の作成
-	h := handler.NewConnectHandler(connections, config, verifier)
+	h := handler.NewConnectHandler(connections, config, verifier, rooms, apigwClient)
 
 	// Lambda ハンドラの登録
 	lambda.Start(h.Handle)

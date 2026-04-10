@@ -113,11 +113,25 @@ func (h *MessageHandler) Handle(ctx context.Context, req events.APIGatewayWebsoc
 // handlePing は ping アクションを処理する
 // connections テーブルの lastPingAt を更新し、messageCount をリセットし、pong を返す
 func (h *MessageHandler) handlePing(ctx context.Context, connID string) error {
+	// messageCount リセット
 	if err := h.connections.ResetMessageCount(ctx, connID); err != nil {
 		log.Printf("message: ping: failed to reset message count connId=%s: %v", connID, err)
 		// カウントリセット失敗はクリティカルではないため続行
 	}
 
+	// 切断タイムアウト判定
+	conn, err := h.connections.Get(ctx, connID)
+	if err == nil && conn.RoomCode != "" {
+		room, err := h.rooms.GetRoom(ctx, conn.RoomCode)
+		if err == nil && room != nil && room.Status == "battling" && room.DisconnectedAt != nil {
+			elapsed := time.Now().Unix() - *room.DisconnectedAt
+			if elapsed > 60 {
+				h.resolveDisconnectTimeout(ctx, room)
+			}
+		}
+	}
+
+	// pong 送信
 	if err := h.apigw.SendJSON(ctx, connID, map[string]any{
 		"event": "pong",
 	}); err != nil {
@@ -396,6 +410,18 @@ func (h *MessageHandler) handleSelectAction(ctx context.Context, connID string, 
 		})
 	}
 
+	// 切断タイムアウト判定
+	if room.DisconnectedAt != nil {
+		elapsed := time.Now().Unix() - *room.DisconnectedAt
+		if elapsed > 60 {
+			h.resolveDisconnectTimeout(ctx, room)
+			return h.apigw.SendJSON(ctx, connID, map[string]any{
+				"event":  "battle_end",
+				"winner": getOpponentRole(room.DisconnectedRole),
+			})
+		}
+	}
+
 	// 5. connID から role を特定
 	role := getRoleForConn(connID, room)
 	if role == "" {
@@ -530,4 +556,41 @@ func getRoleForConn(connID string, room *db.RoomRecord) string {
 		return "guest"
 	}
 	return ""
+}
+
+// getOpponentRole は切断した role の相手 role を返す
+func getOpponentRole(role string) string {
+	if role == "host" {
+		return "guest"
+	}
+	return "host"
+}
+
+// getConnIDForRole は role に対応する connectionID を返す
+func getConnIDForRole(role string, room *db.RoomRecord) string {
+	if role == "host" {
+		return room.HostConnectionID
+	}
+	return room.GuestConnectionID
+}
+
+// resolveDisconnectTimeout は切断タイムアウトを処理しバトルを終了する
+func (h *MessageHandler) resolveDisconnectTimeout(ctx context.Context, room *db.RoomRecord) {
+	winner := getOpponentRole(room.DisconnectedRole)
+
+	if err := h.rooms.SetFinished(ctx, room.RoomCode, winner); err != nil {
+		log.Printf("message: disconnect timeout: failed to set finished roomCode=%s: %v", room.RoomCode, err)
+		return
+	}
+
+	// 残存プレイヤーに battle_end を通知
+	winnerConnID := getConnIDForRole(winner, room)
+	if winnerConnID != "" {
+		h.apigw.SendJSON(ctx, winnerConnID, map[string]any{
+			"event":  "battle_end",
+			"winner": winner,
+		})
+	}
+
+	log.Printf("message: disconnect timeout: battle ended roomCode=%s winner=%s", room.RoomCode, winner)
 }
