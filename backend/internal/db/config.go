@@ -53,3 +53,22 @@ func (t *ConfigTable) IsMaintenanceMode(ctx context.Context) (bool, error) {
 
 	return strVal.Value == "true", nil
 }
+
+// SetMaintenanceMode は maintenance_mode フラグを設定する
+func (t *ConfigTable) SetMaintenanceMode(ctx context.Context, enabled bool) error {
+	value := "false"
+	if enabled {
+		value = "true"
+	}
+	_, err := t.client.PutItem(ctx, &dynamodb.PutItemInput{
+		TableName: aws.String(t.tableName),
+		Item: map[string]types.AttributeValue{
+			"configKey": &types.AttributeValueMemberS{Value: "maintenance_mode"},
+			"value":     &types.AttributeValueMemberS{Value: value},
+		},
+	})
+	if err != nil {
+		return fmt.Errorf("set maintenance_mode: %w", err)
+	}
+	return nil
+}
