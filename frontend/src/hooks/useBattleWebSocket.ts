@@ -9,6 +9,16 @@ const RECONNECT_TOKEN_KEY = 'ws_reconnect_token'
 
 const BACKOFF_DELAYS = [1000, 2000, 4000, 8000, 16000, 30000]
 
+// 現在の進化ステージの customSprite のみ含めた creature データを作成
+function prepareCreatureForSend(creature: Creature): Record<string, unknown> {
+  const { customSprites, ...rest } = creature
+  const currentSprite = customSprites?.[creature.evolutionStage]
+  if (currentSprite) {
+    return { ...rest, customSprites: { [creature.evolutionStage]: currentSprite } }
+  }
+  return rest
+}
+
 export interface UseBattleWebSocketOptions {
   onRoomCreated: (roomCode: string) => void
   onOpponentJoined: (opponentCreature: CreatureSnapshot) => void
@@ -220,14 +230,14 @@ export function useBattleWebSocket(options: UseBattleWebSocketOptions): UseBattl
   }, [clearPingTimer])
 
   const createRoom = useCallback((creature: Creature) => {
-    // customSprites を除外してデータ量を削減
-    const { customSprites: _customSprites, ...creatureWithoutSprites } = creature
-    sendJson({ action: 'create_room', creature: creatureWithoutSprites })
+    // 現在のステージの customSprite のみ含めてデータ量を抑える
+    const creatureData = prepareCreatureForSend(creature)
+    sendJson({ action: 'create_room', creature: creatureData })
   }, [sendJson])
 
   const joinRoom = useCallback((roomCode: string, creature: Creature) => {
-    const { customSprites: _customSprites, ...creatureWithoutSprites } = creature
-    sendJson({ action: 'join_room', roomCode, creature: creatureWithoutSprites })
+    const creatureData = prepareCreatureForSend(creature)
+    sendJson({ action: 'join_room', roomCode, creature: creatureData })
   }, [sendJson])
 
   const sendReady = useCallback((roomCode: string) => {
