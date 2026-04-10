@@ -219,12 +219,12 @@ export default function App() {
     setShowPlayGame(true)
   }, [])
 
-  const handlePlayResult = useCallback(() => {
+  const handlePlayResult = useCallback((success: boolean) => {
     setShowPlayGame(false)
     if (!creatureRef.current) return
-    const updated = playWithCreature(creatureRef.current)
+    const updated = playWithCreature(creatureRef.current, success)
     persistActiveCreature(updated)
-    showMessage('一緒に遊んだ！楽しかった！🎮')
+    showMessage(success ? '一緒に遊んだ！楽しかった！🎮' : '一緒に遊んだ！少し楽しかった🎮')
   }, [persistActiveCreature, showMessage])
 
   const handleSleep = useCallback(() => {

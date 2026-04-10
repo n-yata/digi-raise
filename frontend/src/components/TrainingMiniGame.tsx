@@ -7,39 +7,139 @@ interface Props {
   onResult: (success: boolean) => void
 }
 
-const ZONE_START = 35
-const ZONE_END = 65
-const SPEED = 1.5 // % per frame (~60fps)
+const GRID_SIZE = 9
+const GAME_DURATION = 8000
+const MOLE_VISIBLE_MS = 800
+const MOLE_INTERVAL_MS = 1000
+const SUCCESS_THRESHOLD = 5
+
+type Phase = 'countdown' | 'playing' | 'result'
 
 export default function TrainingMiniGame({ creature, onResult }: Props) {
-  const [markerPos, setMarkerPos] = useState(0)
+  const [phase, setPhase] = useState<Phase>('countdown')
+  const [countdown, setCountdown] = useState(3)
+  const [activeMole, setActiveMole] = useState<number | null>(null)
+  const [hitCell, setHitCell] = useState<number | null>(null)
+  const [score, setScore] = useState(0)
+  const [timeLeft, setTimeLeft] = useState(GAME_DURATION / 1000)
   const [result, setResult] = useState<'success' | 'fail' | null>(null)
-  const [stopped, setStopped] = useState(false)
-  const posRef = useRef(0)
-  const dirRef = useRef(1)
-  const stoppedRef = useRef(false)
+
+  const scoreRef = useRef(0)
+  const activeMoleRef = useRef<number | null>(null)
+  const moleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const moleIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const gameTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const endTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const doneRef = useRef(false)
+
   const color = TYPE_COLORS[creature.type]
 
-  useEffect(() => {
-    const frame = setInterval(() => {
-      if (stoppedRef.current) return
-      posRef.current += dirRef.current * SPEED
-      if (posRef.current >= 100) { posRef.current = 100; dirRef.current = -1 }
-      else if (posRef.current <= 0) { posRef.current = 0; dirRef.current = 1 }
-      setMarkerPos(posRef.current)
-    }, 16)
-    return () => clearInterval(frame)
+  const clearAllTimers = useCallback(() => {
+    if (moleTimerRef.current) clearTimeout(moleTimerRef.current)
+    if (moleIntervalRef.current) clearInterval(moleIntervalRef.current)
+    if (gameTimerRef.current) clearInterval(gameTimerRef.current)
+    if (endTimerRef.current) clearTimeout(endTimerRef.current)
   }, [])
 
-  const handleTap = useCallback(() => {
-    if (stoppedRef.current) return
-    stoppedRef.current = true
-    setStopped(true)
-    const pos = posRef.current
-    const success = pos >= ZONE_START && pos <= ZONE_END
+  const spawnMole = useCallback(() => {
+    // Pick a random cell different from current active
+    const prev = activeMoleRef.current
+    let next: number
+    do {
+      next = Math.floor(Math.random() * GRID_SIZE)
+    } while (next === prev)
+
+    activeMoleRef.current = next
+    setActiveMole(next)
+
+    // Hide the mole after MOLE_VISIBLE_MS
+    if (moleTimerRef.current) clearTimeout(moleTimerRef.current)
+    moleTimerRef.current = setTimeout(() => {
+      activeMoleRef.current = null
+      setActiveMole(null)
+    }, MOLE_VISIBLE_MS)
+  }, [])
+
+  const endGame = useCallback(() => {
+    if (doneRef.current) return
+    doneRef.current = true
+    clearAllTimers()
+    activeMoleRef.current = null
+    setActiveMole(null)
+    setPhase('result')
+    const finalScore = scoreRef.current
+    const success = finalScore >= SUCCESS_THRESHOLD
     setResult(success ? 'success' : 'fail')
-    setTimeout(() => onResult(success), 1500)
-  }, [onResult])
+    endTimerRef.current = setTimeout(() => onResult(success), 1500)
+  }, [clearAllTimers, onResult])
+
+  // Countdown phase
+  useEffect(() => {
+    if (phase !== 'countdown') return
+    if (countdown <= 0) {
+      setPhase('playing')
+      return
+    }
+    const t = setTimeout(() => setCountdown(c => c - 1), 1000)
+    return () => clearTimeout(t)
+  }, [phase, countdown])
+
+  // Game phase
+  useEffect(() => {
+    if (phase !== 'playing') return
+
+    doneRef.current = false
+    scoreRef.current = 0
+    setScore(0)
+    setTimeLeft(GAME_DURATION / 1000)
+
+    // Spawn first mole immediately
+    spawnMole()
+
+    // Spawn subsequent moles on interval
+    moleIntervalRef.current = setInterval(() => {
+      spawnMole()
+    }, MOLE_INTERVAL_MS)
+
+    // Game countdown timer
+    const startTime = Date.now()
+    gameTimerRef.current = setInterval(() => {
+      const elapsed = Date.now() - startTime
+      const remaining = Math.max(0, Math.ceil((GAME_DURATION - elapsed) / 1000))
+      setTimeLeft(remaining)
+      if (elapsed >= GAME_DURATION) {
+        endGame()
+      }
+    }, 200)
+
+    return () => {
+      clearAllTimers()
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase])
+
+  // Unmount cleanup
+  useEffect(() => {
+    return () => clearAllTimers()
+  }, [clearAllTimers])
+
+  const handleCellClick = useCallback((index: number) => {
+    if (phase !== 'playing' || doneRef.current) return
+    if (activeMoleRef.current !== index) return
+
+    // Hit!
+    activeMoleRef.current = null
+    setActiveMole(null)
+    if (moleTimerRef.current) clearTimeout(moleTimerRef.current)
+
+    setHitCell(index)
+    setTimeout(() => setHitCell(null), 300)
+
+    scoreRef.current += 1
+    setScore(scoreRef.current)
+  }, [phase])
+
+  const countdownLabel = countdown > 0 ? String(countdown) : 'スタート！'
 
   return (
     <div
@@ -50,74 +150,110 @@ export default function TrainingMiniGame({ creature, onResult }: Props) {
         className="p-6 rounded-2xl mx-4 w-full max-w-sm"
         style={{ background: '#16213e', border: `2px solid ${color}` }}
       >
-        <div className="text-center mb-2 font-pixel" style={{ fontSize: '0.7rem', color }}>
+        {/* Header */}
+        <div className="text-center mb-1 font-pixel" style={{ fontSize: '0.7rem', color }}>
           ⚔️ トレーニング！
         </div>
-        <div className="text-center mb-5 font-pixel" style={{ fontSize: '0.7rem', color: '#94a3b8' }}>
-          {result ? '\u00a0' : '緑ゾーンでタップ！'}
+        <div className="text-center mb-4 font-pixel" style={{ fontSize: '0.7rem', color: '#94a3b8' }}>
+          {phase === 'playing' ? 'もぐらを叩け！' : '\u00a0'}
         </div>
 
-        {/* Bar */}
-        <div
-          className="relative w-full rounded-full overflow-hidden mb-6"
-          style={{ height: 36, background: '#0f172a', border: '1px solid #334155' }}
-        >
-          {/* Success zone */}
+        {/* Score + timer row */}
+        {phase === 'playing' && (
           <div
-            className="absolute top-0 bottom-0"
-            style={{
-              left: `${ZONE_START}%`,
-              width: `${ZONE_END - ZONE_START}%`,
-              background: 'rgba(74,222,128,0.25)',
-              borderLeft: '2px solid rgba(74,222,128,0.8)',
-              borderRight: '2px solid rgba(74,222,128,0.8)',
-            }}
-          />
-          {/* Marker */}
-          <div
-            className="absolute top-1/2 -translate-y-1/2 rounded"
-            style={{
-              width: 12,
-              height: 24,
-              left: `calc(${markerPos}% - 6px)`,
-              background: stopped
-                ? result === 'success' ? '#4ade80' : '#f87171'
-                : color,
-              boxShadow: stopped ? 'none' : `0 0 10px ${color}`,
-            }}
-          />
-        </div>
-
-        {/* Result */}
-        {result && (
-          <div
-            className="text-center mb-5 font-pixel"
-            style={{
-              fontSize: '0.9rem',
-              color: result === 'success' ? '#4ade80' : '#f87171',
-            }}
+            className="flex justify-between mb-4 font-pixel"
+            style={{ fontSize: '0.75rem', color: '#94a3b8' }}
           >
-            {result === 'success' ? '🎯 成功！' : '💥 失敗…'}
+            <span style={{ color }}>スコア: <span style={{ color: '#fff' }}>{score}</span></span>
+            <span>残り: <span style={{ color: timeLeft <= 3 ? '#f87171' : '#fff' }}>{timeLeft}s</span></span>
           </div>
         )}
 
-        {/* Tap button */}
-        {!stopped && (
-          <button
-            onClick={handleTap}
-            className="w-full py-4 rounded-xl font-pixel active:scale-95 transition-transform"
-            style={{
-              fontSize: '0.8rem',
-              background: `linear-gradient(135deg, ${color}44, ${color}22)`,
-              border: `2px solid ${color}`,
-              color,
-              letterSpacing: '0.1em',
-            }}
+        {/* Countdown overlay */}
+        {phase === 'countdown' && (
+          <div
+            className="flex items-center justify-center mb-4 font-pixel"
+            style={{ height: 200, fontSize: countdown === 0 ? '1.2rem' : '2.5rem', color }}
           >
-            タップ！
-          </button>
+            {countdownLabel}
+          </div>
+        )}
+
+        {/* Grid */}
+        {phase === 'playing' && (
+          <div
+            className="grid gap-2 mb-4"
+            style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}
+          >
+            {Array.from({ length: GRID_SIZE }, (_, i) => {
+              const isActive = activeMole === i
+              const isHit = hitCell === i
+              return (
+                <button
+                  key={i}
+                  onClick={() => handleCellClick(i)}
+                  className="rounded-xl flex items-center justify-center select-none"
+                  style={{
+                    height: 70,
+                    background: isHit
+                      ? `${color}55`
+                      : isActive
+                        ? '#0f172a'
+                        : '#0f172a',
+                    border: isActive
+                      ? `2px solid ${color}`
+                      : '2px solid #334155',
+                    transform: isHit ? 'scale(0.85)' : isActive ? 'scale(1.05)' : 'scale(1)',
+                    transition: 'transform 0.1s ease-out, border 0.1s, background 0.1s',
+                    fontSize: '1.8rem',
+                    cursor: isActive ? 'pointer' : 'default',
+                  }}
+                >
+                  {isActive ? (
+                    <span
+                      style={{
+                        display: 'inline-block',
+                        animation: 'mole-pop 0.15s ease-out',
+                      }}
+                    >
+                      🐾
+                    </span>
+                  ) : null}
+                </button>
+              )
+            })}
+          </div>
+        )}
+
+        {/* Result */}
+        {phase === 'result' && result && (
+          <div className="flex flex-col items-center justify-center" style={{ height: 200 }}>
+            <div
+              className="font-pixel mb-3"
+              style={{
+                fontSize: '1.1rem',
+                color: result === 'success' ? '#4ade80' : '#f87171',
+              }}
+            >
+              {result === 'success' ? '🎯 成功！' : '💥 失敗…'}
+            </div>
+            <div
+              className="font-pixel"
+              style={{ fontSize: '0.75rem', color: '#94a3b8' }}
+            >
+              スコア: {score} / {GRID_SIZE}
+            </div>
+          </div>
         )}
       </div>
+
+      <style>{`
+        @keyframes mole-pop {
+          0%   { transform: scale(0.3); opacity: 0.5; }
+          70%  { transform: scale(1.2); opacity: 1; }
+          100% { transform: scale(1);   opacity: 1; }
+        }
+      `}</style>
     </div>
   )
 }

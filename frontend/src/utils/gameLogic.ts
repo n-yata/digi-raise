@@ -75,18 +75,15 @@ export function trainCreature(creature: Creature, success: boolean = true): Crea
   return { ...updated, lastUpdated: Date.now() }
 }
 
-export function playWithCreature(creature: Creature): Creature {
+export function playWithCreature(creature: Creature, success: boolean = true): Creature {
   if (!creature.isAlive || creature.isSleeping) return creature
-  const updated = addExp(
-    {
-      ...creature,
-      happiness: Math.min(100, creature.happiness + 20),
-      hunger: Math.max(0, creature.hunger - 5),
-      playCount: creature.playCount + 1,
-    },
-    5
-  )
-  return { ...updated, lastUpdated: Date.now() }
+  return {
+    ...creature,
+    happiness: Math.min(100, creature.happiness + (success ? 20 : 5)),
+    hunger: Math.max(0, creature.hunger - 5),
+    playCount: creature.playCount + 1,
+    lastUpdated: Date.now(),
+  }
 }
 
 export function toggleSleep(creature: Creature): Creature {
@@ -119,8 +116,9 @@ export function applyTimeUpdate(creature: Creature, devMode: boolean): Creature 
   // age はティック数 × 0.5 ずつ増える（float。表示は Math.floor）
   updated.age = updated.age + thirtyMinTicks * 0.5
   if (updated.isSleeping) {
-    // 50 HP/hour = 25 HP per 30-min tick
-    updated.hp = Math.min(updated.maxHp, updated.hp + thirtyMinTicks * 25)
+    // 30分ティックごとに最大HPの10%を回復
+    const hpPerTick = Math.ceil(updated.maxHp * 0.1)
+    updated.hp = Math.min(updated.maxHp, updated.hp + thirtyMinTicks * hpPerTick)
   }
 
   // Starvation damage

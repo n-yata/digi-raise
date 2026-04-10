@@ -278,51 +278,87 @@ describe('trainCreature', () => {
 // 4. playWithCreature
 // ----------------------------------------------------------------
 describe('playWithCreature', () => {
-  it('happiness が 20 増加する (上限100)', () => {
+  it('success=true のとき happiness が 20 増加する', () => {
+    const creature = makeCreature({ happiness: 50 })
+    const result = playWithCreature(creature, true)
+    expect(result.happiness).toBe(70)
+  })
+
+  it('success=false のとき happiness が 5 増加する', () => {
+    const creature = makeCreature({ happiness: 50 })
+    const result = playWithCreature(creature, false)
+    expect(result.happiness).toBe(55)
+  })
+
+  it('success 省略時(デフォルト true)は happiness が 20 増加する', () => {
     const creature = makeCreature({ happiness: 50 })
     const result = playWithCreature(creature)
     expect(result.happiness).toBe(70)
   })
 
-  it('happiness の上限は 100 を超えない', () => {
+  it('success=true のとき happiness の上限は 100 を超えない', () => {
     const creature = makeCreature({ happiness: 90 })
-    const result = playWithCreature(creature)
+    const result = playWithCreature(creature, true)
     expect(result.happiness).toBe(100)
   })
 
-  it('hunger が 5 減少する (下限0)', () => {
+  it('success=false のとき happiness の上限は 100 を超えない', () => {
+    const creature = makeCreature({ happiness: 98 })
+    const result = playWithCreature(creature, false)
+    expect(result.happiness).toBe(100)
+  })
+
+  it('hunger が 5 減少する (success=true)', () => {
     const creature = makeCreature({ hunger: 60 })
-    const result = playWithCreature(creature)
+    const result = playWithCreature(creature, true)
+    expect(result.hunger).toBe(55)
+  })
+
+  it('hunger が 5 減少する (success=false)', () => {
+    const creature = makeCreature({ hunger: 60 })
+    const result = playWithCreature(creature, false)
     expect(result.hunger).toBe(55)
   })
 
   it('hunger の下限は 0 を下回らない', () => {
     const creature = makeCreature({ hunger: 3 })
-    const result = playWithCreature(creature)
+    const result = playWithCreature(creature, true)
     expect(result.hunger).toBe(0)
   })
 
-  it('exp が 5 増加する', () => {
+  it('EXP は変化しない (success=true)', () => {
     const creature = makeCreature({ exp: 10 })
-    const result = playWithCreature(creature)
-    expect(result.exp).toBe(15)
+    const result = playWithCreature(creature, true)
+    expect(result.exp).toBe(10)
   })
 
-  it('playCount が 1 増加する', () => {
+  it('EXP は変化しない (success=false)', () => {
+    const creature = makeCreature({ exp: 10 })
+    const result = playWithCreature(creature, false)
+    expect(result.exp).toBe(10)
+  })
+
+  it('playCount が 1 増加する (success=true)', () => {
     const creature = makeCreature({ playCount: 4 })
-    const result = playWithCreature(creature)
+    const result = playWithCreature(creature, true)
+    expect(result.playCount).toBe(5)
+  })
+
+  it('playCount が 1 増加する (success=false)', () => {
+    const creature = makeCreature({ playCount: 4 })
+    const result = playWithCreature(creature, false)
     expect(result.playCount).toBe(5)
   })
 
   it('isAlive:false のときそのまま返す', () => {
     const creature = makeCreature({ isAlive: false, playCount: 0 })
-    const result = playWithCreature(creature)
+    const result = playWithCreature(creature, true)
     expect(result.playCount).toBe(0)
   })
 
   it('isSleeping:true のときそのまま返す', () => {
     const creature = makeCreature({ isSleeping: true, playCount: 0 })
-    const result = playWithCreature(creature)
+    const result = playWithCreature(creature, true)
     expect(result.playCount).toBe(0)
   })
 })
@@ -387,7 +423,7 @@ describe('applyTimeUpdate', () => {
     expect(result.age).toBe(3)
   })
 
-  it('睡眠中(isSleeping:true)のとき hp が ticks×25 回復する', () => {
+  it('睡眠中(isSleeping:true)のとき hp が ticks×ceil(maxHp*0.1) 回復する', () => {
     const creature = makeCreature({
       lastUpdated: BASE_TIME,
       isSleeping: true,
@@ -396,7 +432,8 @@ describe('applyTimeUpdate', () => {
     })
     vi.spyOn(Date, 'now').mockReturnValue(BASE_TIME + 1000 * 60 * 30) // 1 tick
     const result = applyTimeUpdate(creature, false)
-    expect(result.hp).toBe(125) // 100 + 25
+    // ceil(150 * 0.1) = 15, 100 + 15 = 115
+    expect(result.hp).toBe(115)
   })
 
   it('睡眠中の hp 回復は maxHp を超えない', () => {
@@ -406,9 +443,10 @@ describe('applyTimeUpdate', () => {
       hp: 38,
       maxHp: 40,
     })
-    vi.spyOn(Date, 'now').mockReturnValue(BASE_TIME + 1000 * 60 * 60) // 2 ticks → +10
+    vi.spyOn(Date, 'now').mockReturnValue(BASE_TIME + 1000 * 60 * 60) // 2 ticks
     const result = applyTimeUpdate(creature, false)
-    expect(result.hp).toBe(40) // Math.min(40, 38+10)=40
+    // ceil(40 * 0.1) = 4, 38 + 4*2 = 46 → capped at 40
+    expect(result.hp).toBe(40)
   })
 
   it('hunger が 0 になったとき飢餓ダメージで hp が ticks×5 減少する', () => {
