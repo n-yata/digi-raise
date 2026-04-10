@@ -434,13 +434,22 @@ func (h *MessageHandler) handleSelectAction(ctx context.Context, connID string, 
 	}
 
 	// 6. パッシブタイムアウトチェック（30秒超過で未選択側に guard を強制）
-	room = h.checkActionTimeout(ctx, room)
+	room, timeoutResolved := h.checkActionTimeout(ctx, room)
+	if timeoutResolved {
+		// タイムアウトで両者揃ったので actions_locked を送信して終了
+		return h.sendActionsLocked(ctx, room)
+	}
 
-	// 7. アクションをセット
+	// 7. アクションをセット（既にセット済みの場合は無視）
 	updatedRoom, err := h.rooms.SetAction(ctx, msg.RoomCode, role, msg.BattleAction)
 	if err != nil {
 		log.Printf("message: select_action: failed to set action role=%s connId=%s roomCode=%s: %v", role, connID, msg.RoomCode, err)
-		return err
+		// 条件不一致（既にセット済み）は正常系として扱う
+		return h.apigw.SendJSON(ctx, connID, map[string]any{
+			"event":   "error",
+			"code":    "NOT_YOUR_TURN",
+			"message": "action already submitted",
+		})
 	}
 
 	// 8. 両者のアクションが揃っているか判定
@@ -453,49 +462,51 @@ func (h *MessageHandler) handleSelectAction(ctx context.Context, connID string, 
 	}
 
 	// 10. 両者揃ったら actions_locked イベントを送信してターンを進める
+	return h.sendActionsLocked(ctx, updatedRoom)
+}
 
-	// a. crypto/rand で turnSeed を生成（JavaScript 安全整数範囲: 0 〜 2^53-1）
+// sendActionsLocked は両者にactions_lockedイベントを送信しターンを進める
+func (h *MessageHandler) sendActionsLocked(ctx context.Context, room *db.RoomRecord) error {
 	seedBig, err := rand.Int(rand.Reader, big.NewInt(1<<53))
 	if err != nil {
-		log.Printf("message: select_action: failed to generate seed roomCode=%s: %v", msg.RoomCode, err)
+		log.Printf("message: select_action: failed to generate seed roomCode=%s: %v", room.RoomCode, err)
 		return err
 	}
 	seed := seedBig.Int64()
 
 	payload := map[string]any{
 		"event":       "actions_locked",
-		"hostAction":  updatedRoom.HostAction,
-		"guestAction": updatedRoom.GuestAction,
+		"hostAction":  room.HostAction,
+		"guestAction": room.GuestAction,
 		"seed":        seed,
-		"turnNumber":  updatedRoom.CurrentTurn,
+		"turnNumber":  room.CurrentTurn,
 	}
 
-	// b. 両者に actions_locked を送信
-	if sendErr := h.apigw.SendJSON(ctx, updatedRoom.HostConnectionID, payload); sendErr != nil {
-		log.Printf("message: select_action: failed to notify host roomCode=%s: %v", msg.RoomCode, sendErr)
+	if sendErr := h.apigw.SendJSON(ctx, room.HostConnectionID, payload); sendErr != nil {
+		log.Printf("message: select_action: failed to notify host roomCode=%s: %v", room.RoomCode, sendErr)
 	}
-	if sendErr := h.apigw.SendJSON(ctx, updatedRoom.GuestConnectionID, payload); sendErr != nil {
-		log.Printf("message: select_action: failed to notify guest roomCode=%s: %v", msg.RoomCode, sendErr)
+	if sendErr := h.apigw.SendJSON(ctx, room.GuestConnectionID, payload); sendErr != nil {
+		log.Printf("message: select_action: failed to notify guest roomCode=%s: %v", room.RoomCode, sendErr)
 	}
 
-	// c. ターンを進める
-	if err := h.rooms.AdvanceTurn(ctx, msg.RoomCode); err != nil {
-		log.Printf("message: select_action: failed to advance turn roomCode=%s: %v", msg.RoomCode, err)
+	if err := h.rooms.AdvanceTurn(ctx, room.RoomCode); err != nil {
+		log.Printf("message: select_action: failed to advance turn roomCode=%s: %v", room.RoomCode, err)
 		return err
 	}
 
-	log.Printf("message: select_action: turn advanced roomCode=%s turnNumber=%d seed=%d", msg.RoomCode, updatedRoom.CurrentTurn, seed)
+	log.Printf("message: select_action: turn advanced roomCode=%s turnNumber=%d seed=%d", room.RoomCode, room.CurrentTurn, seed)
 	return nil
 }
 
 // checkActionTimeout はパッシブタイムアウトをチェックし、30秒超過時に未選択側に guard を強制する
-func (h *MessageHandler) checkActionTimeout(ctx context.Context, room *db.RoomRecord) *db.RoomRecord {
+// 両者のアクションが揃った場合は (room, true) を返す
+func (h *MessageHandler) checkActionTimeout(ctx context.Context, room *db.RoomRecord) (*db.RoomRecord, bool) {
 	if room.TurnStartedAt == nil {
-		return room
+		return room, false
 	}
 	elapsed := time.Now().Unix() - *room.TurnStartedAt
 	if elapsed <= 30 {
-		return room // タイムアウトしていない
+		return room, false // タイムアウトしていない
 	}
 
 	log.Printf("message: select_action: timeout detected elapsed=%ds roomCode=%s", elapsed, room.RoomCode)
@@ -515,7 +526,8 @@ func (h *MessageHandler) checkActionTimeout(ctx context.Context, room *db.RoomRe
 			room.GuestAction = "guard"
 		}
 	}
-	return room
+	bothReady := room.HostAction != "" && room.GuestAction != ""
+	return room, bothReady
 }
 
 // isValidBattleAction はバトルアクションのバリデーションを行う
