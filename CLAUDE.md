@@ -1,58 +1,113 @@
-# CLAUDE.md — digi-raise
+# digi-raise（デジレイズ）開発ルール
 
-仕様書は以下を参照:
-- フロントエンド仕様: [`docs/specifications/spec-frontend.md`](docs/specifications/spec-frontend.md)
-- バックエンド仕様: [`docs/specifications/spec-backend.md`](docs/specifications/spec-backend.md)
-- バトル機能実装計画: [`docs/plans/battle-feature.md`](docs/plans/battle-feature.md)
+## 概要
 
-## ディレクトリ構成
+デジモン風の育成ゲーム **デジレイズ (DigiRaise)** の PWA。
+クリーチャーを育てて進化させ、他プレイヤーとオンライン WebSocket バトルで対戦する。フロントエンド単独でも CPU 戦・QR バトル・進化ごとのお絵描きで遊べる。
+開発を進めるうえで遵守すべき標準ルールを定義する。
 
-```
-digi-raise/
-├── frontend/              # フロントエンド（React + TypeScript + Vite）
-│   ├── src/
-│   │   ├── components/    # React コンポーネント
-│   │   ├── hooks/         # カスタムフック
-│   │   ├── types/         # 型定義
-│   │   ├── utils/         # ユーティリティ
-│   │   ├── data/          # 静的データ
-│   │   ├── main.tsx       # エントリーポイント
-│   │   └── index.css      # グローバルスタイル
-│   ├── public/            # 静的アセット
-│   ├── index.html         # エントリー HTML
-│   ├── package.json       # 依存関係・スクリプト
-│   ├── vite.config.ts     # Vite 設定
-│   ├── tsconfig.json      # TypeScript 設定
-│   └── tailwind.config.js # Tailwind CSS 設定
-├── backend/               # バックエンド（Go / AWS Lambda + SAM）
-│   ├── cmd/               # Lambda エントリーポイント
-│   │   ├── connect/       # $connect ルート（認証・再接続）
-│   │   ├── disconnect/    # $disconnect ルート（切断処理）
-│   │   ├── message/       # $default ルート（全メッセージ処理）
-│   │   └── emergency-shutdown/  # 緊急遮断（SNS トリガー）
-│   ├── internal/
-│   │   ├── handler/       # Lambda ハンドラ本体
-│   │   ├── battle/        # バトルルーム操作ロジック
-│   │   ├── db/            # DynamoDB テーブル操作
-│   │   ├── apigw/         # API Gateway PostToConnection ラッパー
-│   │   └── auth/          # HMAC トークン検証
-│   ├── infra/             # SAM テンプレート・デプロイ設定
-│   ├── Makefile           # ビルド・デプロイ
-│   ├── go.mod
-│   └── go.sum
-├── docs/                  # 仕様書・設計ドキュメント
-├── .github/               # GitHub Actions ワークフロー
-└── CLAUDE.md
-```
+---
 
-## プロジェクト概要
+## ドキュメント構造
 
-デジモン風の育成ゲーム **デジレイズ (DigiRaise)** の PWA アプリ。
-- **フロントエンド**: React + TypeScript + Vite → GitHub Pages にデプロイ
-- **バックエンド**: Go + AWS Lambda + API Gateway WebSocket API → SAM でデプロイ
-- **バトル**: CPU戦（フロントエンド完結）+ オンラインバトル（WebSocket 経由）
+### 1. 永続的ドキュメント（`docs/`）
 
-## 開発コマンド
+アプリケーション全体の「**何を作るか / どう作るか**」を定義する恒久的ドキュメント。
+基本設計や方針が変わらない限り更新されない。プロジェクトの「北極星」として機能する。
+
+| ファイル | 役割 |
+|---------|------|
+| `product-requirements.md` | プロダクト要求定義書 |
+| `functional-design.md` | 機能設計書（システム構成・データフロー・WebSocket プロトコル・ER） |
+| `architecture.md` | 技術仕様書（テクノロジースタック・通信経路・パフォーマンス要件） |
+| `repository-structure.md` | リポジトリ構造定義書 |
+| `development-guidelines.md` | 開発ガイドライン（コーディング規約・テスト規約・ナレッジ蓄積） |
+| `glossary.md` | ユビキタス言語定義（ドメイン用語・ゲーム用語・命名規則） |
+
+各ファイルの章立てひな形は `docs/template/` 配下を参照。
+
+### 2. 作業単位のドキュメント（`.steering/[YYYYMMDD]-[開発タイトル]/`）
+
+特定スプリントの「**今回何をするか**」を定義する一時的なステアリングファイル。
+スプリント完了後は履歴として保持する。新規スプリントでは新しいディレクトリを作成。
+
+| ファイル | 役割 |
+|---------|------|
+| `requirements.md` | 今回の要求内容 |
+| `design.md` | 変更内容の設計 |
+| `tasklist.md` | タスクリスト |
+| `decisions.md` | 決定事項ログ（**実装中に判断が発生したら即追記**、最初から作る必要はない） |
+
+各ファイルの章立てひな形は `.steering/template/` 配下を参照。
+
+---
+
+## skill による自動発火
+
+ドキュメント作成・改訂時は、対応する skill が自動で発火してテンプレ参照と運用ルールを適用する。
+
+| skill | 発火条件 |
+|-------|---------|
+| `permanent-doc` | `docs/` 配下の新規作成・大幅改訂時 |
+| `steering-doc` | `.steering/[YYYYMMDD]-[開発タイトル]/` 配下のドキュメント作成・更新時 |
+
+定義は `.claude/skills/{permanent-doc,steering-doc}/SKILL.md` に格納。
+
+---
+
+## 機能追加・修正時の絶対ルール
+
+### 絶対に守ってください！
+
+以下の順序を省略しない。
+
+1. **影響分析** — 永続的ドキュメント（`docs/`）への影響を確認。基本設計に影響するなら `docs/` 更新を計画に含める
+2. **ステアリングディレクトリ作成** — `mkdir -p .steering/[YYYYMMDD]-[開発タイトル]`
+3. **作業ドキュメント作成** — requirements.md → design.md → tasklist.md の順。1 ファイル作成ごとにシャビ承認を得る
+4. **永続的ドキュメント更新** — 必要な場合のみ。実装後の P6 タスクで反映でも可
+5. **実装開始** — 承認後に初めてコードを書く。tasklist.md に基づいて進める
+6. **品質チェック** — クルトワ（security-engineer）レビュー → コミット
+
+> 詳細手順とテンプレ参照は `steering-doc` skill が自動発火して案内する。
+
+### ゲームデザインの判断はシャビ確認必須
+
+以下に該当する変更は、チームに割り振る前に必ずシャビへ確認すること。
+
+- 新しい進化系統・ステージの追加（進化条件の数値含む）
+- EXP・ステータス成長値・アクション効果量の変更
+- バトルのダメージ計算式・タイプ相性係数の変更
+- 特殊アクション（special）の効果内容の追加・変更
+- 新しいアクション・ゲームメカニクスの追加
+- バランスに影響する時間更新サイクルの変更
+
+ゲームデザイン上の判断は `.steering/[YYYYMMDD]-[開発タイトル]/decisions.md` に記録し、恒久ルールに昇格すべきものは `docs/development-guidelines.md` のドメイン別ルールへ反映する。
+
+---
+
+## 詳細ルールの参照先
+
+開発における具体的なルール・規約は永続的ドキュメントを参照すること。
+
+| 知りたいこと | 参照先 |
+|------------|--------|
+| コーディング規約・ハードコーディング禁止 | `docs/development-guidelines.md` |
+| コミット前のセキュリティレビュー | `docs/development-guidelines.md` |
+| ナレッジ蓄積ルール | `docs/development-guidelines.md` |
+| 図表・ダイアグラムの記載ルール | `docs/development-guidelines.md` |
+| フロントエンド（React + Vite）ルール | `docs/development-guidelines.md` |
+| バックエンド（Go + AWS Lambda）ルール | `docs/development-guidelines.md` |
+| インフラ・CI/CD ルール | `docs/development-guidelines.md` |
+| テスト規約 | `docs/development-guidelines.md` |
+| Git 規約 | `docs/development-guidelines.md` |
+| 技術スタック・通信経路 | `docs/architecture.md` |
+| ディレクトリ構成・ファイル配置 | `docs/repository-structure.md` |
+| ドメイン用語・ゲーム用語の定義 | `docs/glossary.md` |
+| バトル仕様・WebSocket プロトコル | `docs/functional-design.md` |
+
+---
+
+## 開発コマンド早見表
 
 ### フロントエンド（`frontend/` ディレクトリで実行）
 
@@ -75,71 +130,13 @@ make deploy      # sam deploy（samconfig.toml 使用）
 make clean       # dist/ 削除
 ```
 
-Windows Git Bash では AWS CLI / SAM CLI 実行時にパスが変換される問題がある:
-```bash
-# NG: /digi-raise/... が C:/Program Files/Git/... に変換される
-aws ssm put-parameter --name "/digi-raise/hmac-secret-key" ...
+Windows Git Bash では SAM/AWS CLI のパス変換に注意（`MSYS_NO_PATHCONV=1`、`sam.cmd` を使用）。詳細は `docs/development-guidelines.md` のドメイン別ルール「インフラ / CI/CD」を参照。
 
-# OK: MSYS_NO_PATHCONV=1 を付ける
-MSYS_NO_PATHCONV=1 aws ssm put-parameter --name "/digi-raise/hmac-secret-key" ...
+---
 
-# SAM CLI は sam.cmd を使う（sam コマンドは Git Bash で見つからない）
-MSYS_NO_PATHCONV=1 sam.cmd deploy ...
-```
+## 注意事項
 
-デプロイ・運用の詳細コマンドは [`docs/specifications/spec-backend.md`](docs/specifications/spec-backend.md) を参照。
-
-## 仕様書の更新ルール
-
-実装が完了したら、`docs/specifications/` の仕様書も併せて最新化すること。
-
-## ゲームデザイン決定時の原則
-
-以下のようなゲームデザインに関わる判断が発生した場合、**チームに実装を割り振る前に必ずシャビに確認すること**。
-
-- 新しい進化系統・ステージの追加（進化条件の数値含む）
-- EXP、ステータス成長値、アクション効果量の変更
-- バトルのダメージ計算式・タイプ相性係数の変更
-- 特殊アクション（special）の効果内容の追加・変更
-- 新しいアクション・ゲームメカニクスの追加
-- バランスに影響する時間更新サイクルの変更
-
-ゲームデザイン上の意思決定は `docs/game-design.md` に記録すること。
-未決定事項は同ファイルの「未決定事項」セクションに追記し、シャビの判断を待つこと。
-
-## 実装上の注意
-
-- `GameState` 型は `frontend/src/types/creature.ts` に定義。`creatures: Creature[]` + `activeCreatureId: string | null` で複数クリーチャーを管理する。
-- 状態管理の中枢は `frontend/src/App.tsx`（useState群）。`useGameState.ts` は削除済み。
-- クリーチャーの保存は `SaveData { creatures, activeCreatureId }` を固定キー `"saveData"` で IndexedDB に一括保存（`storage.ts`）。
-- 非アクティブのクリーチャーは時間停止。切り替え時に `lastUpdated` を現在時刻にリセットする。
-- 死亡クリーチャーは `isAlive: false` の状態でリストに墓石として残る。個別削除も可能。
-- クリーチャーの保持上限は5体（`MAX_CREATURES = 5`、死亡含む）。上限時は新規作成ボタンを無効化。アクティブクリーチャーは削除不可。
-- `age` は float（30分ティックごとに +0.5）。進化条件の比較は float のまま、表示のみ `Math.floor`。
-- ごはんアクションは EXP を付与しない。
-- devMode は `App.tsx` のヘッダー「DEV」ボタンで切り替え。時間スケール: 30分 → 30秒。
-- バトルロジック（ダメージ計算・ターン解決）はフロントエンドで完結。バトルはアクティブクリーチャーで自動参加。
-- QRバトル: 相手クリーチャーデータをQRコード経由で取得し、CPU AIで相手アクションを自動選択してローカルバトル。
-- タイプ相性マトリクスは `frontend/src/utils/battleLogic.ts` の `TYPE_ADVANTAGE` が正。有利: ×1.2、不利: ×0.8。
-
-## バックエンド（WebSocket バトル）
-
-詳細は [`docs/specifications/spec-backend.md`](docs/specifications/spec-backend.md) を参照。
-
-- **WebSocket エンドポイント**: `frontend/.env` の `VITE_WS_ENDPOINT` に設定（SAM deploy の Outputs で確認）
-- **IaC**: AWS SAM（`backend/infra/template.yaml`）
-- Lambda 4つ: connect / disconnect / message / emergency-shutdown
-- DynamoDB 3テーブル: Connections / Rooms / Config
-- ダメージ計算はフロントエンド実行。サーバーは乱数シード配信・ターン管理・マッチングを担当
-- creature データは `json.RawMessage`（DynamoDB Binary 型）でそのまま保存・転送。サーバーは中身を解釈しない（スキーマ変更に強い）
-- API Gateway WebSocket メッセージサイズ上限: クライアント→サーバー 32KB / サーバー→クライアント 128KB
-- Lambda 同時実行数のアカウント上限は 50（ReservedConcurrentExecutions は設定不可）
-- `frontend/.env` に `VITE_WS_ENDPOINT` と `VITE_WS_SECRET_KEY` を設定。GitHub Actions では Secrets から注入（`deploy.yml` の `env` セクション）
-
-## 開発時の注意
-
-詳細は [`docs/knowledge/`](docs/knowledge/) を参照。
-
-- **PWA キャッシュ**: コード変更がブラウザに反映されない場合、DevTools → Application → Service Workers → Unregister → Clear site data → リロード
-- **バグ調査の順序**: 表示コンポーネント（最下流）から逆順に辿る。上流（バックエンド）から調べると遠回りになりやすい
-- **URL/シークレットのハードコード禁止**: 環境変数（`VITE_*` / `os.Getenv`）経由で取得。`.env` + `.gitignore` で管理。フォールバック値もソースに含めない
+- ドキュメントの作成・更新は段階的に行い、各段階で承認を得る
+- `.steering/` のディレクトリ名は日付と開発タイトルで明確に識別できるようにする
+- 永続的ドキュメントと作業単位のドキュメントを混同しない
+- 実装が完了したら、対応する永続的ドキュメントを最新化すること
