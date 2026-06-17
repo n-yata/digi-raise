@@ -1,4 +1,5 @@
 import { useRef, useState, useCallback, useEffect } from 'react'
+import DOMPurify from 'dompurify'
 import { applyFloodFill } from '../utils/floodFill'
 
 export type DrawingTool = 'pen' | 'eraser' | 'fill'
@@ -125,7 +126,7 @@ export default function DrawingCanvas({
               strokeWidth: 0,
               fill: color,
               type: 'fill-group',
-              fillContent: `<g class="fill-layer">${fillMatch[1]}</g>`,
+              fillContent: DOMPurify.sanitize(`<g class="fill-layer">${fillMatch[1]}</g>`, { USE_PROFILES: { svg: true } }),
             },
           ]
           setUndoStack(prev => [...prev, paths])
