@@ -24,7 +24,7 @@
 | `development-guidelines.md` | 開発ガイドライン（コーディング規約・テスト規約・ナレッジ蓄積） |
 | `glossary.md` | ユビキタス言語定義（ドメイン用語・ゲーム用語・命名規則） |
 
-各ファイルの章立てひな形は `docs/template/` 配下を参照。
+各ファイルの章立てひな形は `.claude/skills/<skill名>/templates/` 配下（各 skill に同梱）を参照。
 
 ### 2. 作業単位のドキュメント（`.steering/[YYYYMMDD]-[開発タイトル]/`）
 
@@ -38,7 +38,7 @@
 | `tasklist.md` | タスクリスト |
 | `decisions.md` | 決定事項ログ（**実装中に判断が発生したら即追記**、最初から作る必要はない） |
 
-各ファイルの章立てひな形は `.steering/template/` 配下を参照。
+各ファイルの章立てひな形は `.claude/skills/steering/templates/` 配下を参照。
 
 ---
 
@@ -48,10 +48,17 @@
 
 | skill | 発火条件 |
 |-------|---------|
-| `permanent-doc` | `docs/` 配下の新規作成・大幅改訂時 |
-| `steering-doc` | `.steering/[YYYYMMDD]-[開発タイトル]/` 配下のドキュメント作成・更新時 |
+| `prd` | `docs/product-requirements.md` の新規作成・改訂時 |
+| `functional-design` | `docs/functional-design.md` の新規作成・改訂時 |
+| `architecture-design` | `docs/architecture.md` の新規作成・改訂時 |
+| `repository-structure` | `docs/repository-structure.md` の新規作成・改訂時 |
+| `development-guidelines` | `docs/development-guidelines.md` の新規作成・改訂時 |
+| `glossary` | `docs/glossary.md` の新規作成・改訂時 |
+| `steering` | `.steering/[YYYYMMDD]-[開発タイトル]/` 配下のドキュメント作成・更新時 |
+| `grill-with-docs` | 永続ドキュメント作成前のアイデア壁打ち時 |
+| `archive-retrospectives` | `.steering/` の振り返りを棚卸し・アーカイブするとき |
 
-定義は `.claude/skills/{permanent-doc,steering-doc}/SKILL.md` に格納。
+定義は `.claude/skills/<skill名>/SKILL.md` に格納。`.claude/README.md` に目次あり。
 
 ---
 
@@ -68,7 +75,7 @@
 5. **実装開始** — 承認後に初めてコードを書く。tasklist.md に基づいて進める
 6. **品質チェック** — クルトワ（security-engineer）レビュー → コミット
 
-> 詳細手順とテンプレ参照は `steering-doc` skill が自動発火して案内する。
+> 詳細手順とテンプレ参照は `steering` skill が自動発火して案内する。
 
 ### ゲームデザインの判断はシャビ確認必須
 
@@ -82,6 +89,33 @@
 - バランスに影響する時間更新サイクルの変更
 
 ゲームデザイン上の判断は `.steering/[YYYYMMDD]-[開発タイトル]/decisions.md` に記録し、恒久ルールに昇格すべきものは `docs/development-guidelines.md` のドメイン別ルールへ反映する。
+
+---
+
+## Git ワークフロー（worktree 運用）
+
+### 絶対に守ってください！
+
+- **`main` 直コミット禁止**: すべての実装変更は feature ブランチで行う。
+- **ブランチは `git worktree` で分離する**: feature ブランチの作業ディレクトリはリポジトリ直下ではなく `.worktrees/` 配下に分離する。
+
+```bash
+# feature ブランチを worktree として作成（リポジトリルートで実行）
+git worktree add .worktrees/<branch-name> -b <branch-name>
+
+# 作業が終わったら worktree を削除（main にマージ後）
+git worktree remove .worktrees/<branch-name>
+git branch -d <branch-name>
+```
+
+- **コミット前にクルトワ（security-engineer）のレビューを通す**: `main` へのマージ前に必ずレビューを実施する。
+- **hooks による機械的ブロック**: `--no-verify` / `-n` / `--no-gpg-sign` / `-c core.hooksPath=` は `.claude/hooks/block-no-verify.ps1` によりハーネス層で拒否される。
+
+---
+
+## `.claude` カタログの維持
+
+`.claude/` 配下に command / skill / agent を**追加・削除・リネームしたら**、`.claude/README.md` のカタログも**必ず同じ変更で更新する**こと。README はモドリッチが「何が使えるか」を把握するための案内板であり、陳腐化すると skill の自動発火やコマンド起動が意図通りに動かなくなる。
 
 ---
 
