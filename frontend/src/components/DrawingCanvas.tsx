@@ -1,5 +1,6 @@
 import DOMPurify from 'dompurify'
 import { useRef, useState, useCallback, useEffect } from 'react'
+import DOMPurify from 'dompurify'
 import { applyFloodFill } from '../utils/floodFill'
 
 export type DrawingTool = 'pen' | 'eraser' | 'fill'
