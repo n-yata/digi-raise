@@ -7,7 +7,6 @@ interface CreatureSpriteProps {
   type: CreatureType
   stage: EvolutionStage
   animState: AnimState
-  customSvg?: string
 }
 
 // Emoji base per type and stage
@@ -162,7 +161,7 @@ function PixelBody({ type, stage, color }: { type: CreatureType; stage: Evolutio
   )
 }
 
-export default function CreatureSprite({ type, stage, animState, customSvg }: CreatureSpriteProps) {
+export default function CreatureSprite({ type, stage, animState }: CreatureSpriteProps) {
   const color = TYPE_COLORS[type]
 
   const getAnimClass = () => {
@@ -223,15 +222,7 @@ export default function CreatureSprite({ type, stage, animState, customSvg }: Cr
 
       {/* Main sprite */}
       <div className={`transition-all duration-300 ${getAnimClass()}`}>
-        {customSvg ? (
-          // User-drawn SVG (only user's own drawings are used here, XSS risk is accepted)
-          <div
-            style={{ width: 100, height: 100 }}
-            dangerouslySetInnerHTML={{ __html: customSvg }}
-          />
-        ) : (
-          <PixelBody type={type} stage={stage} color={color} />
-        )}
+        <PixelBody type={type} stage={stage} color={color} />
       </div>
 
       {/* Shadow */}

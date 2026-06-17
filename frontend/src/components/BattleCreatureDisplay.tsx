@@ -14,7 +14,6 @@ interface BattleCreatureDisplayProps {
   damageNumber: number | null
   poisonActive: boolean
   paralyzed: boolean
-  customSvg?: string
 }
 
 export default function BattleCreatureDisplay({
@@ -26,7 +25,6 @@ export default function BattleCreatureDisplay({
   damageNumber,
   poisonActive,
   paralyzed,
-  customSvg,
 }: BattleCreatureDisplayProps) {
   const [showEffect, setShowEffect] = useState<BattleEffectType>(null)
   const [showDamage, setShowDamage] = useState<number | null>(null)
@@ -89,7 +87,6 @@ export default function BattleCreatureDisplay({
           type={type as CreatureType}
           stage={evolutionStage as EvolutionStage}
           animState={animState}
-          customSvg={customSvg}
         />
 
         {/* Poison overlay */}

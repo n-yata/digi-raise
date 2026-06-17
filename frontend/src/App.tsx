@@ -1,5 +1,4 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
-import DOMPurify from 'dompurify'
 import type { Creature, GameScreen, EvolutionStage } from './types/creature'
 import type { BattleRole, CreatureSnapshot, BattleResult } from './types/battle'
 import { useBattleWebSocket } from './hooks/useBattleWebSocket'
@@ -18,7 +17,6 @@ import PlayMiniGame from './components/PlayMiniGame'
 import FeedMiniGame from './components/FeedMiniGame'
 import BattleLobbyScreen from './components/BattleLobbyScreen'
 import BattleScreen from './components/BattleScreen'
-import CreatureDrawingScreen from './components/CreatureDrawingScreen'
 import { feedCreature, trainCreature, playWithCreature, toggleSleep } from './utils/gameLogic'
 
 export default function App() {
@@ -35,10 +33,6 @@ export default function App() {
   const [showTrainingGame, setShowTrainingGame] = useState(false)
   const [showPlayGame, setShowPlayGame] = useState(false)
   const [showFeedGame, setShowFeedGame] = useState(false)
-
-  // Drawing state
-  const [pendingCreature, setPendingCreature] = useState<Creature | null>(null)
-  const [drawingStage, setDrawingStage] = useState<EvolutionStage | undefined>(undefined)
 
   // Battle state
   const [battleRole, setBattleRole] = useState<BattleRole | null>(null)
@@ -164,32 +158,6 @@ export default function App() {
     setPendingEvolution(false)
   }, [])
 
-  const handleDrawingComplete = useCallback((sprites: Partial<Record<EvolutionStage, string>>) => {
-    const base = pendingCreature ?? activeCreature
-    if (!base) return
-    // Sanitize SVG strings to prevent XSS
-    const sanitizedSprites: Partial<Record<EvolutionStage, string>> = {}
-    for (const [key, svg] of Object.entries(sprites)) {
-      sanitizedSprites[Number(key) as EvolutionStage] =
-        DOMPurify.sanitize(svg, { USE_PROFILES: { svg: true } })
-    }
-    const mergedSprites = { ...base.customSprites, ...sanitizedSprites }
-    const withSprites: Creature = { ...base, customSprites: mergedSprites }
-    persistActiveCreature(withSprites)
-    setPendingCreature(null)
-    setDrawingStage(undefined)
-    setScreen('main')
-  }, [pendingCreature, activeCreature, persistActiveCreature])
-
-  const handleDrawingSkip = useCallback(() => {
-    const base = pendingCreature ?? activeCreature
-    if (!base) return
-    persistActiveCreature(base)
-    setPendingCreature(null)
-    setDrawingStage(undefined)
-    setScreen('main')
-  }, [pendingCreature, activeCreature, persistActiveCreature])
-
   const handleFeed = useCallback(() => {
     if (!creatureRef.current) return
     if (creatureRef.current.hunger >= 100) {
@@ -253,15 +221,9 @@ export default function App() {
   }, [persistActiveCreature])
 
   const handleEvolutionContinue = useCallback(() => {
-    // After evolution, show drawing screen for the new stage
-    if (activeCreature) {
-      setDrawingStage(activeCreature.evolutionStage)
-      setScreen('drawing')
-    } else {
-      setScreen('main')
-    }
+    setScreen('main')
     setEvolvedFrom(null)
-  }, [activeCreature])
+  }, [])
 
   const handleBattle = useCallback(() => {
     setScreen('battle_lobby')
@@ -500,15 +462,6 @@ export default function App() {
           onNewCreature={() => setScreen('setup')}
         />
       )}
-      {screen === 'drawing' && (pendingCreature || activeCreature) && (
-        <CreatureDrawingScreen
-          creatureType={(pendingCreature ?? activeCreature!).type}
-          singleStage={drawingStage}
-          onComplete={handleDrawingComplete}
-          onSkip={handleDrawingSkip}
-        />
-      )}
-
       {screen === 'battle_lobby' && activeCreature && (
         <BattleLobbyScreen
           creature={activeCreature}
@@ -533,7 +486,6 @@ export default function App() {
             def: activeCreature.def,
             spd: activeCreature.spd,
             level: activeCreature.level,
-            customSvg: activeCreature.customSprites?.[activeCreature.evolutionStage],
           }}
           opponentCreature={battleOpponent}
           role={battleRole}
