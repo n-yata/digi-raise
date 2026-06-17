@@ -1,0 +1,42 @@
+{
+  "permissions": {
+    "allow": [
+      "Skill(prd)",
+      "Skill(functional-design)",
+      "Skill(architecture-design)",
+      "Skill(repository-structure)",
+      "Skill(development-guidelines)",
+      "Skill(glossary)",
+      "Skill(steering)",
+      "Skill(grill-with-docs)",
+      "Skill(archive-retrospectives)"
+    ],
+    "deny": [],
+    "ask": []
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|PowerShell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${CLAUDE_PROJECT_DIR}/.claude/hooks/block-no-verify.ps1\""
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash|PowerShell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${CLAUDE_PROJECT_DIR}/.claude/hooks/verify-git-worktree.ps1\"",
+            "statusMessage": "git状態を確認中..."
+          }
+        ]
+      }
+    ]
+  }
+}
