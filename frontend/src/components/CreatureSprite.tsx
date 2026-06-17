@@ -1,5 +1,8 @@
 import type { CreatureType, EvolutionStage } from '../types/creature'
 import { TYPE_COLORS } from '../data/evolutions'
+import { STAGE_SIZES, SHADOW_WIDTHS } from '../data/spriteConfig'
+import { EggBody } from './creatures/EggBody'
+import { DefaultCreatureBody, hasDefaultSprite } from './creatures/DefaultCreatureBody'
 
 type AnimState = 'idle' | 'happy' | 'sleeping' | 'attack' | 'evolving' | 'dead' | 'sad' | 'hungry' | 'critical'
 
@@ -180,7 +183,7 @@ export default function CreatureSprite({ type, stage, animState, customSvg }: Cr
     }
   }
 
-  const shadowWidth = [40, 55, 70, 85, 100, 115][stage]
+  const shadowWidth = SHADOW_WIDTHS[stage]
 
   return (
     <div className="relative flex flex-col items-center justify-center">
@@ -224,11 +227,15 @@ export default function CreatureSprite({ type, stage, animState, customSvg }: Cr
       {/* Main sprite */}
       <div className={`transition-all duration-300 ${getAnimClass()}`}>
         {customSvg ? (
-          // User-drawn SVG (only user's own drawings are used here, XSS risk is accepted)
+          // Sanitized SVG (sanitized at assignment point before reaching here)
           <div
             style={{ width: 100, height: 100 }}
             dangerouslySetInnerHTML={{ __html: customSvg }}
           />
+        ) : stage === 0 ? (
+          <EggBody color={color} size={STAGE_SIZES[0]} />
+        ) : hasDefaultSprite(type, stage) ? (
+          <DefaultCreatureBody type={type} stage={stage} />
         ) : (
           <PixelBody type={type} stage={stage} color={color} />
         )}

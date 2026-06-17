@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
+import DOMPurify from 'dompurify'
 import type { CreatureSnapshot, BattleRole, BattleResult, BattleAction } from '../types/battle'
 import { useBattleState } from '../hooks/useBattleState'
 import { resolveTurn } from '../utils/battleLogic'
@@ -411,7 +412,7 @@ export default function BattleScreen({
             damageNumber={opponentDamageNumber}
             poisonActive={opponentPoisonActive}
             paralyzed={opponentIsParalyzed}
-            customSvg={opponentCreature.customSvg || (opponentCreature as unknown as { customSprites?: Record<string, string> }).customSprites?.[String(opponentCreature.evolutionStage)]}
+            customSvg={opponentCreature.customSvg || (() => { const s = (opponentCreature as unknown as { customSprites?: Record<string, string> }).customSprites?.[String(opponentCreature.evolutionStage)]; return s ? DOMPurify.sanitize(s, { USE_PROFILES: { svg: true } }) : undefined })()}
           />
         </div>
         <div className="flex-1" />

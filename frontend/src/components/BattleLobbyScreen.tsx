@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef, MutableRefObject } from 'react'
+import DOMPurify from 'dompurify'
 import type { Creature } from '../types/creature'
 import type { BattleRole, CreatureSnapshot } from '../types/battle'
 import { generateCpuCreature } from '../utils/cpuBattle'
@@ -79,7 +80,8 @@ export default function BattleLobbyScreen({
         // サーバーから来る customSprites を customSvg に変換
         const raw = opponentCreature as CreatureSnapshot & { customSprites?: Record<string, string> }
         if (raw.customSprites && !raw.customSvg) {
-          raw.customSvg = raw.customSprites[String(raw.evolutionStage)]
+          const svg = raw.customSprites[String(raw.evolutionStage)]
+          raw.customSvg = svg ? DOMPurify.sanitize(svg, { USE_PROFILES: { svg: true } }) : undefined
         }
         pendingOpponentRef.current = raw
         setOnlineState('ready')
