@@ -19,7 +19,7 @@
   "initializeCommand": ["bash", "-c", "mkdir -p \"$HOME/.claude/session-env\" && chmod 700 \"$HOME/.claude\" && chmod 777 \"$HOME/.claude/session-env\""],
 
   // コンテナ初回作成後に依存関係をインストール
-  "postCreateCommand": "cd frontend && npm install",
+  "postCreateCommand": "npm install -g @anthropic-ai/claude-code && cd frontend && npm install",
 
   // セキュリティ: 非 root ユーザーで実行
   "remoteUser": "vscode",
