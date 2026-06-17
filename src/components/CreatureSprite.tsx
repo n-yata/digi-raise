@@ -1,5 +1,6 @@
 import type { CreatureType, EvolutionStage } from '../types/creature'
 import { TYPE_COLORS } from '../data/evolutions'
+import { SPRITE_GRIDS, SPRITE_PIXEL_SIZE, buildPalette } from '../data/pixelSprites'
 
 type AnimState = 'idle' | 'happy' | 'sleeping' | 'attack' | 'evolving' | 'dead'
 
@@ -9,40 +10,37 @@ interface CreatureSpriteProps {
   animState: AnimState
 }
 
-// Emoji base per type and stage
-const SPRITE_EMOJIS: Record<CreatureType, string[]> = {
-  Fire:    ['🥚', '🔴', '🦊', '🐉', '🔥', '☄️'],
-  Water:   ['🥚', '🔵', '🐟', '🐋', '🌊', '🌀'],
-  Plant:   ['🥚', '🟢', '🌱', '🌿', '🌸', '🌳'],
-  Thunder: ['🥚', '🟡', '⚡', '🌩️', '🌪️', '⚡'],
-  Dark:    ['🥚', '🟣', '👻', '💀', '🌑', '👁️'],
-  Light:   ['🥚', '⭐', '✨', '🌟', '💫', '🌈'],
-}
-
-// Emoji-based body per stage
-function PixelBody({ type, stage, color }: { type: CreatureType; stage: EvolutionStage; color: string }) {
-  const sizes = [60, 80, 100, 120, 140, 160]
-  const size = sizes[stage]
-  const emoji = SPRITE_EMOJIS[type][stage]
-  const emojiFontSizes = [40, 44, 48, 52, 64, 76]
+// Pixel-art body per stage, recolored from the creature's type color.
+function PixelBody({ stage, color }: { type: CreatureType; stage: EvolutionStage; color: string }) {
+  const grid = SPRITE_GRIDS[stage]
+  const palette = buildPalette(color)
+  const pixel = SPRITE_PIXEL_SIZE[stage]
+  const cols = grid[0].length
+  const rows = grid.length
 
   return (
-    <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
+    <div className="relative flex items-center justify-center">
       {/* Aura ring */}
       <div className="absolute inset-0 rounded-full" style={{
         background: `radial-gradient(circle, ${color}22 0%, transparent 70%)`,
       }} />
-      {/* Decorative elements */}
-      {stage >= 4 && (
-        <>
-          <div className="absolute" style={{ top: 0, left: 0, fontSize: 18, filter: 'blur(0.5px)' }}>✦</div>
-          <div className="absolute" style={{ top: 0, right: 0, fontSize: 18, filter: 'blur(0.5px)' }}>✦</div>
-        </>
-      )}
-      <div style={{ fontSize: emojiFontSizes[stage], lineHeight: 1, filter: `drop-shadow(0 0 8px ${color})` }}>
-        {emoji}
+      {/* Pixel grid */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: `repeat(${cols}, ${pixel}px)`,
+          gridTemplateRows: `repeat(${rows}, ${pixel}px)`,
+          filter: `drop-shadow(0 0 6px ${color}88)`,
+          imageRendering: 'pixelated',
+        }}
+      >
+        {grid.flatMap((row, y) =>
+          row.split('').map((ch, x) => (
+            <div key={`${x}-${y}`} style={{ background: palette[ch] ?? 'transparent' }} />
+          ))
+        )}
       </div>
-      {/* Power level indicator rings for high stages */}
+      {/* Power level indicator ring for the final stage */}
       {stage >= 5 && (
         <div className="absolute inset-0 rounded-full border-2 animate-ping" style={{ borderColor: color, opacity: 0.4 }} />
       )}
