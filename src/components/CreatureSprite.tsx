@@ -19,124 +19,13 @@ const SPRITE_EMOJIS: Record<CreatureType, string[]> = {
   Light:   ['🥚', '⭐', '✨', '🌟', '💫', '🌈'],
 }
 
-// Pixel art body shapes per stage (CSS-based)
+// Emoji-based body per stage
 function PixelBody({ type, stage, color }: { type: CreatureType; stage: EvolutionStage; color: string }) {
   const sizes = [60, 80, 100, 120, 140, 160]
   const size = sizes[stage]
-
-  // Stage 0: Egg
-  if (stage === 0) {
-    return (
-      <div
-        className="relative flex items-center justify-center"
-        style={{
-          width: size,
-          height: size * 1.2,
-          background: `radial-gradient(ellipse at 40% 35%, white 0%, ${color}88 40%, ${color} 100%)`,
-          borderRadius: '50% 50% 45% 45%',
-          boxShadow: `0 0 20px ${color}88, inset 0 -10px 20px rgba(0,0,0,0.3)`,
-        }}
-      >
-        {/* Egg spots */}
-        <div className="absolute" style={{
-          width: 12, height: 8, borderRadius: '50%',
-          background: `${color}cc`, top: '35%', left: '20%',
-        }} />
-        <div className="absolute" style={{
-          width: 8, height: 6, borderRadius: '50%',
-          background: `${color}aa`, top: '55%', left: '60%',
-        }} />
-      </div>
-    )
-  }
-
-  // Stage 1: Baby - round blob
-  if (stage === 1) {
-    return (
-      <div
-        className="relative flex flex-col items-center"
-        style={{ width: size, height: size }}
-      >
-        {/* Body */}
-        <div style={{
-          width: size,
-          height: size * 0.8,
-          background: `radial-gradient(circle at 40% 35%, ${color}ff 0%, ${color}bb 60%, ${color}88 100%)`,
-          borderRadius: '50%',
-          boxShadow: `0 0 15px ${color}66, inset 0 -8px 15px rgba(0,0,0,0.2)`,
-          position: 'relative',
-        }}>
-          {/* Eyes */}
-          <div className="absolute flex gap-2" style={{ top: '30%', left: '25%' }}>
-            <div style={{ width: 8, height: 10, background: '#111', borderRadius: '40%' }}>
-              <div style={{ width: 3, height: 3, background: 'white', borderRadius: '50%', margin: '1px 0 0 4px' }} />
-            </div>
-            <div style={{ width: 8, height: 10, background: '#111', borderRadius: '40%' }}>
-              <div style={{ width: 3, height: 3, background: 'white', borderRadius: '50%', margin: '1px 0 0 4px' }} />
-            </div>
-          </div>
-          {/* Mouth */}
-          <div className="absolute" style={{
-            width: 10, height: 5, bottom: '25%', left: '37%',
-            borderBottom: '3px solid #111', borderRadius: '0 0 5px 5px',
-          }} />
-        </div>
-        {/* Tiny feet */}
-        <div className="flex gap-3 -mt-1">
-          <div style={{ width: 14, height: 10, background: color, borderRadius: '50% 50% 40% 40%' }} />
-          <div style={{ width: 14, height: 10, background: color, borderRadius: '50% 50% 40% 40%' }} />
-        </div>
-      </div>
-    )
-  }
-
-  // Stage 2: Child - more defined
-  if (stage === 2) {
-    return (
-      <div className="relative flex flex-col items-center" style={{ width: size, height: size }}>
-        {/* Head */}
-        <div style={{
-          width: size * 0.65,
-          height: size * 0.55,
-          background: `radial-gradient(circle at 40% 35%, ${color}ff, ${color}99)`,
-          borderRadius: '50% 50% 40% 40%',
-          boxShadow: `0 0 12px ${color}55`,
-          position: 'relative',
-        }}>
-          <div className="absolute flex gap-2" style={{ top: '25%', left: '18%' }}>
-            <div style={{ width: 9, height: 11, background: '#111', borderRadius: '40%' }}>
-              <div style={{ width: 3, height: 3, background: 'white', borderRadius: '50%', margin: '1px 0 0 5px' }} />
-            </div>
-            <div style={{ width: 9, height: 11, background: '#111', borderRadius: '40%' }}>
-              <div style={{ width: 3, height: 3, background: 'white', borderRadius: '50%', margin: '1px 0 0 5px' }} />
-            </div>
-          </div>
-          {/* Type feature on head */}
-          <div className="absolute" style={{ top: -8, left: '42%', fontSize: 16 }}>
-            {type === 'Fire' ? '🔥' : type === 'Water' ? '💧' : type === 'Plant' ? '🌿' :
-             type === 'Thunder' ? '⚡' : type === 'Dark' ? '🌑' : '✨'}
-          </div>
-        </div>
-        {/* Body */}
-        <div style={{
-          width: size * 0.55,
-          height: size * 0.4,
-          background: `linear-gradient(180deg, ${color}dd, ${color}99)`,
-          borderRadius: '30% 30% 40% 40%',
-          marginTop: -4,
-        }} />
-        {/* Legs */}
-        <div className="flex gap-2 -mt-1">
-          <div style={{ width: 16, height: 16, background: color, borderRadius: '40% 40% 50% 50%' }} />
-          <div style={{ width: 16, height: 16, background: color, borderRadius: '40% 40% 50% 50%' }} />
-        </div>
-      </div>
-    )
-  }
-
-  // Stage 3+: Adult and beyond - use large emoji + decorations
   const emoji = SPRITE_EMOJIS[type][stage]
-  const emojiFontSizes = [0, 0, 0, 52, 64, 76]
+  const emojiFontSizes = [40, 44, 48, 52, 64, 76]
+
   return (
     <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
       {/* Aura ring */}
