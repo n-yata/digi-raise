@@ -47,31 +47,68 @@ export default function MainGame({
   const pendingRef = useRef(pendingEvolution)
   useEffect(() => { pendingRef.current = pendingEvolution }, [pendingEvolution])
 
-  // Walking across the display area when idle
+  // 徘徊behavior: 卵(stage0)は歩かず静止。生後は「歩く(動)」と「立ち止まる(静)」を交互に繰り返す。
+  const isEgg = creature.evolutionStage === 0
+  const ambient = !isEgg && (animState === 'idle' || animState === 'happy')
+
   const [walkX, setWalkX] = useState(0)
-  const [walkDir, setWalkDir] = useState<1 | -1>(1)
-  const walkRef = useRef<{ x: number; dir: 1 | -1 }>({ x: 0, dir: 1 })
+  const [facing, setFacing] = useState<1 | -1>(1)
+  const [phase, setPhase] = useState<'walk' | 'rest'>('rest')
+  const moveRef = useRef<{ x: number; dir: 1 | -1 }>({ x: 0, dir: 1 })
+  const phaseRef = useRef<'walk' | 'rest'>('rest')
 
   useEffect(() => {
-    if (animState !== 'idle') {
-      walkRef.current = { x: 0, dir: walkRef.current.dir }
+    if (!ambient) {
+      moveRef.current.x = 0
+      phaseRef.current = 'rest'
       setWalkX(0)
+      setPhase('rest')
       return
     }
-    const RANGE = 58
-    const SPEED = 0.45
-    const id = setInterval(() => {
-      const s = walkRef.current
+    const RANGE = 56
+    const SPEED = 0.4
+
+    let phaseTimer: ReturnType<typeof setTimeout>
+    const nextPhase = () => {
+      if (phaseRef.current === 'rest') {
+        // 歩き出す（半々で向きを変える）
+        if (Math.random() < 0.5) moveRef.current.dir = moveRef.current.dir === 1 ? -1 : 1
+        setFacing(moveRef.current.dir)
+        phaseRef.current = 'walk'
+        setPhase('walk')
+        phaseTimer = setTimeout(nextPhase, 1500 + Math.random() * 2500) // 動: 1.5〜4秒
+      } else {
+        phaseRef.current = 'rest'
+        setPhase('rest')
+        phaseTimer = setTimeout(nextPhase, 1400 + Math.random() * 2600) // 静: 1.4〜4秒
+      }
+    }
+    // 立ち止まりから開始し、しばらくして歩き出す
+    phaseRef.current = 'rest'
+    setPhase('rest')
+    phaseTimer = setTimeout(nextPhase, 1000 + Math.random() * 1500)
+
+    const mover = setInterval(() => {
+      if (phaseRef.current !== 'walk') return
+      const s = moveRef.current
       let nx = s.x + s.dir * SPEED
-      let nd = s.dir
-      if (nx >= RANGE) { nx = RANGE; nd = -1 }
-      else if (nx <= -RANGE) { nx = -RANGE; nd = 1 }
-      walkRef.current = { x: nx, dir: nd }
+      if (nx >= RANGE) { nx = RANGE; s.dir = -1; setFacing(-1) }
+      else if (nx <= -RANGE) { nx = -RANGE; s.dir = 1; setFacing(1) }
+      s.x = nx
       setWalkX(nx)
-      if (nd !== s.dir) setWalkDir(nd)
     }, 16)
-    return () => clearInterval(id)
-  }, [animState])
+
+    return () => { clearTimeout(phaseTimer); clearInterval(mover) }
+  }, [ambient])
+
+  // スプライト状態: 卵=静止 / 徘徊中=歩行(動)or休憩(静) / それ以外=感情そのまま
+  const spriteAnim: typeof animState | 'walking' = isEgg
+    ? 'idle'
+    : !ambient
+      ? animState
+      : phase === 'walk'
+        ? 'walking'
+        : animState === 'happy' ? 'happy' : 'idle'
 
   return (
     <div
@@ -161,11 +198,11 @@ export default function MainGame({
         )}
 
         <div style={{ transform: `translateX(${walkX}px)`, willChange: 'transform' }}>
-          <div style={{ transform: `scaleX(${walkDir})` }}>
+          <div style={{ transform: `scaleX(${facing})` }}>
             <CreatureSprite
               type={creature.type}
               stage={creature.evolutionStage}
-              animState={animState === 'idle' ? 'walking' : animState}
+              animState={spriteAnim}
             />
           </div>
         </div>
