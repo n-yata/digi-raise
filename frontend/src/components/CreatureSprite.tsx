@@ -11,6 +11,7 @@ interface CreatureSpriteProps {
 
 // タイプ別アクセントカラー（ドット絵のワンポイント）
 const ACCENT_COLORS: Record<CreatureType, string> = {
+  Normal:  '#e5e7eb',
   Fire:    '#ffd166',
   Water:   '#bfefff',
   Plant:   '#ffe066',

@@ -1,9 +1,45 @@
-import type { Creature, EvolutionStage } from '../types/creature'
+import type { Creature, CreatureType, EvolutionStage } from '../types/creature'
 import {
   EVOLUTION_REQUIREMENTS,
   EVOLUTION_NAMES,
   BASE_STATS,
 } from '../data/evolutions'
+
+/**
+ * 育て方（育成アクションの累計回数）から進化先タイプを決定する。
+ * 「最多アクション＋次点」の組み合わせで6タイプに割り当てる。
+ *   トレ→あそぶ: Fire  / トレ→えさ: Plant
+ *   あそぶ→トレ: Thunder / あそぶ→えさ: Light
+ *   えさ→あそぶ: Water / えさ→トレ: Dark
+ * 全アクション未実施（全回数0）の場合は Water（バランス）。
+ * 同数時は train > play > feed の優先順位でタイブレーク。
+ */
+export function determineTypeFromRaising(
+  counts: { trainCount: number; playCount: number; feedCount: number }
+): CreatureType {
+  const { trainCount, playCount, feedCount } = counts
+  if (trainCount === 0 && playCount === 0 && feedCount === 0) return 'Water'
+
+  const priority: Record<'train' | 'play' | 'feed', number> = { train: 0, play: 1, feed: 2 }
+  const entries: { key: 'train' | 'play' | 'feed'; count: number }[] = [
+    { key: 'train', count: trainCount },
+    { key: 'play', count: playCount },
+    { key: 'feed', count: feedCount },
+  ]
+  entries.sort((a, b) => b.count - a.count || priority[a.key] - priority[b.key])
+  const dominant = entries[0].key
+  const runnerUp = entries[1].key
+
+  const table: Record<string, CreatureType> = {
+    'train|play': 'Fire',
+    'train|feed': 'Plant',
+    'play|train': 'Thunder',
+    'play|feed': 'Light',
+    'feed|play': 'Water',
+    'feed|train': 'Dark',
+  }
+  return table[`${dominant}|${runnerUp}`] ?? 'Water'
+}
 
 export function canEvolve(creature: Creature): boolean {
   if (!creature.isAlive) return false
@@ -27,10 +63,17 @@ export function canEvolve(creature: Creature): boolean {
 export function evolveCreature(creature: Creature): Creature {
   const nextStage = (creature.evolutionStage + 1) as EvolutionStage
   const baseStats = BASE_STATS[nextStage]
-  const evolutionName = EVOLUTION_NAMES[creature.type][nextStage]
+
+  // チャイルド以降（nextStage>=2）の進化では、その時点の育て方で進化先タイプを毎回再判定する。
+  // タマゴ→ベイビー（nextStage=1）は孵化のみで中立タイプを維持。
+  const newType: CreatureType = nextStage >= 2
+    ? determineTypeFromRaising(creature)
+    : creature.type
+  const evolutionName = EVOLUTION_NAMES[newType][nextStage]
 
   return {
     ...creature,
+    type: newType,
     evolutionStage: nextStage,
     evolutionName,
     maxHp: baseStats.hp,

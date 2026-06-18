@@ -11,6 +11,7 @@ type CardIcon = string
 
 // 各タイプ3ペア分の色（メモリーゲームの識別用）
 const TYPE_ICONS: Record<CreatureType, [CardIcon, CardIcon, CardIcon]> = {
+  Normal:  ['#9ca3af', '#cbd5e1', '#6b7280'],
   Fire:    ['#ff6b35', '#ffb347', '#ff3d3d'],
   Water:   ['#4fc3f7', '#1e88e5', '#80deea'],
   Plant:   ['#81c784', '#aed581', '#388e3c'],

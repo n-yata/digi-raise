@@ -1,6 +1,7 @@
 import type { CreatureType, EvolutionStage } from '../types/creature'
 
 export const EVOLUTION_NAMES: Record<CreatureType, string[]> = {
+  Normal:  ['タマゴ', 'ノービモン', 'ノーマモン', 'ノーブルモン', 'グランモン', 'オムニモン'],
   Fire:    ['タマゴ', 'ホノカ', 'フレイモン', 'バーニモン', 'インフェルノモン', 'エンペラーモン'],
   Water:   ['タマゴ', 'ミズカ', 'アクアモン', 'マリンモン', 'ポセイドモン', 'オーシャンモン'],
   Plant:   ['タマゴ', 'ハナカ', 'リーフモン', 'フローラモン', 'ガーデンモン', 'エデンモン'],
@@ -19,6 +20,7 @@ export const STAGE_NAMES: Record<EvolutionStage, string> = {
 }
 
 export const TYPE_COLORS: Record<CreatureType, string> = {
+  Normal:  '#9ca3af',
   Fire:    '#ff6b35',
   Water:   '#4fc3f7',
   Plant:   '#81c784',
@@ -28,6 +30,7 @@ export const TYPE_COLORS: Record<CreatureType, string> = {
 }
 
 export const TYPE_BG_COLORS: Record<CreatureType, string> = {
+  Normal:  'rgba(156, 163, 175, 0.15)',
   Fire:    'rgba(255, 107, 53, 0.15)',
   Water:   'rgba(79, 195, 247, 0.15)',
   Plant:   'rgba(129, 199, 132, 0.15)',
