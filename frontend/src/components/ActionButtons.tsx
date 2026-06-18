@@ -32,9 +32,9 @@ function ActionBtn({ label, onClick, disabled, accent = '#4fc3f7', pulse }: BtnP
         ${pulse ? 'animate-pulse' : ''}
       `}
       style={{
-        minHeight: 64,
+        minHeight: 52,
         minWidth: 72,
-        padding: '8px 4px',
+        padding: '6px 4px',
         background: disabled
           ? 'rgba(255,255,255,0.05)'
           : `linear-gradient(135deg, ${accent}22, ${accent}11)`,
