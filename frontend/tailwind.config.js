@@ -36,7 +36,7 @@ export default {
         'hungry-callout': 'hungryCallout 1.2s ease-in-out infinite',
         'critical-blink': 'criticalBlink 0.6s ease-in-out infinite',
         'critical-warn': 'criticalWarn 0.6s ease-in-out infinite',
-        'walk-bounce': 'walkBounce 0.46s ease-in-out infinite',
+        'walk-bounce': 'walkBounce 0.55s ease-in-out infinite',
       },
       keyframes: {
         idleBreathe: {
@@ -77,8 +77,11 @@ export default {
           '100%': { transform: 'translateY(0) scaleY(1) scaleX(1)' },
         },
         walkBounce: {
-          '0%, 100%': { transform: 'translateY(0px)' },
-          '50%': { transform: 'translateY(-4px)' },
+          '0%':   { transform: 'translateY(0) rotate(-3.5deg)' },
+          '25%':  { transform: 'translateY(-5px) rotate(0deg)' },
+          '50%':  { transform: 'translateY(0) rotate(3.5deg)' },
+          '75%':  { transform: 'translateY(-5px) rotate(0deg)' },
+          '100%': { transform: 'translateY(0) rotate(-3.5deg)' },
         },
         evolveGlow: {
           '0%, 100%': { filter: 'brightness(1) blur(0px)', transform: 'scale(1)' },
