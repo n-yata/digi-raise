@@ -385,7 +385,6 @@ export default function BattleScreen({
             damageNumber={myDamageNumber}
             poisonActive={myPoisonActive}
             paralyzed={myIsParalyzed}
-            customSvg={myCreature.customSvg}
           />
         </div>
 
@@ -411,7 +410,6 @@ export default function BattleScreen({
             damageNumber={opponentDamageNumber}
             poisonActive={opponentPoisonActive}
             paralyzed={opponentIsParalyzed}
-            customSvg={opponentCreature.customSvg || (opponentCreature as unknown as { customSprites?: Record<string, string> }).customSprites?.[String(opponentCreature.evolutionStage)]}
           />
         </div>
         <div className="flex-1" />

@@ -138,7 +138,6 @@ export default function MainGame({
           type={creature.type}
           stage={creature.evolutionStage}
           animState={animState}
-          customSvg={creature.customSprites?.[creature.evolutionStage]}
         />
 
         {/* Evolution ready glow */}
