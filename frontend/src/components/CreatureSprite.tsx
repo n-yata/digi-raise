@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import type { CreatureType, EvolutionStage } from '../types/creature'
 import { TYPE_COLORS } from '../data/evolutions'
 
-type AnimState = 'idle' | 'happy' | 'sleeping' | 'attack' | 'evolving' | 'dead' | 'sad' | 'hungry' | 'critical' | 'eating'
+type AnimState = 'idle' | 'happy' | 'sleeping' | 'attack' | 'evolving' | 'dead' | 'sad' | 'hungry' | 'critical' | 'eating' | 'walking'
 
 interface CreatureSpriteProps {
   type: CreatureType
@@ -274,12 +274,13 @@ const PIXEL_MAPS_B: Record<EvolutionStage, string[]> = {
 }
 
 // アニメ状態ごとのフレーム列と速度。seq の値は 0=Aフレーム / 1=Bフレーム。
-// idle はほとんど A、たまに B を出して「まばたき＋ひと足」。それ以外は交互に動かす。
+// B フレームは「目を閉じ・口を開け」る差分。パラパラ切替はチラつきの原因になるため、
+// まばたき(idle)・口パク(eating)・噛みつき(attack)など「フレームで表現すべき」ものだけに限定する。
+// walking と happy は B に切り替えず A(目あき)のまま、滑らかな CSS アニメで動かす。
 const FRAME_PATTERNS: Partial<Record<AnimState, { seq: number[]; interval: number }>> = {
-  idle:   { seq: [0, 0, 0, 0, 0, 0, 0, 1], interval: 220 },
-  happy:  { seq: [0, 1], interval: 200 },
-  eating: { seq: [0, 1], interval: 170 },
-  attack: { seq: [0, 1], interval: 110 },
+  idle:   { seq: [0, 0, 0, 0, 0, 0, 0, 0, 0, 1], interval: 200 }, // たまに1回まばたき
+  eating: { seq: [0, 1], interval: 190 },                          // もぐもぐ口パク
+  attack: { seq: [0, 1], interval: 130 },                          // 噛みつき
 }
 
 // ステージごとの1ドットのサイズ(px)。成長に合わせて拡大
@@ -356,6 +357,7 @@ export default function CreatureSprite({ type, stage, animState }: CreatureSprit
       case 'sad':      return 'animate-sad-sway'
       case 'hungry':   return 'animate-hungry-droop'
       case 'critical': return 'animate-critical-blink'
+      case 'walking':  return 'animate-walk-bounce'
       case 'idle':
       default:         return 'animate-idle-breathe'
     }

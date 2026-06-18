@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { Creature } from '../types/creature'
 import { TYPE_COLORS, STAGE_NAMES } from '../data/evolutions'
 import { EXP_TO_LEVEL } from '../data/evolutions'
@@ -46,6 +46,32 @@ export default function MainGame({
 
   const pendingRef = useRef(pendingEvolution)
   useEffect(() => { pendingRef.current = pendingEvolution }, [pendingEvolution])
+
+  // Walking across the display area when idle
+  const [walkX, setWalkX] = useState(0)
+  const [walkDir, setWalkDir] = useState<1 | -1>(1)
+  const walkRef = useRef<{ x: number; dir: 1 | -1 }>({ x: 0, dir: 1 })
+
+  useEffect(() => {
+    if (animState !== 'idle') {
+      walkRef.current = { x: 0, dir: walkRef.current.dir }
+      setWalkX(0)
+      return
+    }
+    const RANGE = 58
+    const SPEED = 0.45
+    const id = setInterval(() => {
+      const s = walkRef.current
+      let nx = s.x + s.dir * SPEED
+      let nd = s.dir
+      if (nx >= RANGE) { nx = RANGE; nd = -1 }
+      else if (nx <= -RANGE) { nx = -RANGE; nd = 1 }
+      walkRef.current = { x: nx, dir: nd }
+      setWalkX(nx)
+      if (nd !== s.dir) setWalkDir(nd)
+    }, 16)
+    return () => clearInterval(id)
+  }, [animState])
 
   return (
     <div
@@ -134,11 +160,15 @@ export default function MainGame({
           </div>
         )}
 
-        <CreatureSprite
-          type={creature.type}
-          stage={creature.evolutionStage}
-          animState={animState}
-        />
+        <div style={{ transform: `translateX(${walkX}px)`, willChange: 'transform' }}>
+          <div style={{ transform: `scaleX(${walkDir})` }}>
+            <CreatureSprite
+              type={creature.type}
+              stage={creature.evolutionStage}
+              animState={animState === 'idle' ? 'walking' : animState}
+            />
+          </div>
+        </div>
 
         {/* Evolution ready glow */}
         {pendingEvolution && (
