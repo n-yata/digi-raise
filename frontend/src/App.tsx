@@ -172,7 +172,7 @@ export default function App() {
     if (!creatureRef.current) return
     const updated = feedCreature(creatureRef.current)
     persistActiveCreature(updated)
-    showMessage('もぐもぐ！ご飯を食べた！🍖')
+    showMessage('もぐもぐ！ご飯を食べた！')
   }, [persistActiveCreature, showMessage])
 
   const handleTrain = useCallback(() => {
@@ -186,7 +186,7 @@ export default function App() {
     const updated = trainCreature(creatureRef.current, success)
     persistActiveCreature(updated)
     setAttackAnimation(true)
-    showMessage(success ? 'トレーニング成功！大きく強くなった！⚔️' : 'トレーニング失敗…でも少し強くなった')
+    showMessage(success ? 'トレーニング成功！大きく強くなった！' : 'トレーニング失敗…でも少し強くなった')
     setTimeout(() => setAttackAnimation(false), 1200)
   }, [persistActiveCreature, showMessage])
 
@@ -200,14 +200,14 @@ export default function App() {
     if (!creatureRef.current) return
     const updated = playWithCreature(creatureRef.current, success)
     persistActiveCreature(updated)
-    showMessage(success ? '一緒に遊んだ！楽しかった！🎮' : '一緒に遊んだ！少し楽しかった🎮')
+    showMessage(success ? '一緒に遊んだ！楽しかった！' : '一緒に遊んだ！少し楽しかった')
   }, [persistActiveCreature, showMessage])
 
   const handleSleep = useCallback(() => {
     if (!creatureRef.current) return
     const updated = toggleSleep(creatureRef.current)
     persistActiveCreature(updated)
-    showMessage(updated.isSleeping ? 'おやすみなさい…💤' : 'おはよう！元気いっぱい！☀️')
+    showMessage(updated.isSleeping ? 'おやすみなさい…' : 'おはよう！元気いっぱい！')
   }, [persistActiveCreature, showMessage])
 
   const handleEvolve = useCallback(() => {
@@ -389,7 +389,7 @@ export default function App() {
       <div className="min-h-screen flex items-center justify-center scanlines"
         style={{ background: '#1a1a2e' }}>
         <div className="text-center">
-          <div className="text-5xl mb-4 animate-float">🥚</div>
+          <div className="mb-4 animate-float mx-auto" style={{ width: 48, height: 48, borderRadius: '50%', background: 'rgba(255,255,255,0.18)' }} />
           <div className="font-pixel" style={{ fontSize: '0.75rem', color: '#4fc3f7' }}>
             ロード中...
           </div>

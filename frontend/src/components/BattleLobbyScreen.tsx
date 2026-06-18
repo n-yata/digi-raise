@@ -442,9 +442,7 @@ export default function BattleLobbyScreen({
                 className="px-3 py-6 rounded-lg flex flex-col items-center gap-3"
                 style={{ background: '#16213e', border: '1px solid #0f3460' }}
               >
-                <div className="font-pixel animate-pulse" style={{ fontSize: '1.5rem' }}>
-                  🌐
-                </div>
+                <div className="animate-pulse" style={{ width: 24, height: 24, borderRadius: '50%', background: '#4fc3f7', boxShadow: '0 0 12px #4fc3f7' }} />
                 <div className="font-pixel" style={{ fontSize: '0.65rem', color: '#64748b' }}>
                   接続中...
                 </div>
@@ -497,9 +495,7 @@ export default function BattleLobbyScreen({
                 className="px-3 py-6 rounded-lg flex flex-col items-center gap-3"
                 style={{ background: '#16213e', border: '1px solid #0f3460' }}
               >
-                <div className="font-pixel animate-pulse" style={{ fontSize: '1.5rem' }}>
-                  ⚔️
-                </div>
+                <div className="animate-pulse" style={{ width: 24, height: 24, borderRadius: '50%', background: '#f43f5e', boxShadow: '0 0 12px #f43f5e' }} />
                 <div className="font-pixel" style={{ fontSize: '0.65rem', color: '#4fc3f7' }}>
                   相手が見つかりました！
                 </div>

@@ -220,38 +220,15 @@ export default function CreatureSprite({ type, stage, animState }: CreatureSprit
     <div className="relative flex flex-col items-center justify-center">
       {/* Sleeping ZZZ */}
       {animState === 'sleeping' && (
-        <div className="absolute -top-8 right-0 text-xl animate-sleep-zzz select-none z-10">
-          💤
-        </div>
-      )}
-
-      {/* Happy sparkles */}
-      {animState === 'happy' && (
-        <div className="absolute inset-0 pointer-events-none">
-          <span className="absolute text-xs" style={{ top: '5%', left: '10%', animationDelay: '0s' }}>✨</span>
-          <span className="absolute text-xs" style={{ top: '5%', right: '10%', animationDelay: '0.5s' }}>⭐</span>
-        </div>
-      )}
-
-      {/* Sad teardrops */}
-      {animState === 'sad' && (
-        <div className="absolute inset-0 pointer-events-none">
-          <span className="absolute animate-sad-drop" style={{ top: '20%', left: '5%', fontSize: 14, animationDelay: '0s' }}>💧</span>
-          <span className="absolute animate-sad-drop" style={{ top: '20%', right: '5%', fontSize: 14, animationDelay: '0.8s' }}>💧</span>
-        </div>
-      )}
-
-      {/* Hungry callout */}
-      {animState === 'hungry' && (
-        <div className="absolute pointer-events-none animate-hungry-callout" style={{ top: '-28px', left: '50%', transform: 'translateX(-50%)', fontSize: 20, whiteSpace: 'nowrap' }}>
-          🍖
+        <div className="absolute -top-8 right-0 text-sm font-pixel animate-sleep-zzz select-none z-10" style={{ color: 'rgba(255,255,255,0.85)' }}>
+          Zzz
         </div>
       )}
 
       {/* Critical warning */}
       {animState === 'critical' && (
-        <div className="absolute pointer-events-none animate-critical-warn" style={{ top: '-28px', left: '50%', transform: 'translateX(-50%)', fontSize: 18, whiteSpace: 'nowrap' }}>
-          ⚠️
+        <div className="absolute pointer-events-none animate-critical-warn font-pixel" style={{ top: '-28px', left: '50%', transform: 'translateX(-50%)', fontSize: 18, color: '#ef4444', whiteSpace: 'nowrap' }}>
+          ！
         </div>
       )}
 

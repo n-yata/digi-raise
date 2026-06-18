@@ -10,14 +10,13 @@ interface BattleActionButtonsProps {
 interface ActionBtnConfig {
   action: BattleAction
   label: string
-  icon: string
   accent: string
 }
 
 const BUTTONS: ActionBtnConfig[] = [
-  { action: 'attack', label: 'こうげき', icon: '⚔️', accent: '#f43f5e' },
-  { action: 'guard', label: 'ガード', icon: '🛡️', accent: '#60a5fa' },
-  { action: 'special', label: '特殊', icon: '✨', accent: '#a78bfa' },
+  { action: 'attack', label: 'こうげき', accent: '#f43f5e' },
+  { action: 'guard', label: 'ガード', accent: '#60a5fa' },
+  { action: 'special', label: '特殊', accent: '#a78bfa' },
 ]
 
 export default function BattleActionButtons({
@@ -41,7 +40,7 @@ export default function BattleActionButtons({
 
   return (
     <div className="grid grid-cols-3 gap-2">
-      {BUTTONS.map(({ action, icon, accent }) => {
+      {BUTTONS.map(({ action, accent }) => {
         const isSpecialOnCooldown = action === 'special' && specialCooldown > 0
         const btnDisabled = isFullyDisabled || selected !== null || isSpecialOnCooldown
         const isSelected = selected === action
@@ -75,7 +74,6 @@ export default function BattleActionButtons({
               cursor: btnDisabled ? 'not-allowed' : 'pointer',
             }}
           >
-            <span style={{ fontSize: 20 }}>{icon}</span>
             <span
               className="font-pixel"
               style={{

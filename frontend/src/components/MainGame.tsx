@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import type { Creature } from '../types/creature'
-import { TYPE_COLORS, TYPE_EMOJIS, STAGE_NAMES } from '../data/evolutions'
+import { TYPE_COLORS, STAGE_NAMES } from '../data/evolutions'
 import { EXP_TO_LEVEL } from '../data/evolutions'
 import { getAnimationState } from '../utils/gameLogic'
 import CreatureSprite from './CreatureSprite'
@@ -60,7 +60,7 @@ export default function MainGame({
         <div className="flex items-center justify-between">
           <div>
             <div className="flex items-center gap-2">
-              <span style={{ color, fontSize: '1.1rem' }}>{TYPE_EMOJIS[creature.type]}</span>
+              <span style={{ display: 'inline-block', width: '1.1rem', height: '1.1rem', borderRadius: '50%', background: color }} />
               <span className="font-pixel" style={{ fontSize: '1rem', color: '#e0e0e0' }}>
                 {creature.name}
               </span>
@@ -82,7 +82,7 @@ export default function MainGame({
             }}
             title="開発モード切替"
           >
-            {devMode ? '⚡DEV' : 'DEV'}
+            DEV
           </button>
         </div>
 
@@ -97,13 +97,13 @@ export default function MainGame({
           {creature.isSleeping && (
             <span className="font-pixel px-2 py-0.5 rounded-full"
               style={{ fontSize: '0.5rem', background: '#60a5fa22', color: '#60a5fa', border: '1px solid #60a5fa44' }}>
-              💤 おやすみ中
+              おやすみ中
             </span>
           )}
           {devMode && (
             <span className="font-pixel px-2 py-0.5 rounded-full"
               style={{ fontSize: '0.5rem', background: '#ffd70022', color: '#ffd700', border: '1px solid #ffd70044' }}>
-              ⚡ 開発モード
+              開発モード
             </span>
           )}
         </div>

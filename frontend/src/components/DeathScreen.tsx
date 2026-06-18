@@ -59,8 +59,11 @@ export default function DeathScreen({ creature, hasOtherAliveCreatures, onStartO
         ))}
       </div>
 
-      <div className="text-6xl mb-4 grayscale opacity-50" style={{ filter: 'grayscale(1)' }}>
-        💀
+      <div
+        className="font-pixel mb-4 opacity-60"
+        style={{ fontSize: '1.6rem', color: '#94a3b8', letterSpacing: '0.1em' }}
+      >
+        R.I.P.
       </div>
 
       <h2 className="font-pixel text-center mb-2" style={{ fontSize: '0.9rem', color: '#94a3b8' }}>
@@ -76,7 +79,7 @@ export default function DeathScreen({ creature, hasOtherAliveCreatures, onStartO
         style={{ background: '#16213e', border: '1px solid #1e293b' }}
       >
         <p className="font-pixel" style={{ fontSize: '0.7rem', color: '#64748b', lineHeight: 2 }}>
-          もっと食べさせてあげれば<br />よかった...💧<br />
+          もっと食べさせてあげれば<br />よかった...<br />
           また一緒に旅をしよう。
         </p>
       </div>

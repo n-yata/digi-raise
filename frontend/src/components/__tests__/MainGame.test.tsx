@@ -83,14 +83,14 @@ describe('MainGame', () => {
     expect(screen.queryByText(/おやすみ中/)).not.toBeInTheDocument()
   })
 
-  it('devMode=true のとき「⚡ 開発モード」バッジが表示される', () => {
+  it('devMode=true のとき「開発モード」バッジが表示される', () => {
     render(<MainGame {...defaultProps} devMode={true} />)
-    expect(screen.getByText(/⚡ 開発モード/)).toBeInTheDocument()
+    expect(screen.getByText(/開発モード/)).toBeInTheDocument()
   })
 
-  it('devMode=true のとき DEV ボタンのテキストが「⚡DEV」になる', () => {
+  it('devMode=true のとき DEV ボタンのテキストが「DEV」になる', () => {
     render(<MainGame {...defaultProps} devMode={true} />)
-    expect(screen.getByText('⚡DEV')).toBeInTheDocument()
+    expect(screen.getAllByText('DEV').length).toBeGreaterThan(0)
   })
 
   it('message が non-null のとき、そのテキストが画面に表示される', () => {
