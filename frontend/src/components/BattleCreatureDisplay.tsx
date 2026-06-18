@@ -71,7 +71,7 @@ export default function BattleCreatureDisplay({
           textShadow: `0 0 6px ${isOpponent ? '#f8717166' : '#4ade8066'}`,
         }}
       >
-        {isOpponent ? '🎯 ' : ''}{name}{!isOpponent ? '（あなた）' : ''}
+        {name}{!isOpponent ? '（あなた）' : ''}
       </div>
 
       {/* Creature sprite container */}
@@ -103,8 +103,8 @@ export default function BattleCreatureDisplay({
         {/* Paralysis sparks */}
         {paralyzed && (
           <div className="absolute inset-0 pointer-events-none">
-            <span className="absolute paralysis-spark" style={{ top: '10%', left: '15%', fontSize: 14 }}>⚡</span>
-            <span className="absolute paralysis-spark" style={{ top: '40%', right: '10%', fontSize: 12, animationDelay: '0.3s' }}>⚡</span>
+            <span className="absolute paralysis-spark" style={{ top: '10%', left: '15%', width: 3, height: 12, background: '#fde047', boxShadow: '0 0 6px #fde047', transform: 'skewX(-20deg)' }} />
+            <span className="absolute paralysis-spark" style={{ top: '40%', right: '10%', width: 3, height: 10, background: '#fde047', boxShadow: '0 0 6px #fde047', transform: 'skewX(-20deg)', animationDelay: '0.3s' }} />
           </div>
         )}
 
@@ -123,7 +123,6 @@ export default function BattleCreatureDisplay({
                 background: 'radial-gradient(circle, #60a5fa22 0%, transparent 70%)',
               }}
             />
-            <span className="absolute text-3xl" style={{ filter: 'drop-shadow(0 0 8px #60a5fa)' }}>🛡️</span>
           </div>
         )}
 
@@ -151,7 +150,6 @@ export default function BattleCreatureDisplay({
             key={`hit-${effectKey}`}
             className="absolute inset-0 flex items-center justify-center pointer-events-none"
           >
-            <span className="absolute text-2xl star-burst" style={{ filter: `drop-shadow(0 0 6px #f43f5e)` }}>💥</span>
           </div>
         )}
 
@@ -161,9 +159,9 @@ export default function BattleCreatureDisplay({
             key={`heal-${effectKey}`}
             className="absolute inset-0 pointer-events-none"
           >
-            <span className="absolute sparkle" style={{ top: '20%', left: '20%', fontSize: 16 }}>💚</span>
-            <span className="absolute sparkle" style={{ top: '10%', right: '20%', fontSize: 14, animationDelay: '0.2s' }}>✨</span>
-            <span className="absolute sparkle" style={{ top: '30%', left: '50%', fontSize: 12, animationDelay: '0.4s' }}>💚</span>
+            <span className="absolute sparkle" style={{ top: '20%', left: '20%', width: 12, height: 12, borderRadius: '50%', background: '#4ade80', boxShadow: '0 0 8px #4ade80' }} />
+            <span className="absolute sparkle" style={{ top: '10%', right: '20%', width: 10, height: 10, borderRadius: '50%', background: '#86efac', boxShadow: '0 0 6px #86efac', animationDelay: '0.2s' }} />
+            <span className="absolute sparkle" style={{ top: '30%', left: '50%', width: 8, height: 8, borderRadius: '50%', background: '#4ade80', boxShadow: '0 0 6px #4ade80', animationDelay: '0.4s' }} />
           </div>
         )}
       </div>

@@ -5,10 +5,9 @@ interface BarProps {
   value: number
   max: number
   color: string
-  icon: string
 }
 
-function Bar({ label, value, max, color, icon }: BarProps) {
+function Bar({ label, value, max, color }: BarProps) {
   const pct = Math.max(0, Math.min(100, (value / max) * 100))
   const isLow = pct < 25
 
@@ -16,7 +15,7 @@ function Bar({ label, value, max, color, icon }: BarProps) {
     <div className="mb-2">
       <div className="flex justify-between items-center mb-1">
         <span className="text-xs flex items-center gap-1" style={{ fontSize: '0.55rem' }}>
-          {icon} {label}
+          {label}
         </span>
         <span className="text-xs tabular-nums" style={{ fontSize: '0.55rem', color }}>
           {Math.floor(value)}/{max}
@@ -49,9 +48,9 @@ interface StatusBarsProps {
 export default function StatusBars({ creature, typeColor }: StatusBarsProps) {
   return (
     <div className="w-full">
-      <Bar label="HP" value={creature.hp} max={creature.maxHp} color="#4ade80" icon="❤️" />
-      <Bar label="空腹" value={creature.hunger} max={100} color="#fb923c" icon="🍖" />
-      <Bar label="幸福" value={creature.happiness} max={100} color={typeColor} icon="😊" />
+      <Bar label="HP" value={creature.hp} max={creature.maxHp} color="#4ade80" />
+      <Bar label="空腹" value={creature.hunger} max={100} color="#fb923c" />
+      <Bar label="幸福" value={creature.happiness} max={100} color={typeColor} />
     </div>
   )
 }

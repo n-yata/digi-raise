@@ -27,15 +27,6 @@ export const TYPE_COLORS: Record<CreatureType, string> = {
   Light:   '#fff9c4',
 }
 
-export const TYPE_EMOJIS: Record<CreatureType, string> = {
-  Fire:    '🔥',
-  Water:   '💧',
-  Plant:   '🌿',
-  Thunder: '⚡',
-  Dark:    '🌑',
-  Light:   '✨',
-}
-
 export const TYPE_BG_COLORS: Record<CreatureType, string> = {
   Fire:    'rgba(255, 107, 53, 0.15)',
   Water:   'rgba(79, 195, 247, 0.15)',

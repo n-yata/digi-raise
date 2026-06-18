@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { CreatureType } from '../types/creature'
-import { TYPE_COLORS, TYPE_EMOJIS } from '../data/evolutions'
+import { TYPE_COLORS } from '../data/evolutions'
 import { createNewCreature } from '../utils/gameLogic'
 
 interface CreatureSetupProps {
@@ -40,7 +40,11 @@ export default function CreatureSetup({ onStart, onBack }: CreatureSetupProps) {
       <div className="min-h-screen flex flex-col items-center justify-center px-6 py-8"
         style={{ background: 'linear-gradient(180deg, #0a0a1a 0%, #1a1a2e 100%)' }}
       >
-        <div className="text-5xl mb-6 animate-float">🥚</div>
+        <div
+          className="mb-6 animate-float"
+          style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(255,255,255,0.18)' }}
+        />
+
         <h2 className="font-pixel text-center mb-8" style={{ fontSize: '1rem', color: '#ffd700' }}>
           なまえをつけてあげよう
         </h2>
@@ -104,9 +108,15 @@ export default function CreatureSetup({ onStart, onBack }: CreatureSetupProps) {
     <div className="min-h-screen flex flex-col items-center px-4 py-6"
       style={{ background: 'linear-gradient(180deg, #0a0a1a 0%, #1a1a2e 100%)' }}
     >
-      <div className="text-5xl mb-4 animate-float">
-        {selectedType ? TYPE_EMOJIS[selectedType] : '🥚'}
-      </div>
+      <div
+        className="mb-4 animate-float"
+        style={{
+          width: 56,
+          height: 56,
+          borderRadius: '50%',
+          background: selectedType ? TYPE_COLORS[selectedType] : 'rgba(255,255,255,0.18)',
+        }}
+      />
 
       <h2 className="font-pixel text-center mb-1" style={{ fontSize: '1rem', color: '#ffd700' }}>
         「{name}」のタイプを選ぼう
@@ -135,7 +145,15 @@ export default function CreatureSetup({ onStart, onBack }: CreatureSetupProps) {
                 boxShadow: isSelected ? `0 0 15px ${color}44` : 'none',
               }}
             >
-              <span style={{ fontSize: 28 }}>{TYPE_EMOJIS[type]}</span>
+              <span
+                style={{
+                  display: 'inline-block',
+                  width: 28,
+                  height: 28,
+                  borderRadius: '50%',
+                  background: color,
+                }}
+              />
               <span className="font-pixel" style={{ fontSize: '0.7rem', color: isSelected ? color : '#94a3b8' }}>
                 {type}
               </span>

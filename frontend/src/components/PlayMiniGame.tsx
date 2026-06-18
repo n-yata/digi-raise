@@ -9,13 +9,14 @@ interface Props {
 
 type CardIcon = string
 
+// 各タイプ3ペア分の色（メモリーゲームの識別用）
 const TYPE_ICONS: Record<CreatureType, [CardIcon, CardIcon, CardIcon]> = {
-  Fire:    ['🔥', '🌋', '💥'],
-  Water:   ['💧', '🌊', '🐟'],
-  Plant:   ['🌿', '🌸', '🍀'],
-  Thunder: ['⚡', '🌩️', '💫'],
-  Dark:    ['🌑', '🦇', '👁️'],
-  Light:   ['✨', '🌟', '👼'],
+  Fire:    ['#ff6b35', '#ffb347', '#ff3d3d'],
+  Water:   ['#4fc3f7', '#1e88e5', '#80deea'],
+  Plant:   ['#81c784', '#aed581', '#388e3c'],
+  Thunder: ['#ffd54f', '#fff176', '#ffb300'],
+  Dark:    ['#ce93d8', '#9575cd', '#5e35b1'],
+  Light:   ['#fff9c4', '#fff176', '#ffe082'],
 }
 
 const MAX_TURNS = 8
@@ -165,7 +166,7 @@ export default function PlayMiniGame({ creature, onResult }: Props) {
       >
         {/* Title */}
         <div className="text-center mb-1 font-pixel" style={{ fontSize: '0.8rem', color }}>
-          🎮 あそぶ！
+          あそぶ！
         </div>
         <div className="text-center mb-3 font-pixel" style={{ fontSize: '0.7rem', color: '#94a3b8' }}>
           ペアを見つけよう！
@@ -213,7 +214,16 @@ export default function PlayMiniGame({ creature, onResult }: Props) {
               }}
             >
               {card.isFlipped || card.isMatched ? (
-                <span>{card.icon}</span>
+                <span
+                  style={{
+                    display: 'inline-block',
+                    width: '1.6rem',
+                    height: '1.6rem',
+                    borderRadius: '50%',
+                    background: card.icon,
+                    boxShadow: `0 0 8px ${card.icon}88`,
+                  }}
+                />
               ) : (
                 <span className="font-pixel" style={{ fontSize: '1rem', color: '#475569' }}>?</span>
               )}
@@ -227,7 +237,7 @@ export default function PlayMiniGame({ creature, onResult }: Props) {
             className="text-center font-pixel"
             style={{ fontSize: '0.9rem', color: success ? '#4ade80' : '#f87171' }}
           >
-            {success ? '楽しかった！🎉' : 'また遊ぼう！'}
+            {success ? '楽しかった！' : 'また遊ぼう！'}
           </div>
         )}
       </div>
