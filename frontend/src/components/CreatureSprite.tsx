@@ -9,153 +9,188 @@ interface CreatureSpriteProps {
   animState: AnimState
 }
 
-// Emoji base per type and stage
-const SPRITE_EMOJIS: Record<CreatureType, string[]> = {
-  Fire:    ['🥚', '🔴', '🦊', '🐉', '🔥', '☄️'],
-  Water:   ['🥚', '🔵', '🐟', '🐋', '🌊', '🌀'],
-  Plant:   ['🥚', '🟢', '🌱', '🌿', '🌸', '🌳'],
-  Thunder: ['🥚', '🟡', '⚡', '🌩️', '🌪️', '⚡'],
-  Dark:    ['🥚', '🟣', '👻', '💀', '🌑', '👁️'],
-  Light:   ['🥚', '⭐', '✨', '🌟', '💫', '🌈'],
+// タイプ別アクセントカラー（ドット絵のワンポイント）
+const ACCENT_COLORS: Record<CreatureType, string> = {
+  Fire:    '#ffd166',
+  Water:   '#bfefff',
+  Plant:   '#ffe066',
+  Thunder: '#fff3b0',
+  Dark:    '#b388ff',
+  Light:   '#fff7cc',
 }
 
-// Pixel art body shapes per stage (CSS-based)
+// 明度調整: amt>0 で白方向に、amt<0 で黒方向に
+function adjust(hex: string, amt: number): string {
+  const c = hex.replace('#', '')
+  const full = c.length === 3 ? c.split('').map((x) => x + x).join('') : c
+  const n = parseInt(full, 16)
+  const r = (n >> 16) & 255
+  const g = (n >> 8) & 255
+  const b = n & 255
+  const f = (v: number) =>
+    Math.max(0, Math.min(255, Math.round(amt >= 0 ? v + (255 - v) * amt : v * (1 + amt))))
+  return `#${((1 << 24) + (f(r) << 16) + (f(g) << 8) + f(b)).toString(16).slice(1)}`
+}
+
+// ドット絵マップ（16x16）。各文字が色の役割に対応:
+// '.' 透明 / 'o' 輪郭 / 'M' 本体(タイプ色) / 'D' 影 / 'L' ハイライト
+// 'E' 目の白 / 'P' 瞳 / 'A' アクセント(タイプ別)
+const PIXEL_MAPS: Record<EvolutionStage, string[]> = {
+  // Stage 0: たまご
+  0: [
+    '................',
+    '......oooo......',
+    '....ooLLMMoo....',
+    '...oLLMMMMMoo...',
+    '..oLMMMMMMMMo...',
+    '..oMMMAMMMMMo...',
+    '.oMMMMMMMAMMMo..',
+    '.oMMAMMMMMMMMo..',
+    '.oMMMMMMMMAMMo..',
+    '.oMMMMMAMMMMMo..',
+    '.oMMMMMMMMMMMo..',
+    '..oMMMMMMMMMo...',
+    '..oMMMMMMMMMo...',
+    '...ooMMMMMoo....',
+    '.....ooooo......',
+    '................',
+  ],
+  // Stage 1: ベビー（まんまるスライム）
+  1: [
+    '................',
+    '................',
+    '.....oooooo.....',
+    '...ooLLMMMMoo...',
+    '..oLLMMMMMMMMo..',
+    '.oLMMMMMMMMMMMo.',
+    '.oMMMPMMMMPMMMo.',
+    '.oMMMPMMMMPMMMo.',
+    '.oMMMMMMMMMMMMo.',
+    '.oMMMMoooMMMMMo.',
+    '.oMMMMMMMMMMMMo.',
+    '..oMMMMMMMMMMo..',
+    '...ooMMMMMMoo...',
+    '....oo.oo.oo....',
+    '................',
+    '................',
+  ],
+  // Stage 2: チャイルド（耳と足）
+  2: [
+    '................',
+    '...o........o...',
+    '...oo......oo...',
+    '...oLoo..ooLo...',
+    '..oLLMMMMMMLLo..',
+    '.oLMMMMMMMMMMo..',
+    '.oMMPMMMMMMPMMo.',
+    '.oMMPMMMMMMPMMo.',
+    '.oMMMMMAAMMMMMo.',
+    '.oMMMMMMMMMMMMo.',
+    '.oMMMooooMMMMMo.',
+    '..oMMMMMMMMMMo..',
+    '..oMMMMMMMMMMo..',
+    '...oMMo..oMMo...',
+    '...ooo....ooo...',
+    '................',
+  ],
+  // Stage 3: ティーン（腕あり）
+  3: [
+    '................',
+    '...oo....oo.....',
+    '..oLLo..oLLo....',
+    '..oLMo..oMLo....',
+    '.ooLMMMMMMMLoo..',
+    '.oLMMMMMMMMMMLo.',
+    'oLMMPMMMMMMPMMLo',
+    'oMMMPMMMMMMPMMMo',
+    'oMMMMMMMMMMMMMMo',
+    'oMMMMMoooMMMMMMo',
+    'oMMMMMMMMMMMMMMo',
+    '.oMMMMAAAAMMMMo.',
+    '.oMMMMMMMMMMMMo.',
+    '..oMMo....oMMo..',
+    '..ooo......ooo..',
+    '................',
+  ],
+  // Stage 4: アダルト（角・翼）
+  4: [
+    '....o......o....',
+    '...oLo....oLo...',
+    '...oLoo..ooLo...',
+    '..ooLLMMMMLLoo..',
+    '.oLLMMMMMMMMLLo.',
+    'oLMMMMMMMMMMMMLo',
+    'oMMMPPMMMMPPMMMo',
+    'oMMMPPMMMMPPMMMo',
+    'oMMMMMMMMMMMMMMo',
+    'oMMMMMAAAAMMMMMo',
+    'oMMMMMMMMMMMMMMo',
+    'oLMMMMooooMMMMLo',
+    '.oLMMMMMMMMMMLo.',
+    '..oMMo....oMMo..',
+    '..ooo......ooo..',
+    '................',
+  ],
+  // Stage 5: パーフェクト（大型・オーラ）
+  5: [
+    '..A..o....o..A..',
+    '...oLo....oLo...',
+    '.A.oLoo..ooLo.A.',
+    '..ooLLMMMMLLoo..',
+    '.oLLMMMMMMMMLLo.',
+    'oLMMMMMMMMMMMMLo',
+    'oMMPPMMMMMMPPMMo',
+    'oMMPPMMMMMMPPMMo',
+    'oMMMMMMMMMMMMMMo',
+    'oMMMMAAAAAAMMMMo',
+    'oMMMMMMMMMMMMMMo',
+    'oLMMMMoooooMMMLo',
+    'AoLMMMMMMMMMMLoA',
+    '..oMMMo..oMMMo..',
+    '..ooo......ooo..',
+    '....A......A....',
+  ],
+}
+
+// ステージごとの1ドットのサイズ(px)。成長に合わせて拡大
+const PIXEL_SIZES: Record<EvolutionStage, number> = {
+  0: 4, 1: 4, 2: 5, 3: 6, 4: 6, 5: 7,
+}
+
+// ドット絵スプライト本体（ステージ別の形 × タイプ別カラー）
 function PixelBody({ type, stage, color }: { type: CreatureType; stage: EvolutionStage; color: string }) {
-  const sizes = [60, 80, 100, 120, 140, 160]
-  const size = sizes[stage]
+  const map = PIXEL_MAPS[stage]
+  const px = PIXEL_SIZES[stage]
+  const cols = map[0].length
+  const rows = map.length
 
-  // Stage 0: Egg
-  if (stage === 0) {
-    return (
-      <div
-        className="relative flex items-center justify-center"
-        style={{
-          width: size,
-          height: size * 1.2,
-          background: `radial-gradient(ellipse at 40% 35%, white 0%, ${color}88 40%, ${color} 100%)`,
-          borderRadius: '50% 50% 45% 45%',
-          boxShadow: `0 0 20px ${color}88, inset 0 -10px 20px rgba(0,0,0,0.3)`,
-        }}
-      >
-        {/* Egg spots */}
-        <div className="absolute" style={{
-          width: 12, height: 8, borderRadius: '50%',
-          background: `${color}cc`, top: '35%', left: '20%',
-        }} />
-        <div className="absolute" style={{
-          width: 8, height: 6, borderRadius: '50%',
-          background: `${color}aa`, top: '55%', left: '60%',
-        }} />
-      </div>
-    )
+  const palette: Record<string, string | undefined> = {
+    o: adjust(color, -0.55),
+    M: color,
+    D: adjust(color, -0.28),
+    L: adjust(color, 0.4),
+    E: '#ffffff',
+    P: '#1b1b2e',
+    A: ACCENT_COLORS[type],
   }
 
-  // Stage 1: Baby - round blob
-  if (stage === 1) {
-    return (
-      <div
-        className="relative flex flex-col items-center"
-        style={{ width: size, height: size }}
-      >
-        {/* Body */}
-        <div style={{
-          width: size,
-          height: size * 0.8,
-          background: `radial-gradient(circle at 40% 35%, ${color}ff 0%, ${color}bb 60%, ${color}88 100%)`,
-          borderRadius: '50%',
-          boxShadow: `0 0 15px ${color}66, inset 0 -8px 15px rgba(0,0,0,0.2)`,
-          position: 'relative',
-        }}>
-          {/* Eyes */}
-          <div className="absolute flex gap-2" style={{ top: '30%', left: '25%' }}>
-            <div style={{ width: 8, height: 10, background: '#111', borderRadius: '40%' }}>
-              <div style={{ width: 3, height: 3, background: 'white', borderRadius: '50%', margin: '1px 0 0 4px' }} />
-            </div>
-            <div style={{ width: 8, height: 10, background: '#111', borderRadius: '40%' }}>
-              <div style={{ width: 3, height: 3, background: 'white', borderRadius: '50%', margin: '1px 0 0 4px' }} />
-            </div>
-          </div>
-          {/* Mouth */}
-          <div className="absolute" style={{
-            width: 10, height: 5, bottom: '25%', left: '37%',
-            borderBottom: '3px solid #111', borderRadius: '0 0 5px 5px',
-          }} />
-        </div>
-        {/* Tiny feet */}
-        <div className="flex gap-3 -mt-1">
-          <div style={{ width: 14, height: 10, background: color, borderRadius: '50% 50% 40% 40%' }} />
-          <div style={{ width: 14, height: 10, background: color, borderRadius: '50% 50% 40% 40%' }} />
-        </div>
-      </div>
-    )
-  }
-
-  // Stage 2: Child - more defined
-  if (stage === 2) {
-    return (
-      <div className="relative flex flex-col items-center" style={{ width: size, height: size }}>
-        {/* Head */}
-        <div style={{
-          width: size * 0.65,
-          height: size * 0.55,
-          background: `radial-gradient(circle at 40% 35%, ${color}ff, ${color}99)`,
-          borderRadius: '50% 50% 40% 40%',
-          boxShadow: `0 0 12px ${color}55`,
-          position: 'relative',
-        }}>
-          <div className="absolute flex gap-2" style={{ top: '25%', left: '18%' }}>
-            <div style={{ width: 9, height: 11, background: '#111', borderRadius: '40%' }}>
-              <div style={{ width: 3, height: 3, background: 'white', borderRadius: '50%', margin: '1px 0 0 5px' }} />
-            </div>
-            <div style={{ width: 9, height: 11, background: '#111', borderRadius: '40%' }}>
-              <div style={{ width: 3, height: 3, background: 'white', borderRadius: '50%', margin: '1px 0 0 5px' }} />
-            </div>
-          </div>
-          {/* Type feature on head */}
-          <div className="absolute" style={{ top: -8, left: '42%', fontSize: 16 }}>
-            {type === 'Fire' ? '🔥' : type === 'Water' ? '💧' : type === 'Plant' ? '🌿' :
-             type === 'Thunder' ? '⚡' : type === 'Dark' ? '🌑' : '✨'}
-          </div>
-        </div>
-        {/* Body */}
-        <div style={{
-          width: size * 0.55,
-          height: size * 0.4,
-          background: `linear-gradient(180deg, ${color}dd, ${color}99)`,
-          borderRadius: '30% 30% 40% 40%',
-          marginTop: -4,
-        }} />
-        {/* Legs */}
-        <div className="flex gap-2 -mt-1">
-          <div style={{ width: 16, height: 16, background: color, borderRadius: '40% 40% 50% 50%' }} />
-          <div style={{ width: 16, height: 16, background: color, borderRadius: '40% 40% 50% 50%' }} />
-        </div>
-      </div>
-    )
-  }
-
-  // Stage 3+: Adult and beyond - use large emoji + decorations
-  const emoji = SPRITE_EMOJIS[type][stage]
-  const emojiFontSizes = [0, 0, 0, 52, 64, 76]
   return (
-    <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
-      {/* Aura ring */}
-      <div className="absolute inset-0 rounded-full" style={{
-        background: `radial-gradient(circle, ${color}22 0%, transparent 70%)`,
-      }} />
-      {/* Decorative elements */}
-      {stage >= 4 && (
-        <>
-          <div className="absolute" style={{ top: 0, left: 0, fontSize: 18, filter: 'blur(0.5px)' }}>✦</div>
-          <div className="absolute" style={{ top: 0, right: 0, fontSize: 18, filter: 'blur(0.5px)' }}>✦</div>
-        </>
-      )}
-      <div style={{ fontSize: emojiFontSizes[stage], lineHeight: 1, filter: `drop-shadow(0 0 8px ${color})` }}>
-        {emoji}
-      </div>
-      {/* Power level indicator rings for high stages */}
-      {stage >= 5 && (
-        <div className="absolute inset-0 rounded-full border-2 animate-ping" style={{ borderColor: color, opacity: 0.4 }} />
+    <div
+      style={{
+        display: 'grid',
+        gridTemplateColumns: `repeat(${cols}, ${px}px)`,
+        gridTemplateRows: `repeat(${rows}, ${px}px)`,
+        width: cols * px,
+        height: rows * px,
+        imageRendering: 'pixelated',
+        filter: `drop-shadow(0 0 6px ${color}66)`,
+      }}
+    >
+      {map.flatMap((row, y) =>
+        row.split('').map((ch, x) => {
+          const bg = palette[ch]
+          return <div key={`${x}-${y}`} style={bg ? { background: bg } : undefined} />
+        }),
       )}
     </div>
   )
