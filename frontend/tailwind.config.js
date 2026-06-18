@@ -25,6 +25,8 @@ export default {
         'happy-jump': 'happyJump 0.5s ease-in-out infinite',
         'sleep-zzz': 'sleepZzz 1.5s ease-in-out infinite',
         'attack-flash': 'attackFlash 0.3s ease-in-out 3',
+        'attack-lunge': 'attackLunge 0.45s ease-in-out infinite',
+        'eat-nod': 'eatNod 0.34s ease-in-out infinite',
         'evolve-glow': 'evolveGlow 0.5s ease-in-out infinite',
         'float': 'float 3s ease-in-out infinite',
         'pulse-glow': 'pulseGlow 2s ease-in-out infinite',
@@ -41,8 +43,9 @@ export default {
           '50%': { transform: 'scaleY(1.05) scaleX(0.97)' },
         },
         happyJump: {
-          '0%, 100%': { transform: 'translateY(0)' },
-          '50%': { transform: 'translateY(-12px)' },
+          '0%, 100%': { transform: 'translateY(0) rotate(-3deg) scaleY(1)' },
+          '40%': { transform: 'translateY(-12px) rotate(0deg) scaleY(1.04)' },
+          '70%': { transform: 'translateY(0) rotate(3deg) scaleY(0.96)' },
         },
         sleepZzz: {
           '0%, 100%': { opacity: '0.6', transform: 'translateY(0) rotate(-5deg)' },
@@ -51,6 +54,16 @@ export default {
         attackFlash: {
           '0%, 100%': { transform: 'translateX(0)', filter: 'brightness(1)' },
           '50%': { transform: 'translateX(8px)', filter: 'brightness(2)' },
+        },
+        attackLunge: {
+          '0%, 100%': { transform: 'translateX(0) scaleX(1) scaleY(1)' },
+          '25%': { transform: 'translateX(-4px) scaleX(0.92) scaleY(1.06)' },
+          '55%': { transform: 'translateX(11px) scaleX(1.08) scaleY(0.94)', filter: 'brightness(1.5)' },
+          '75%': { transform: 'translateX(4px) scaleX(1) scaleY(1)' },
+        },
+        eatNod: {
+          '0%, 100%': { transform: 'translateY(0) scaleY(1)' },
+          '50%': { transform: 'translateY(3px) scaleY(0.9)' },
         },
         evolveGlow: {
           '0%, 100%': { filter: 'brightness(1) blur(0px)', transform: 'scale(1)' },
