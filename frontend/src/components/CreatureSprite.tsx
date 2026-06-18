@@ -1,7 +1,8 @@
+import { useState, useEffect } from 'react'
 import type { CreatureType, EvolutionStage } from '../types/creature'
 import { TYPE_COLORS } from '../data/evolutions'
 
-type AnimState = 'idle' | 'happy' | 'sleeping' | 'attack' | 'evolving' | 'dead' | 'sad' | 'hungry' | 'critical'
+type AnimState = 'idle' | 'happy' | 'sleeping' | 'attack' | 'evolving' | 'dead' | 'sad' | 'hungry' | 'critical' | 'eating'
 
 interface CreatureSpriteProps {
   type: CreatureType
@@ -153,15 +154,141 @@ const PIXEL_MAPS: Record<EvolutionStage, string[]> = {
   ],
 }
 
+// 2枚目フレーム（モーション用）。目を閉じ（まばたき）・口を開け・足を1ドットずらした差分。
+// idle ではたまに混ぜて「まばたき＋ステップ」、happy/eating/attack では交互に出して口パク・動きを表現する。
+const PIXEL_MAPS_B: Record<EvolutionStage, string[]> = {
+  // Stage 0: たまご（顔なし。揺れはCSSで表現するため A と同一）
+  0: [
+    '................',
+    '......oooo......',
+    '....ooLLMMoo....',
+    '...oLLMMMMMoo...',
+    '..oLMMMMMMMMo...',
+    '..oMMMAMMMMMo...',
+    '.oMMMMMMMAMMMo..',
+    '.oMMAMMMMMMMMo..',
+    '.oMMMMMMMMAMMo..',
+    '.oMMMMMAMMMMMo..',
+    '.oMMMMMMMMMMMo..',
+    '..oMMMMMMMMMo...',
+    '..oMMMMMMMMMo...',
+    '...ooMMMMMoo....',
+    '.....ooooo......',
+    '................',
+  ],
+  // Stage 1
+  1: [
+    '................',
+    '................',
+    '.....oooooo.....',
+    '...ooLLMMMMoo...',
+    '..oLLMMMMMMMMo..',
+    '.oLMMMMMMMMMMMo.',
+    '.oMMMMMMMMMMMMo.',
+    '.oMMMMMMMMMMMMo.',
+    '.oMMMMMMMMMMMMo.',
+    '.oMMMMooooMMMMo.',
+    '.oMMMMMMMMMMMMo.',
+    '..oMMMMMMMMMMo..',
+    '...ooMMMMMMoo...',
+    '...oo.oo.oo.....',
+    '................',
+    '................',
+  ],
+  // Stage 2
+  2: [
+    '................',
+    '...o........o...',
+    '...oo......oo...',
+    '...oLoo..ooLo...',
+    '..oLLMMMMMMLLo..',
+    '.oLMMMMMMMMMMo..',
+    '.oMMMMMMMMMMMMo.',
+    '.oMMMMMMMMMMMMo.',
+    '.oMMMMMAAMMMMMo.',
+    '.oMMMMMMMMMMMMo.',
+    '.oMMooooooMMMMo.',
+    '..oMMMMMMMMMMo..',
+    '..oMMMMMMMMMMo..',
+    '..oMMo..oMMo....',
+    '..ooo....ooo....',
+    '................',
+  ],
+  // Stage 3
+  3: [
+    '................',
+    '...oo....oo.....',
+    '..oLLo..oLLo....',
+    '..oLMo..oMLo....',
+    '.ooLMMMMMMMLoo..',
+    '.oLMMMMMMMMMMLo.',
+    'oLMMMMMMMMMMMMLo',
+    'oMMMMMMMMMMMMMMo',
+    'oMMMMMMMMMMMMMMo',
+    'oMMMMoooooMMMMMo',
+    'oMMMMMMMMMMMMMMo',
+    '.oMMMMAAAAMMMMo.',
+    '.oMMMMMMMMMMMMo.',
+    '.oMMo....oMMo...',
+    '.ooo......ooo...',
+    '................',
+  ],
+  // Stage 4
+  4: [
+    '....o......o....',
+    '...oLo....oLo...',
+    '...oLoo..ooLo...',
+    '..ooLLMMMMLLoo..',
+    '.oLLMMMMMMMMLLo.',
+    'oLMMMMMMMMMMMMLo',
+    'oMMMMMMMMMMMMMMo',
+    'oMMMMMMMMMMMMMMo',
+    'oMMMMMMMMMMMMMMo',
+    'oMMMMMAAAAMMMMMo',
+    'oMMMMMMMMMMMMMMo',
+    'oLMMMooooooMMMLo',
+    '.oLMMMMMMMMMMLo.',
+    '.oMMo....oMMo...',
+    '.ooo......ooo...',
+    '................',
+  ],
+  // Stage 5
+  5: [
+    '..A..o....o..A..',
+    '...oLo....oLo...',
+    '.A.oLoo..ooLo.A.',
+    '..ooLLMMMMLLoo..',
+    '.oLLMMMMMMMMLLo.',
+    'oLMMMMMMMMMMMMLo',
+    'oMMMMMMMMMMMMMMo',
+    'oMMMMMMMMMMMMMMo',
+    'oMMMMMMMMMMMMMMo',
+    'oMMMMAAAAAAMMMMo',
+    'oMMMMMMMMMMMMMMo',
+    'oLMMMooooooMMMLo',
+    'AoLMMMMMMMMMMLoA',
+    '.oMMMo..oMMMo...',
+    '.ooo......ooo...',
+    '....A......A....',
+  ],
+}
+
+// アニメ状態ごとのフレーム列と速度。seq の値は 0=Aフレーム / 1=Bフレーム。
+// idle はほとんど A、たまに B を出して「まばたき＋ひと足」。それ以外は交互に動かす。
+const FRAME_PATTERNS: Partial<Record<AnimState, { seq: number[]; interval: number }>> = {
+  idle:   { seq: [0, 0, 0, 0, 0, 0, 0, 1], interval: 220 },
+  happy:  { seq: [0, 1], interval: 200 },
+  eating: { seq: [0, 1], interval: 170 },
+  attack: { seq: [0, 1], interval: 110 },
+}
+
 // ステージごとの1ドットのサイズ(px)。成長に合わせて拡大
 const PIXEL_SIZES: Record<EvolutionStage, number> = {
   0: 4, 1: 4, 2: 5, 3: 6, 4: 6, 5: 7,
 }
 
-// ドット絵スプライト本体（ステージ別の形 × タイプ別カラー）
-function PixelBody({ type, stage, color }: { type: CreatureType; stage: EvolutionStage; color: string }) {
-  const map = PIXEL_MAPS[stage]
-  const px = PIXEL_SIZES[stage]
+// ドット絵スプライト本体（与えられたドットマップ × タイプ別カラーで描画）
+function PixelBody({ color, accent, map, px }: { color: string; accent: string; map: string[]; px: number }) {
   const cols = map[0].length
   const rows = map.length
 
@@ -172,7 +299,7 @@ function PixelBody({ type, stage, color }: { type: CreatureType; stage: Evolutio
     L: adjust(color, 0.4),
     E: '#ffffff',
     P: '#1b1b2e',
-    A: ACCENT_COLORS[type],
+    A: accent,
   }
 
   return (
@@ -199,12 +326,31 @@ function PixelBody({ type, stage, color }: { type: CreatureType; stage: Evolutio
 
 export default function CreatureSprite({ type, stage, animState }: CreatureSpriteProps) {
   const color = TYPE_COLORS[type]
+  const accent = ACCENT_COLORS[type]
+
+  // 2フレームのパラパラアニメ。状態に応じて A/B フレームを切り替える。
+  const pattern = FRAME_PATTERNS[animState]
+  const [step, setStep] = useState(0)
+  useEffect(() => {
+    setStep(0)
+    if (!pattern) return
+    const id = setInterval(() => setStep(s => s + 1), pattern.interval)
+    return () => clearInterval(id)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [animState])
+
+  const frameIdx = pattern
+    ? pattern.seq[step % pattern.seq.length]
+    : (animState === 'sleeping' ? 1 : 0) // 睡眠は目を閉じた B フレームで静止
+  const map = (frameIdx === 1 ? PIXEL_MAPS_B : PIXEL_MAPS)[stage]
+  const px = PIXEL_SIZES[stage]
 
   const getAnimClass = () => {
     switch (animState) {
       case 'happy':    return 'animate-happy-jump'
+      case 'eating':   return 'animate-eat-nod'
       case 'sleeping': return 'animate-idle-breathe opacity-70'
-      case 'attack':   return 'animate-attack-flash'
+      case 'attack':   return 'animate-attack-lunge'
       case 'evolving': return 'animate-evolve-glow'
       case 'dead':     return 'opacity-40 grayscale'
       case 'sad':      return 'animate-sad-sway'
@@ -235,7 +381,7 @@ export default function CreatureSprite({ type, stage, animState }: CreatureSprit
 
       {/* Main sprite */}
       <div className={`transition-all duration-300 ${getAnimClass()}`}>
-        <PixelBody type={type} stage={stage} color={color} />
+        <PixelBody color={color} accent={accent} map={map} px={px} />
       </div>
 
       {/* Shadow */}
