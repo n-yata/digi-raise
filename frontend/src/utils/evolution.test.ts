@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import type { Creature } from '../types/creature'
-import { canEvolve, evolveCreature, getEvolutionProgress } from './evolution'
+import { canEvolve, evolveCreature, getEvolutionProgress, determineTypeFromRaising } from './evolution'
 
 // テスト用ヘルパー: 任意ステージのクリーチャーを生成
 function makeCreature(overrides: Partial<Creature> = {}): Creature {
@@ -306,16 +306,47 @@ describe('evolveCreature', () => {
     expect(result.happiness).toBe(100)
   })
 
-  it('evolutionName が次のステージの名前に更新される (Fire type, stage1→2)', () => {
-    const creature = makeCreature({ evolutionStage: 1, type: 'Fire' })
+  it('stage1→2 進化時は育て方で進化先タイプが決まる (トレ最多+あそぶ次点 → Fire)', () => {
+    const creature = makeCreature({ evolutionStage: 1, type: 'Normal', trainCount: 5, playCount: 3, feedCount: 1 })
     const result = evolveCreature(creature)
+    expect(result.type).toBe('Fire')
     expect(result.evolutionName).toBe('フレイモン') // EVOLUTION_NAMES.Fire[2]
   })
 
-  it('evolutionName が次のステージの名前に更新される (Water type, stage0→1)', () => {
-    const creature = makeCreature({ evolutionStage: 0, type: 'Water' })
+  it('stage0→1 進化（孵化）ではタイプを再判定せず中立のまま', () => {
+    const creature = makeCreature({ evolutionStage: 0, type: 'Normal', trainCount: 5 })
     const result = evolveCreature(creature)
-    expect(result.evolutionName).toBe('ミズカ') // EVOLUTION_NAMES.Water[1]
+    expect(result.type).toBe('Normal')
+    expect(result.evolutionName).toBe('ノービモン') // EVOLUTION_NAMES.Normal[1]
+  })
+
+  it('育て方が変われば次の進化で別タイプに分岐し得る (あそぶ最多+えさ次点 → Light)', () => {
+    const creature = makeCreature({ evolutionStage: 2, type: 'Fire', age: 3, happiness: 50, playCount: 9, feedCount: 4, trainCount: 1 })
+    const result = evolveCreature(creature)
+    expect(result.type).toBe('Light')
+  })
+})
+
+// ----------------------------------------------------------------
+// determineTypeFromRaising（育て方→タイプ判定）
+// ----------------------------------------------------------------
+describe('determineTypeFromRaising', () => {
+  it('全回数0なら Water（バランス）', () => {
+    expect(determineTypeFromRaising({ trainCount: 0, playCount: 0, feedCount: 0 })).toBe('Water')
+  })
+
+  it('最多→次点のマッピングが正しい', () => {
+    expect(determineTypeFromRaising({ trainCount: 5, playCount: 3, feedCount: 1 })).toBe('Fire')    // train→play
+    expect(determineTypeFromRaising({ trainCount: 5, playCount: 1, feedCount: 3 })).toBe('Plant')   // train→feed
+    expect(determineTypeFromRaising({ trainCount: 3, playCount: 5, feedCount: 1 })).toBe('Thunder') // play→train
+    expect(determineTypeFromRaising({ trainCount: 1, playCount: 5, feedCount: 3 })).toBe('Light')   // play→feed
+    expect(determineTypeFromRaising({ trainCount: 1, playCount: 3, feedCount: 5 })).toBe('Water')   // feed→play
+    expect(determineTypeFromRaising({ trainCount: 3, playCount: 1, feedCount: 5 })).toBe('Dark')    // feed→train
+  })
+
+  it('同数は train > play > feed の優先順位でタイブレークする', () => {
+    // train=play=feed → dominant=train, runnerUp=play → Fire
+    expect(determineTypeFromRaising({ trainCount: 2, playCount: 2, feedCount: 2 })).toBe('Fire')
   })
 })
 

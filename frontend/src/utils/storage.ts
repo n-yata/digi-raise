@@ -3,7 +3,7 @@ import type { Creature, CreatureType } from '../types/creature'
 
 const MAX_FILE_SIZE = 1 * 1024 * 1024 // 1MB
 
-const VALID_CREATURE_TYPES: CreatureType[] = ['Fire', 'Water', 'Plant', 'Thunder', 'Dark', 'Light']
+const VALID_CREATURE_TYPES: CreatureType[] = ['Normal', 'Fire', 'Water', 'Plant', 'Thunder', 'Dark', 'Light']
 
 function validateCreature(c: unknown): c is Creature {
   if (typeof c !== 'object' || c === null) return false
