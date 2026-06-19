@@ -5,6 +5,17 @@ export default {
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
+    borderRadius: {
+      'none': '0px',
+      'sm':   '1px',
+      DEFAULT: '2px',
+      'md':   '2px',
+      'lg':   '2px',
+      'xl':   '2px',
+      '2xl':  '2px',
+      '3xl':  '2px',
+      'full': '9999px',
+    },
     extend: {
       fontFamily: {
         pixel: ['"Press Start 2P"', 'monospace'],
