@@ -97,18 +97,28 @@
 ### 絶対に守ってください！
 
 - **`main` 直コミット禁止**: すべての実装変更は feature ブランチで行う。
-- **ブランチは `git worktree` で分離する**: feature ブランチの作業ディレクトリはリポジトリ直下ではなく `.worktrees/` 配下に分離する。
+- **ブランチは `git worktree` で分離する**: feature ブランチの作業ディレクトリはリポジトリの**外**に置く。リポジトリ内に worktree を作るとファイルロックや git status 汚染が発生するため禁止。
+- **マージは必ず PR 経由**: ローカルで `git merge` して push するのは禁止。GitHub PR を作成・マージすることで Actions が自動発火する。
 
 ```bash
-# feature ブランチを worktree として作成（リポジトリルートで実行）
-git worktree add .worktrees/<branch-name> -b <branch-name>
+# 1. feature ブランチを worktree として作成（リポジトリルートで実行）
+git worktree add ../digi-raise-worktrees/<branch-name> -b <branch-name>
 
-# 作業が終わったら worktree を削除（main にマージ後）
-git worktree remove .worktrees/<branch-name>
-git branch -d <branch-name>
+# 2. worktree 内で実装・コミット後、GitHub にプッシュ
+git push -u origin <branch-name>
+
+# 3. PR を作成
+gh pr create --title "<タイトル>" --body "<説明>"
+
+# 4. クルトワ（security-engineer）レビュー通過後、PR をマージ
+gh pr merge --merge --delete-branch
+
+# 5. worktree を削除
+git worktree remove ../digi-raise-worktrees/<branch-name>
+# ローカルブランチはマージ時に削除済みのため不要
 ```
 
-- **コミット前にクルトワ（security-engineer）のレビューを通す**: `main` へのマージ前に必ずレビューを実施する。
+- **コミット前にクルトワ（security-engineer）のレビューを通す**: PR マージ前に必ずレビューを実施する。
 - **hooks による機械的ブロック**: `--no-verify` / `-n` / `--no-gpg-sign` / `-c core.hooksPath=` は `.claude/hooks/block-no-verify.ps1` によりハーネス層で拒否される。
 
 ---
