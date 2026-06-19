@@ -83,7 +83,7 @@ export default function StatusScreen({ creature, allCreatures, activeCreatureId,
             color: '#94a3b8',
           }}
         >
-          ← もどる
+          &lt; もどる
         </button>
         <h2 className="font-pixel flex items-center gap-2" style={{ fontSize: '1rem', color }}>
           <TypeDot color={color} size={14} /> ステータス
@@ -159,7 +159,7 @@ export default function StatusScreen({ creature, allCreatures, activeCreatureId,
                 {ename}
               </span>
               {i < evolutionPath.length - 1 && (
-                <span style={{ color: '#334155', fontSize: '0.6rem', alignSelf: 'center' }}>→</span>
+                <span style={{ color: '#334155', fontSize: '0.6rem', alignSelf: 'center' }}>&gt;</span>
               )}
             </React.Fragment>
           ))}
@@ -284,7 +284,7 @@ export default function StatusScreen({ creature, allCreatures, activeCreatureId,
           }}
         >
           {canAddCreature
-            ? '＋ 新しいクリーチャーを育てる'
+            ? '+ 新しいクリーチャーを育てる'
             : `上限${MAX_CREATURES}体に達しています`}
         </button>
       </div>

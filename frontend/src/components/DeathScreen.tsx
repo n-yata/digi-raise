@@ -90,7 +90,7 @@ export default function DeathScreen({ creature, hasOtherAliveCreatures, onStartO
         style={{ background: '#16213e', border: `1px solid ${color}33` }}
       >
         <div className="font-pixel text-center mb-3" style={{ fontSize: '0.75rem', color }}>
-          ── 記録 ──
+          -- 記録 --
         </div>
         <div className="grid grid-cols-2 gap-2">
           {achievements.map(({ label, value }) => (

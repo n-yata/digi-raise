@@ -65,7 +65,7 @@ export default function CreatureSetup({ onStart, onBack }: CreatureSetupProps) {
             color: '#94a3b8',
           }}
         >
-          ← もどる
+          &lt; もどる
         </button>
         <button
           onClick={handleStart}
