@@ -91,7 +91,7 @@ export default function App() {
         return
       }
 
-      if (canEvolve(updated)) {
+      if (canEvolve(updated) && updated.evolutionStage > 0) {
         setPendingEvolution(true)
       }
     }
@@ -109,12 +109,20 @@ export default function App() {
   useEffect(() => {
     if (activeCreature && screen === 'main') {
       if (canEvolve(activeCreature)) {
-        setPendingEvolution(true)
+        if (activeCreature.evolutionStage === 0) {
+          const evolved = evolveCreature(activeCreature)
+          setEvolvedFrom(0)
+          persistActiveCreature(evolved)
+          setPendingEvolution(false)
+          setScreen('evolution')
+        } else {
+          setPendingEvolution(true)
+        }
       } else {
         setPendingEvolution(false)
       }
     }
-  }, [activeCreature, screen])
+  }, [activeCreature, screen, persistActiveCreature])
 
   // --- Actions ---
 

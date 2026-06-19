@@ -66,34 +66,9 @@ export default function ActionButtons({
     : []
   const isEgg = creature.evolutionStage === 0
 
-  // タマゴステージ: 「生まれる」ボタンのみ表示
+  // タマゴステージ: 自動ふ化のため操作不要
   if (isEgg) {
-    return (
-      <div className="w-full flex justify-center">
-        <button
-          onClick={onEvolve}
-          className="w-full py-4 rounded-lg font-pixel"
-          style={{
-            background: 'linear-gradient(90deg, #ffd700, #ff8c00, #ffd700)',
-            backgroundSize: '200% 100%',
-            animation: 'evolveGradient 2s linear infinite, hatch 0.6s ease-in-out infinite alternate',
-            border: '2px solid #ffd700',
-            color: '#111',
-            fontSize: '0.9rem',
-            letterSpacing: '0.05em',
-            boxShadow: '0 0 24px #ffd70099',
-          }}
-        >
-          タップして生まれる！
-        </button>
-        <style>{`
-          @keyframes hatch {
-            0% { transform: rotate(-4deg) scale(1.01); }
-            100% { transform: rotate(4deg) scale(1.03); }
-          }
-        `}</style>
-      </div>
-    )
+    return null
   }
 
   return (
