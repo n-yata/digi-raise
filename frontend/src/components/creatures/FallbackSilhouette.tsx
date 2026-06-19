@@ -2,6 +2,7 @@ import type { EvolutionStage } from '../../types/creature'
 import { SVG_OUTLINE_COLOR } from '../../data/spriteConfig'
 import type { AnimState } from './DefaultCreatureBody'
 import { getExpression } from './DefaultCreatureBody'
+import { Mouth } from './parts/Mouth'
 
 interface FallbackSilhouetteProps {
   color: string
@@ -13,7 +14,7 @@ interface FallbackSilhouetteProps {
 export function FallbackSilhouette({ color, size, stage, animState }: FallbackSilhouetteProps) {
   const isLowStage = stage <= 2
   const ry = isLowStage ? 30 : 36
-  const { eye } = getExpression(animState)
+  const { eye, mouth } = getExpression(animState)
 
   const EyeDot = ({ cx, cy }: { cx: number; cy: number }) => {
     if (eye === 'closed') {
@@ -27,6 +28,7 @@ export function FallbackSilhouette({ color, size, stage, animState }: FallbackSi
       <ellipse cx="50" cy="55" rx="36" ry={ry} fill={color} stroke={SVG_OUTLINE_COLOR} strokeWidth="3" />
       <EyeDot cx={40} cy={48} />
       <EyeDot cx={60} cy={48} />
+      <Mouth x={50} y={63} variant={mouth} />
     </svg>
   )
 }
