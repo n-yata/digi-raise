@@ -38,7 +38,7 @@ export default function StatusScreen({ creature, allCreatures, activeCreatureId,
   const canAddCreature = allCreatures.length < MAX_CREATURES
   const color = TYPE_COLORS[creature.type]
   const expNeeded = EXP_TO_LEVEL(creature.level)
-  const evolutionChecks = getEvolutionProgress(creature)
+  const evolutionChecks = getEvolutionProgress(creature).filter(c => c.label !== '幸福度')
   const canEvolveNow = canEvolve(creature)
 
   const handleExport = async () => {

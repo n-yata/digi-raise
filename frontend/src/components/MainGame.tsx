@@ -264,12 +264,9 @@ export default function MainGame({
       </div>
 
       {/* Age display */}
-      <div className="mx-4 mt-1 flex justify-between shrink-0">
+      <div className="mx-4 mt-1 shrink-0">
         <span className="font-pixel" style={{ fontSize: '0.55rem', color: '#64748b' }}>
           年齢: {Math.floor(creature.age)}日
-        </span>
-        <span className="font-pixel" style={{ fontSize: '0.55rem', color: '#64748b' }}>
-          幸福: {Math.floor(creature.happiness)}/100
         </span>
       </div>
 
