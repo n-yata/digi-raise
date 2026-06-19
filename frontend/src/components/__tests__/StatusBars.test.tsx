@@ -34,32 +34,27 @@ function makeCreature(overrides: Partial<Creature> = {}): Creature {
 }
 
 describe('StatusBars', () => {
-  it('HP/空腹/幸福の各ラベルが表示される', () => {
-    render(<StatusBars creature={makeCreature()} typeColor="#ff6b35" />)
+  it('HP/空腹の各ラベルが表示される（幸福は隠しパラメータで非表示）', () => {
+    render(<StatusBars creature={makeCreature()} />)
 
     expect(screen.getByText(/HP/)).toBeInTheDocument()
     expect(screen.getByText(/空腹/)).toBeInTheDocument()
-    expect(screen.getByText(/幸福/)).toBeInTheDocument()
+    expect(screen.queryByText(/幸福/)).not.toBeInTheDocument()
   })
 
   it('Math.floor(hp)/maxHp の数値が表示される（hp=75, maxHp=100 → "75/100"）', () => {
-    render(<StatusBars creature={makeCreature({ hp: 75, maxHp: 100 })} typeColor="#ff6b35" />)
+    render(<StatusBars creature={makeCreature({ hp: 75, maxHp: 100 })} />)
     expect(screen.getByText('75/100')).toBeInTheDocument()
   })
 
   it('hunger=50 → "50/100" が表示される', () => {
-    render(<StatusBars creature={makeCreature({ hunger: 50 })} typeColor="#ff6b35" />)
+    render(<StatusBars creature={makeCreature({ hunger: 50 })} />)
     expect(screen.getByText('50/100')).toBeInTheDocument()
-  })
-
-  it('happiness=70 → "70/100" が表示される', () => {
-    render(<StatusBars creature={makeCreature({ happiness: 70 })} typeColor="#ff6b35" />)
-    expect(screen.getByText('70/100')).toBeInTheDocument()
   })
 
   it('hp=100, maxHp=100 → バーのパーセントは 100%（isLow=false）で通常グラデーション', () => {
     const { container } = render(
-      <StatusBars creature={makeCreature({ hp: 100, maxHp: 100 })} typeColor="#ff6b35" />
+      <StatusBars creature={makeCreature({ hp: 100, maxHp: 100 })} />
     )
 
     // HP バー（最初の bar-fill 要素）
@@ -72,7 +67,7 @@ describe('StatusBars', () => {
 
   it('hp=24, maxHp=100 → pct=24 < 25 → isLow=true（赤グラデーションが style に含まれる）', () => {
     const { container } = render(
-      <StatusBars creature={makeCreature({ hp: 24, maxHp: 100 })} typeColor="#ff6b35" />
+      <StatusBars creature={makeCreature({ hp: 24, maxHp: 100 })} />
     )
 
     const barFills = container.querySelectorAll('.bar-fill')
@@ -82,7 +77,7 @@ describe('StatusBars', () => {
 
   it('hp=25, maxHp=100 → pct=25 → isLow=false（通常グラデーション）', () => {
     const { container } = render(
-      <StatusBars creature={makeCreature({ hp: 25, maxHp: 100 })} typeColor="#ff6b35" />
+      <StatusBars creature={makeCreature({ hp: 25, maxHp: 100 })} />
     )
 
     const barFills = container.querySelectorAll('.bar-fill')
@@ -92,7 +87,7 @@ describe('StatusBars', () => {
 
   it('hunger=0 → pct=0 < 25 → isLow=true（空腹バーが赤グラデーション）', () => {
     const { container } = render(
-      <StatusBars creature={makeCreature({ hunger: 0 })} typeColor="#ff6b35" />
+      <StatusBars creature={makeCreature({ hunger: 0 })} />
     )
 
     const barFills = container.querySelectorAll('.bar-fill')
@@ -102,7 +97,7 @@ describe('StatusBars', () => {
   })
 
   it('Math.floor が適用される（hp=99.9 → 表示は "99/100"）', () => {
-    render(<StatusBars creature={makeCreature({ hp: 99.9, maxHp: 100 })} typeColor="#ff6b35" />)
+    render(<StatusBars creature={makeCreature({ hp: 99.9, maxHp: 100 })} />)
     expect(screen.getByText('99/100')).toBeInTheDocument()
   })
 })

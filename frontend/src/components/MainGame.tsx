@@ -260,7 +260,7 @@ export default function MainGame({
 
       {/* Status bars */}
       <div className="mx-4 mt-2 shrink-0">
-        <StatusBars creature={creature} typeColor={color} />
+        <StatusBars creature={creature} />
       </div>
 
       {/* Age display */}

@@ -62,7 +62,6 @@ export default function StatusScreen({ creature, allCreatures, activeCreatureId,
     { label: '年齢', value: `${Math.floor(creature.age)}日` },
     { label: '体重', value: `${creature.weight}kg` },
     { label: '空腹度', value: `${Math.floor(creature.hunger)}/100` },
-    { label: '幸福度', value: `${Math.floor(creature.happiness)}/100` },
   ]
 
   const evolutionPath = EVOLUTION_NAMES[creature.type]

@@ -42,15 +42,13 @@ function Bar({ label, value, max, color }: BarProps) {
 
 interface StatusBarsProps {
   creature: Creature
-  typeColor: string
 }
 
-export default function StatusBars({ creature, typeColor }: StatusBarsProps) {
+export default function StatusBars({ creature }: StatusBarsProps) {
   return (
     <div className="w-full">
       <Bar label="HP" value={creature.hp} max={creature.maxHp} color="#4ade80" />
       <Bar label="空腹" value={creature.hunger} max={100} color="#fb923c" />
-      <Bar label="幸福" value={creature.happiness} max={100} color={typeColor} />
     </div>
   )
 }
