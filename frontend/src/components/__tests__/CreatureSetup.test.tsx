@@ -11,9 +11,9 @@ describe('CreatureSetup', () => {
     vi.clearAllMocks()
   })
 
-  it('「← もどる」をクリックすると onBack が呼ばれる', () => {
+  it('「< もどる」をクリックすると onBack が呼ばれる', () => {
     render(<CreatureSetup onStart={onStart} onBack={onBack} />)
-    fireEvent.click(screen.getByText('← もどる'))
+    fireEvent.click(screen.getByText('< もどる'))
     expect(onBack).toHaveBeenCalledTimes(1)
   })
 

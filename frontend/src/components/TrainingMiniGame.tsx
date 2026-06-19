@@ -52,7 +52,7 @@ export default function TrainingMiniGame({ creature, onResult }: Props) {
                   fontSize: '2rem',
                 }}
               >
-                ←
+                &lt;
               </button>
               <button
                 onClick={() => handleChoice('right')}
@@ -64,7 +64,7 @@ export default function TrainingMiniGame({ creature, onResult }: Props) {
                   fontSize: '2rem',
                 }}
               >
-                →
+                &gt;
               </button>
             </div>
           </>
