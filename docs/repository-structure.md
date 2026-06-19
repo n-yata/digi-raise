@@ -3,7 +3,7 @@
 | 項目 | 内容 |
 |------|------|
 | 作成日 | 2026-05-04 |
-| 最終更新 | 2026-06-19 |
+| 最終更新 | 2026-06-20 |
 | 担当 | モドリッチ |
 
 ---
@@ -12,26 +12,25 @@
 
 ```
 digi-raise/
-├── frontend/                     # フロントエンド（React + TypeScript + Vite）
-│   ├── src/
-│   │   ├── App.tsx               # ルート、画面ルーティング、useState 群による中央状態管理
-│   │   ├── main.tsx              # Vite エントリーポイント
-│   │   ├── index.css             # グローバルスタイル（Tailwind directives）
-│   │   ├── vite-env.d.ts         # Vite 環境変数の型定義
-│   │   ├── components/           # 画面・UI コンポーネント
-│   │   │   ├── creatures/        # クリーチャー描画コンポーネント（CreatureSprite・DefaultCreatureBody・EggBody・FallbackSilhouette・*Sprites）
-│   │   │   │   └── parts/        # 共通 SVG パーツ（Eye・Mouth・FlamePlume 等）
-│   │   ├── hooks/                # useBattleState 等のカスタムフック
-│   │   ├── types/                # creature.ts / battle.ts
-│   │   ├── utils/                # battleLogic / cpuBattle / evolution / gameLogic / storage / floodFill
-│   │   └── data/                 # evolutions.ts（進化系統・基礎ステータス）
-│   ├── public/                   # 静的アセット（PWA アイコン・manifest）
-│   ├── index.html                # エントリー HTML
-│   ├── package.json              # 依存関係・npm スクリプト
-│   ├── vite.config.ts            # Vite 設定（base: '/digi-raise/'）
-│   ├── tsconfig.json             # TypeScript 設定（strict）
-│   ├── tailwind.config.js        # Tailwind CSS 設定
-│   └── .env.example              # 環境変数のサンプル（実 .env は .gitignore 対象）
+├── src/                          # フロントエンドソース（React + TypeScript）
+│   ├── App.tsx                   # ルート、画面ルーティング、useState 群による中央状態管理
+│   ├── main.tsx                  # Vite エントリーポイント
+│   ├── index.css                 # グローバルスタイル（Tailwind directives）
+│   ├── vite-env.d.ts             # Vite 環境変数の型定義
+│   ├── components/               # 画面・UI コンポーネント
+│   │   ├── creatures/            # クリーチャー描画コンポーネント（CreatureSprite・DefaultCreatureBody・EggBody・FallbackSilhouette・*Sprites）
+│   │   │   └── parts/            # 共通 SVG パーツ（Eye・Mouth・FlamePlume 等）
+│   ├── hooks/                    # useBattleState 等のカスタムフック
+│   ├── types/                    # creature.ts / battle.ts
+│   ├── utils/                    # battleLogic / cpuBattle / evolution / gameLogic / storage
+│   └── data/                     # evolutions.ts（進化系統・基礎ステータス）
+├── public/                       # 静的アセット（PWA アイコン・manifest）
+├── index.html                    # エントリー HTML
+├── package.json                  # 依存関係・npm スクリプト
+├── vite.config.ts                # Vite 設定（base: '/digi-raise/'）
+├── tsconfig.json                 # TypeScript 設定（strict）
+├── tailwind.config.js            # Tailwind CSS 設定
+├── .env.example                  # 環境変数のサンプル（実 .env は .gitignore 対象）
 ├── docs/                         # 永続的ドキュメント
 │   ├── product-requirements.md
 │   ├── functional-design.md
@@ -59,14 +58,14 @@ digi-raise/
 
 | ディレクトリ | 役割 |
 |------------|------|
-| `frontend/` | React PWA。GitHub Pages にデプロイ |
-| `frontend/src/components/` | 画面単位・UI 部品単位の React コンポーネント |
-| `frontend/src/components/creatures/` | クリーチャー描画専用コンポーネント群（DefaultCreatureBody がタイプ×ステージを SPRITE_DISPATCH でルーティング） |
-| `frontend/src/components/creatures/parts/` | 共通 SVG パーツ（Eye・Mouth・FlamePlume・WaterFin・Leaf・Bolt・ShadowVeil・Halo） |
-| `frontend/src/hooks/` | 状態管理・副作用をカプセル化したカスタムフック |
-| `frontend/src/utils/` | 純粋関数中心のロジック（バトル計算・進化判定・ストレージ等） |
-| `frontend/src/data/` | 静的データ（進化系統テーブル等） |
-| `frontend/src/types/` | プロジェクト全体で共有する型定義 |
+| `src/` | フロントエンドソース。React PWA として GitHub Pages にデプロイ |
+| `src/components/` | 画面単位・UI 部品単位の React コンポーネント |
+| `src/components/creatures/` | クリーチャー描画専用コンポーネント群（DefaultCreatureBody がタイプ×ステージを SPRITE_DISPATCH でルーティング） |
+| `src/components/creatures/parts/` | 共通 SVG パーツ（Eye・Mouth・FlamePlume・WaterFin・Leaf・Bolt・ShadowVeil・Halo） |
+| `src/hooks/` | 状態管理・副作用をカプセル化したカスタムフック |
+| `src/utils/` | 純粋関数中心のロジック（バトル計算・進化判定・ストレージ等） |
+| `src/data/` | 静的データ（進化系統テーブル等） |
+| `src/types/` | プロジェクト全体で共有する型定義 |
 | `docs/` | 永続的ドキュメント（プロダクト要求・設計・技術仕様・開発ガイドライン・用語集） |
 | `docs/images/` | 画面遷移図・ワイヤフレーム等の図表素材（drawio / SVG / PNG） |
 | `.steering/` | 作業単位のステアリングファイル（要求・設計・タスクリスト・決定事項ログ） |
@@ -87,12 +86,12 @@ digi-raise/
 
 ### フロントエンド
 
-- 画面コンポーネントと UI 部品はいずれも `frontend/src/components/` に配置（Atomic Design 等の細分化はしない）
-- カスタムフックは `frontend/src/hooks/` に `use*.ts` 命名で配置
-- 純粋関数のロジックは `frontend/src/utils/` に配置（テスト容易性確保）
-- 型定義は `frontend/src/types/` に配置（コンポーネント固有の型はファイル内に直接書いてよい）
-- 静的データは `frontend/src/data/` に配置
-- グローバルスタイルは `frontend/src/index.css`（Tailwind directives のみ）
+- 画面コンポーネントと UI 部品はいずれも `src/components/` に配置（Atomic Design 等の細分化はしない）
+- カスタムフックは `src/hooks/` に `use*.ts` 命名で配置
+- 純粋関数のロジックは `src/utils/` に配置（テスト容易性確保）
+- 型定義は `src/types/` に配置（コンポーネント固有の型はファイル内に直接書いてよい）
+- 静的データは `src/data/` に配置
+- グローバルスタイルは `src/index.css`（Tailwind directives のみ）
 
 ### 機密情報
 

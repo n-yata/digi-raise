@@ -140,7 +140,6 @@ git worktree remove ../digi-raise-worktrees/<branch-name>
 | ナレッジ蓄積ルール | `docs/development-guidelines.md` |
 | 図表・ダイアグラムの記載ルール | `docs/development-guidelines.md` |
 | フロントエンド（React + Vite）ルール | `docs/development-guidelines.md` |
-| バックエンド（Go + AWS Lambda）ルール | `docs/development-guidelines.md` |
 | インフラ・CI/CD ルール | `docs/development-guidelines.md` |
 | テスト規約 | `docs/development-guidelines.md` |
 | Git 規約 | `docs/development-guidelines.md` |
@@ -153,28 +152,13 @@ git worktree remove ../digi-raise-worktrees/<branch-name>
 
 ## 開発コマンド早見表
 
-### フロントエンド（`frontend/` ディレクトリで実行）
-
 ```bash
-cd frontend
 npm run dev      # 開発サーバー起動 (localhost:5173)
 npm run build    # TypeScript チェック + Vite ビルド
 npm run preview  # ビルド成果物のプレビュー
 npm run lint     # ESLint (max-warnings 0)
 npm run test:run # テスト実行
 ```
-
-### バックエンド（`backend/` ディレクトリで実行）
-
-```bash
-cd backend
-make build       # 全 Lambda をクロスコンパイル (Linux/amd64)
-make test        # Go テスト実行
-make deploy      # sam deploy（samconfig.toml 使用）
-make clean       # dist/ 削除
-```
-
-Windows Git Bash では SAM/AWS CLI のパス変換に注意（`MSYS_NO_PATHCONV=1`、`sam.cmd` を使用）。詳細は `docs/development-guidelines.md` のドメイン別ルール「インフラ / CI/CD」を参照。
 
 ---
 

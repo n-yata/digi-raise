@@ -230,7 +230,6 @@ Vite の `VITE_*` はビルド時にバンドル埋め込みされるため、Gi
 ```yaml
 - name: Build
   run: npm run build
-  working-directory: frontend
   env:
     VITE_EXAMPLE: ${{ secrets.VITE_EXAMPLE }}
 ```
