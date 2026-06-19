@@ -17,7 +17,8 @@
     background-color: #1a1a2e;
     color: #e0e0e0;
     font-family: 'Press Start 2P', monospace;
-    -webkit-font-smoothing: antialiased;
+    -webkit-font-smoothing: none;
+    -moz-osx-font-smoothing: unset;
     overflow-x: hidden;
   }
 
@@ -103,11 +104,25 @@
     0deg,
     transparent,
     transparent 2px,
-    rgba(0, 0, 0, 0.03) 2px,
-    rgba(0, 0, 0, 0.03) 4px
+    rgba(0, 0, 0, 0.08) 2px,
+    rgba(0, 0, 0, 0.08) 4px
   );
   pointer-events: none;
   z-index: 10;
+}
+
+/* CRT vignette */
+.scanlines::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 60%,
+    rgba(0, 0, 0, 0.45) 100%
+  );
+  pointer-events: none;
+  z-index: 11;
 }
 
 /* Evolution flash */
