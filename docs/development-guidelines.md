@@ -248,6 +248,17 @@ Vite の `VITE_*` はビルド時にバンドル埋め込みされるため、Gi
 
 ### ドメイン C: セキュリティ
 
+#### C-0. クリーチャー標準 SVG の見た目言語（ハードコード禁止）
+
+- **viewBox は `0 0 100 100` に統一**（`CreatureSprite` が `size` prop でスケーリングするため、内部座標は固定）
+- **線幅は `strokeWidth="3"〜`5`（viewBox 100 基準の 3-5%）**
+- **塗り色は必ず `TYPE_COLORS[type]` 経由**でプロップとして受け取る。SVG 内にカラーコードを直接書かない
+- **アウトライン色は `SVG_OUTLINE_COLOR`（`spriteConfig.ts`）のみ**。他の定数・リテラルを使わない
+- **グラデーション・フィルター禁止**（`<linearGradient>` `<filter>` 等は使用しない）
+- **`<script>` `<foreignObject>` 等の危険要素禁止**（XSS 経路を生まない）
+- **各スプライトの SVG ノード数は 30 以下**を目安にシンプルに保つ
+- タイプアイコン（`TypeIcon`）は viewBox `0 0 24 24` 統一。パスは `typeIconPaths.ts` の `TYPE_ICON_PATHS` に集約し、コンポーネント内にハードコードしない
+
 #### C-1. カスタム SVG（ユーザー描画）の取り扱い
 
 - IndexedDB に保存する `customSprites` は **エクスポート時に除外**（XSS 経路を増やさない）
