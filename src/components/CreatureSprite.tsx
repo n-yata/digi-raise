@@ -5,6 +5,7 @@ import { STAGE_SIZES } from '../data/spriteConfig'
 import { EggBody } from './creatures/EggBody'
 import { DefaultCreatureBody } from './creatures/DefaultCreatureBody'
 import type { AnimState } from './creatures/DefaultCreatureBody'
+import { PixelSprite, getPixelSprite } from './creatures/pixel'
 
 interface CreatureSpriteProps {
   type: CreatureType
@@ -35,10 +36,14 @@ export default function CreatureSprite({ type, stage, animState, customSvg }: Cr
   const size = STAGE_SIZES[stage]
   const shadowWidth = [40, 55, 70, 85, 100, 115][stage]
 
+  const pixelData = stage > 0 ? getPixelSprite(type, stage) : null
+
   const body = customSvg ?? (
     stage === 0
       ? <EggBody color={color} size={size} />
-      : <DefaultCreatureBody type={type} stage={stage} animState={animState} />
+      : pixelData
+        ? <PixelSprite data={pixelData} size={size} />
+        : <DefaultCreatureBody type={type} stage={stage} animState={animState} />
   )
 
   return (
@@ -55,7 +60,7 @@ export default function CreatureSprite({ type, stage, animState, customSvg }: Cr
         </div>
       )}
 
-      <div className={`transition-all duration-300 ${getAnimClass(animState)}`}>
+      <div className={`creature-sprite transition-all duration-300 ${getAnimClass(animState)}`}>
         {body}
       </div>
 

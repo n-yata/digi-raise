@@ -47,7 +47,7 @@
   }
 }
 
-/* Creature sprite pixel art using CSS */
+/* Creature sprite — 拡大時にドットの輪郭をくっきり保つ（ドット絵スプライト用） */
 .creature-sprite {
   image-rendering: pixelated;
   image-rendering: crisp-edges;
