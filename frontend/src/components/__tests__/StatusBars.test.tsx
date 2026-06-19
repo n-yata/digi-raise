@@ -34,14 +34,11 @@ function makeCreature(overrides: Partial<Creature> = {}): Creature {
 }
 
 describe('StatusBars', () => {
-  it('HP/空腹/幸福の各ラベルとアイコン（❤️/🍖/😊）が表示される', () => {
+  it('HP/空腹/幸福の各ラベルが表示される', () => {
     render(<StatusBars creature={makeCreature()} typeColor="#ff6b35" />)
 
-    expect(screen.getByText(/❤️/)).toBeInTheDocument()
     expect(screen.getByText(/HP/)).toBeInTheDocument()
-    expect(screen.getByText(/🍖/)).toBeInTheDocument()
     expect(screen.getByText(/空腹/)).toBeInTheDocument()
-    expect(screen.getByText(/😊/)).toBeInTheDocument()
     expect(screen.getByText(/幸福/)).toBeInTheDocument()
   })
 

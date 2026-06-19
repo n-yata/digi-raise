@@ -85,7 +85,7 @@ export default function FeedMiniGame({ creature, onDone }: Props) {
           className="text-center mb-2 font-pixel"
           style={{ fontSize: '0.7rem', color }}
         >
-          🍖 ごはん！
+          ごはん！
         </div>
 
         {/* サブテキスト */}
@@ -106,16 +106,18 @@ export default function FeedMiniGame({ creature, onDone }: Props) {
             <div
               className="absolute select-none"
               style={{
-                fontSize: '2.5rem',
+                width: '2.5rem',
+                height: '2.5rem',
+                borderRadius: '50%',
+                background: '#fb923c',
+                boxShadow: '0 0 10px #fb923c88',
                 top: food.falling ? '45%' : '-10%',
                 left: '50%',
                 transform: 'translateX(-50%)',
                 opacity: food.falling ? 0 : 1,
                 transition: `top ${FALL_DURATION}ms cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity ${FALL_DURATION * 0.3}ms ease ${FALL_DURATION * 0.7}ms`,
               }}
-            >
-              🍖
-            </div>
+            />
           )}
 
           {/* クリーチャー */}
@@ -130,8 +132,7 @@ export default function FeedMiniGame({ creature, onDone }: Props) {
             <CreatureSprite
               type={creature.type}
               stage={creature.evolutionStage}
-              animState={bounce ? 'happy' : 'idle'}
-              customSvg={creature.customSprites?.[creature.evolutionStage]}
+              animState={bounce ? 'eating' : 'idle'}
             />
           </div>
         </div>
@@ -142,7 +143,7 @@ export default function FeedMiniGame({ creature, onDone }: Props) {
             className="text-center mb-4 font-pixel"
             style={{ fontSize: '0.9rem', color: '#4ade80' }}
           >
-            もぐもぐ！🍖
+            もぐもぐ！
           </div>
         )}
 

@@ -10,11 +10,8 @@ function isValidStat(v: unknown, max = MAX_STAT): v is number {
   return typeof v === 'number' && Number.isFinite(v) && Number.isInteger(v) && v > 0 && v <= max
 }
 
-// QRペイロードから customSvg を除外（QRコードの容量制限のため画像は送信しない）
 export function encodeCreatureForQR(creature: CreatureSnapshot): string {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { customSvg, ...rest } = creature
-  return JSON.stringify(rest)
+  return JSON.stringify(creature)
 }
 
 export function decodeCreatureFromQR(data: string): CreatureSnapshot | null {

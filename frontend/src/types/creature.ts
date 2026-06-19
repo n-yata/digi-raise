@@ -1,4 +1,5 @@
-export type CreatureType = 'Fire' | 'Water' | 'Plant' | 'Thunder' | 'Dark' | 'Light'
+// 'Normal' は誕生〜ベイビーの中立タイプ。チャイルド進化で6属性のいずれかに分岐する。
+export type CreatureType = 'Normal' | 'Fire' | 'Water' | 'Plant' | 'Thunder' | 'Dark' | 'Light'
 
 export type EvolutionStage = 0 | 1 | 2 | 3 | 4 | 5
 
@@ -28,10 +29,9 @@ export interface Creature {
   feedCount: number
   wins?: number
   losses?: number
-  customSprites?: Partial<Record<EvolutionStage, string>> // SVG strings for custom drawn sprites
 }
 
-export type GameScreen = 'title' | 'setup' | 'main' | 'evolution' | 'death' | 'status' | 'battle_lobby' | 'battle' | 'drawing'
+export type GameScreen = 'title' | 'setup' | 'main' | 'evolution' | 'death' | 'status' | 'battle_lobby' | 'battle'
 
 export interface GameState {
   creatures: Creature[]

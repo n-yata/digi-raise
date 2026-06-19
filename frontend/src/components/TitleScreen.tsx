@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { TYPE_COLORS } from '../data/evolutions'
 
 interface TitleScreenProps {
   hasExistingSave: boolean
@@ -14,8 +15,8 @@ export default function TitleScreen({ hasExistingSave, onNewGame, onContinue }: 
     return () => clearInterval(id)
   }, [])
 
-  const creatures = ['🔥', '💧', '🌿', '⚡', '🌑', '✨']
-  const floatingCreature = creatures[frame % creatures.length]
+  const typeColors = Object.values(TYPE_COLORS)
+  const floatingColor = typeColors[frame % typeColors.length]
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4 py-8 scanlines"
@@ -42,9 +43,17 @@ export default function TitleScreen({ hasExistingSave, onNewGame, onContinue }: 
       </div>
 
       {/* Floating creature preview */}
-      <div className="text-6xl mb-6 animate-float" style={{ filter: 'drop-shadow(0 0 15px rgba(255,255,255,0.5))' }}>
-        {floatingCreature}
-      </div>
+      <div
+        className="mb-6 animate-float"
+        style={{
+          width: 64,
+          height: 64,
+          borderRadius: '50%',
+          background: floatingColor,
+          boxShadow: `0 0 15px ${floatingColor}`,
+          transition: 'background 0.4s ease',
+        }}
+      />
 
       {/* Title */}
       <div className="text-center mb-2">
@@ -90,7 +99,7 @@ export default function TitleScreen({ hasExistingSave, onNewGame, onContinue }: 
               letterSpacing: '0.1em',
             }}
           >
-            📂 つづきから
+            つづきから
           </button>
         )}
         <button
@@ -105,7 +114,7 @@ export default function TitleScreen({ hasExistingSave, onNewGame, onContinue }: 
             letterSpacing: '0.1em',
           }}
         >
-          ✨ はじめから
+          はじめから
         </button>
       </div>
 

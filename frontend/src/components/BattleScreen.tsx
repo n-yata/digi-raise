@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
-import DOMPurify from 'dompurify'
 import type { CreatureSnapshot, BattleRole, BattleResult, BattleAction } from '../types/battle'
 import { useBattleState } from '../hooks/useBattleState'
 import { resolveTurn } from '../utils/battleLogic'
@@ -322,20 +321,20 @@ export default function BattleScreen({
       <div className="px-4 pt-3 pb-2 flex items-center justify-between" style={{ borderBottom: '1px solid #0f346044' }}>
         <div className="flex items-center gap-2">
           <div className="font-pixel" style={{ fontSize: '0.75rem', color: '#4fc3f7' }}>
-            ⚔️ {modeLabel} ターン {state.currentTurn + 1}
+            {modeLabel} ターン {state.currentTurn + 1}
           </div>
         </div>
         <div className="flex items-center gap-2">
           {state.myParalyzed && (
             <span className="font-pixel px-2 py-0.5 rounded-full"
               style={{ fontSize: '0.65rem', background: '#ffd70022', color: '#ffd700', border: '1px solid #ffd70044' }}>
-              ⚡麻痺
+              麻痺
             </span>
           )}
           {effectsRef.current.myPoisonTurns > 0 && (
             <span className="font-pixel px-2 py-0.5 rounded-full"
               style={{ fontSize: '0.65rem', background: '#4ade8022', color: '#4ade80', border: '1px solid #4ade8044' }}>
-              ☠毒{effectsRef.current.myPoisonTurns}T
+              毒{effectsRef.current.myPoisonTurns}T
             </span>
           )}
         </div>
@@ -386,7 +385,6 @@ export default function BattleScreen({
             damageNumber={myDamageNumber}
             poisonActive={myPoisonActive}
             paralyzed={myIsParalyzed}
-            customSvg={myCreature.customSvg}
           />
         </div>
 
@@ -412,7 +410,6 @@ export default function BattleScreen({
             damageNumber={opponentDamageNumber}
             poisonActive={opponentPoisonActive}
             paralyzed={opponentIsParalyzed}
-            customSvg={opponentCreature.customSvg || (() => { const s = (opponentCreature as unknown as { customSprites?: Record<string, string> }).customSprites?.[String(opponentCreature.evolutionStage)]; return s ? DOMPurify.sanitize(s, { USE_PROFILES: { svg: true } }) : undefined })()}
           />
         </div>
         <div className="flex-1" />

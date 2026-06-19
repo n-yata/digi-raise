@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { Creature, EvolutionStage } from '../types/creature'
-import { TYPE_COLORS, TYPE_EMOJIS, STAGE_NAMES } from '../data/evolutions'
+import { TYPE_COLORS, STAGE_NAMES } from '../data/evolutions'
 import CreatureSprite from './CreatureSprite'
 
 interface EvolutionScreenProps {
@@ -35,7 +35,16 @@ export default function EvolutionScreen({ creature, evolvedFrom, onContinue }: E
     >
       {phase === 'flash' && (
         <div className="flex flex-col items-center">
-          <div className="text-8xl animate-evolve-glow">✨</div>
+          <div
+            className="animate-evolve-glow"
+            style={{
+              width: 96,
+              height: 96,
+              borderRadius: '50%',
+              background: 'radial-gradient(circle, #ffffff 0%, #ffd700 50%, transparent 75%)',
+              boxShadow: '0 0 40px #ffd700',
+            }}
+          />
           <div className="font-pixel text-2xl mt-4 animate-pulse" style={{ color: '#ffd700' }}>
             進化中！！
           </div>
@@ -44,15 +53,9 @@ export default function EvolutionScreen({ creature, evolvedFrom, onContinue }: E
 
       {(phase === 'reveal' || phase === 'done') && (
         <div className="flex flex-col items-center bounce-in">
-          {/* Stars */}
-          <div className="relative mb-4">
-            <div className="text-4xl absolute -top-4 -left-8 animate-float" style={{ animationDelay: '0s' }}>⭐</div>
-            <div className="text-4xl absolute -top-4 -right-8 animate-float" style={{ animationDelay: '0.3s' }}>⭐</div>
-            <div className="text-4xl absolute -top-8 animate-float" style={{ animationDelay: '0.15s' }}>🌟</div>
-          </div>
-
-          <div className="font-pixel mb-2" style={{ fontSize: '0.85rem', color: '#64748b' }}>
-            {TYPE_EMOJIS[creature.type]} {prevName} から...
+          <div className="font-pixel mb-2 flex items-center gap-2" style={{ fontSize: '0.85rem', color: '#64748b' }}>
+            <span style={{ display: 'inline-block', width: '0.85rem', height: '0.85rem', borderRadius: '50%', background: color }} />
+            {prevName} から...
           </div>
 
           <div
@@ -77,23 +80,7 @@ export default function EvolutionScreen({ creature, evolvedFrom, onContinue }: E
               type={creature.type}
               stage={creature.evolutionStage}
               animState="happy"
-              customSvg={creature.customSprites?.[creature.evolutionStage]}
             />
-            {/* Sparkles */}
-            {[...Array(6)].map((_, i) => (
-              <div
-                key={i}
-                className="absolute sparkle"
-                style={{
-                  fontSize: 16,
-                  top: `${Math.random() * 80 + 10}%`,
-                  left: `${Math.random() * 80 + 10}%`,
-                  animationDelay: `${i * 0.25}s`,
-                }}
-              >
-                ✨
-              </div>
-            ))}
           </div>
 
           {/* New stats */}

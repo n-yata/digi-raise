@@ -1,6 +1,6 @@
 import React from 'react' // needed for JSX Fragment
 import type { Creature } from '../types/creature'
-import { TYPE_COLORS, TYPE_EMOJIS, STAGE_NAMES, EVOLUTION_NAMES } from '../data/evolutions'
+import { TYPE_COLORS, STAGE_NAMES, EVOLUTION_NAMES } from '../data/evolutions'
 import { EXP_TO_LEVEL } from '../data/evolutions'
 import { canEvolve, getEvolutionProgress } from '../utils/evolution'
 import { exportSave, importSave } from '../utils/storage'
@@ -18,6 +18,21 @@ interface StatusScreenProps {
 }
 
 const MAX_CREATURES = 5
+
+function TypeDot({ color, size }: { color: string; size: number }) {
+  return (
+    <span
+      style={{
+        display: 'inline-block',
+        width: size,
+        height: size,
+        borderRadius: '50%',
+        background: color,
+        flexShrink: 0,
+      }}
+    />
+  )
+}
 
 export default function StatusScreen({ creature, allCreatures, activeCreatureId, onBack, onLoad, onSelectCreature, onDeleteCreature, onNewCreature }: StatusScreenProps) {
   const canAddCreature = allCreatures.length < MAX_CREATURES
@@ -71,8 +86,8 @@ export default function StatusScreen({ creature, allCreatures, activeCreatureId,
         >
           ← もどる
         </button>
-        <h2 className="font-pixel" style={{ fontSize: '1rem', color }}>
-          {TYPE_EMOJIS[creature.type]} ステータス
+        <h2 className="font-pixel flex items-center gap-2" style={{ fontSize: '1rem', color }}>
+          <TypeDot color={color} size={14} /> ステータス
         </h2>
       </div>
 
@@ -82,7 +97,7 @@ export default function StatusScreen({ creature, allCreatures, activeCreatureId,
         style={{ background: '#16213e', border: `2px solid ${color}44` }}
       >
         <div className="flex items-center gap-3">
-          <div style={{ fontSize: 40 }}>{TYPE_EMOJIS[creature.type]}</div>
+          <TypeDot color={color} size={40} />
           <div>
             <div className="font-pixel" style={{ fontSize: '1.15rem', color: '#e0e0e0' }}>{creature.name}</div>
             <div className="font-pixel mt-1" style={{ fontSize: '0.7rem', color }}>
@@ -115,12 +130,11 @@ export default function StatusScreen({ creature, allCreatures, activeCreatureId,
         <div className="font-pixel mb-3" style={{ fontSize: '0.75rem', color }}>活動記録</div>
         <div className="grid grid-cols-3 gap-3">
           {[
-            { label: '食事', value: creature.feedCount, icon: '🍖' },
-            { label: 'トレーニング', value: creature.trainCount, icon: '⚔️' },
-            { label: '遊び', value: creature.playCount, icon: '🎮' },
-          ].map(({ label, value, icon }) => (
+            { label: '食事', value: creature.feedCount },
+            { label: 'トレーニング', value: creature.trainCount },
+            { label: '遊び', value: creature.playCount },
+          ].map(({ label, value }) => (
             <div key={label} className="text-center">
-              <div style={{ fontSize: 20 }}>{icon}</div>
               <div className="font-pixel" style={{ fontSize: '0.5rem', color: '#64748b' }}>{label}</div>
               <div className="font-pixel" style={{ fontSize: '0.65rem', color: '#e0e0e0' }}>{value}回</div>
             </div>
@@ -163,11 +177,11 @@ export default function StatusScreen({ creature, allCreatures, activeCreatureId,
             fontSize: '0.75rem',
             color: canEvolveNow ? '#ffd700' : color,
           }}>
-            {canEvolveNow ? '⭐ 進化条件達成！' : '進化条件'}
+            {canEvolveNow ? '進化条件達成！' : '進化条件'}
           </div>
           {evolutionChecks.map(({ label, met, value, max }) => (
             <div key={label} className="flex items-center gap-2 mb-2">
-              <span style={{ fontSize: 14 }}>{met ? '✅' : '❌'}</span>
+              <span className="font-pixel" style={{ fontSize: '0.55rem', color: met ? '#4ade80' : '#f87171' }}>{met ? '達成' : '未達'}</span>
               <span className="font-pixel flex-1" style={{ fontSize: '0.55rem', color: met ? '#4ade80' : '#64748b' }}>
                 {label}
               </span>
@@ -190,7 +204,7 @@ export default function StatusScreen({ creature, allCreatures, activeCreatureId,
 
           const content = (
             <>
-              <div style={{ fontSize: 22 }}>{isDead ? '🪦' : TYPE_EMOJIS[c.type]}</div>
+              <TypeDot color={isDead ? '#475569' : cColor} size={22} />
               <div className="flex-1 min-w-0">
                 <div className="font-pixel" style={{ fontSize: '0.65rem', color: '#e0e0e0' }}>{c.name}</div>
                 <div className="font-pixel mt-0.5" style={{ fontSize: '0.55rem', color: isDead ? '#475569' : cColor }}>
@@ -288,7 +302,7 @@ export default function StatusScreen({ creature, allCreatures, activeCreatureId,
             color: '#4ade80',
           }}
         >
-          💾 セーブデータ出力
+          セーブデータ出力
         </button>
         <button
           onClick={handleImport}
@@ -300,7 +314,7 @@ export default function StatusScreen({ creature, allCreatures, activeCreatureId,
             color: '#fb923c',
           }}
         >
-          📂 セーブデータ読込
+          セーブデータ読込
         </button>
       </div>
     </div>

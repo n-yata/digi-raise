@@ -1,6 +1,6 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { Creature } from '../types/creature'
-import { TYPE_COLORS, TYPE_EMOJIS, STAGE_NAMES } from '../data/evolutions'
+import { TYPE_COLORS, STAGE_NAMES } from '../data/evolutions'
 import { EXP_TO_LEVEL } from '../data/evolutions'
 import { getAnimationState } from '../utils/gameLogic'
 import CreatureSprite from './CreatureSprite'
@@ -47,20 +47,83 @@ export default function MainGame({
   const pendingRef = useRef(pendingEvolution)
   useEffect(() => { pendingRef.current = pendingEvolution }, [pendingEvolution])
 
+  // 徘徊behavior: 卵(stage0)は歩かず静止。生後は「歩く(動)」と「立ち止まる(静)」を交互に繰り返す。
+  const isEgg = creature.evolutionStage === 0
+  const ambient = !isEgg && (animState === 'idle' || animState === 'happy')
+
+  const [walkX, setWalkX] = useState(0)
+  const [facing, setFacing] = useState<1 | -1>(1)
+  const [phase, setPhase] = useState<'walk' | 'rest'>('rest')
+  const moveRef = useRef<{ x: number; dir: 1 | -1 }>({ x: 0, dir: 1 })
+  const phaseRef = useRef<'walk' | 'rest'>('rest')
+
+  useEffect(() => {
+    if (!ambient) {
+      moveRef.current.x = 0
+      phaseRef.current = 'rest'
+      setWalkX(0)
+      setPhase('rest')
+      return
+    }
+    const RANGE = 56
+    const SPEED = 0.4
+
+    let phaseTimer: ReturnType<typeof setTimeout>
+    const nextPhase = () => {
+      if (phaseRef.current === 'rest') {
+        // 歩き出す（半々で向きを変える）
+        if (Math.random() < 0.5) moveRef.current.dir = moveRef.current.dir === 1 ? -1 : 1
+        setFacing(moveRef.current.dir)
+        phaseRef.current = 'walk'
+        setPhase('walk')
+        phaseTimer = setTimeout(nextPhase, 1500 + Math.random() * 2500) // 動: 1.5〜4秒
+      } else {
+        phaseRef.current = 'rest'
+        setPhase('rest')
+        phaseTimer = setTimeout(nextPhase, 1400 + Math.random() * 2600) // 静: 1.4〜4秒
+      }
+    }
+    // 立ち止まりから開始し、しばらくして歩き出す
+    phaseRef.current = 'rest'
+    setPhase('rest')
+    phaseTimer = setTimeout(nextPhase, 1000 + Math.random() * 1500)
+
+    const mover = setInterval(() => {
+      if (phaseRef.current !== 'walk') return
+      const s = moveRef.current
+      let nx = s.x + s.dir * SPEED
+      if (nx >= RANGE) { nx = RANGE; s.dir = -1; setFacing(-1) }
+      else if (nx <= -RANGE) { nx = -RANGE; s.dir = 1; setFacing(1) }
+      s.x = nx
+      setWalkX(nx)
+    }, 16)
+
+    return () => { clearTimeout(phaseTimer); clearInterval(mover) }
+  }, [ambient])
+
+  // スプライト状態: 卵=静止 / 徘徊中=歩行(動)or休憩(静) / それ以外=感情そのまま
+  const spriteAnim: typeof animState | 'walking' = isEgg
+    ? 'idle'
+    : !ambient
+      ? animState
+      : phase === 'walk'
+        ? 'walking'
+        : animState === 'happy' ? 'happy' : 'idle'
+
   return (
     <div
-      className={`min-h-screen flex flex-col ${bgClass} scanlines`}
+      className={`h-[100dvh] overflow-hidden flex flex-col ${bgClass} scanlines`}
       style={{ maxWidth: 420, margin: '0 auto' }}
     >
       {/* Header */}
       <div
-        className="px-4 pt-4 pb-2"
+        className="px-4 pt-3 pb-2 shrink-0"
         style={{ borderBottom: `1px solid ${color}33` }}
       >
         <div className="flex items-center justify-between">
           <div>
             <div className="flex items-center gap-2">
-              <span style={{ color, fontSize: '1.1rem' }}>{TYPE_EMOJIS[creature.type]}</span>
+              <span style={{ display: 'inline-block', width: '1.1rem', height: '1.1rem', borderRadius: '50%', background: color }} />
               <span className="font-pixel" style={{ fontSize: '1rem', color: '#e0e0e0' }}>
                 {creature.name}
               </span>
@@ -82,7 +145,7 @@ export default function MainGame({
             }}
             title="開発モード切替"
           >
-            {devMode ? '⚡DEV' : 'DEV'}
+            DEV
           </button>
         </div>
 
@@ -97,25 +160,25 @@ export default function MainGame({
           {creature.isSleeping && (
             <span className="font-pixel px-2 py-0.5 rounded-full"
               style={{ fontSize: '0.5rem', background: '#60a5fa22', color: '#60a5fa', border: '1px solid #60a5fa44' }}>
-              💤 おやすみ中
+              おやすみ中
             </span>
           )}
           {devMode && (
             <span className="font-pixel px-2 py-0.5 rounded-full"
               style={{ fontSize: '0.5rem', background: '#ffd70022', color: '#ffd700', border: '1px solid #ffd70044' }}>
-              ⚡ 開発モード
+              開発モード
             </span>
           )}
         </div>
       </div>
 
-      {/* Creature display area */}
+      {/* Creature display area (伸縮してスクロールを防ぐ) */}
       <div
-        className="relative flex flex-col items-center justify-center py-6 mx-4 mt-3 rounded-xl"
+        className="relative flex flex-1 min-h-0 flex-col items-center justify-center py-2 mx-4 mt-2 rounded-xl overflow-hidden"
         style={{
           background: `radial-gradient(ellipse at center, ${color}11 0%, transparent 70%)`,
           border: `1px solid ${color}22`,
-          minHeight: 200,
+          minHeight: 96,
         }}
       >
         {/* Message popup */}
@@ -134,12 +197,15 @@ export default function MainGame({
           </div>
         )}
 
-        <CreatureSprite
-          type={creature.type}
-          stage={creature.evolutionStage}
-          animState={animState}
-          customSvg={creature.customSprites?.[creature.evolutionStage]}
-        />
+        <div style={{ transform: `translateX(${walkX}px)`, willChange: 'transform' }}>
+          <div style={{ transform: `scaleX(${facing})` }}>
+            <CreatureSprite
+              type={creature.type}
+              stage={creature.evolutionStage}
+              animState={spriteAnim}
+            />
+          </div>
+        </div>
 
         {/* Evolution ready glow */}
         {pendingEvolution && (
@@ -156,7 +222,7 @@ export default function MainGame({
 
       {/* Stats row */}
       <div
-        className="mx-4 mt-2 px-3 py-2 rounded-lg grid grid-cols-5 gap-1"
+        className="mx-4 mt-2 px-3 py-1.5 rounded-lg grid grid-cols-5 gap-1 shrink-0"
         style={{ background: '#16213e', border: '1px solid #0f3460' }}
       >
         {[
@@ -174,7 +240,7 @@ export default function MainGame({
       </div>
 
       {/* EXP bar */}
-      <div className="mx-4 mt-1">
+      <div className="mx-4 mt-1 shrink-0">
         <div className="flex justify-between mb-0.5">
           <span className="font-pixel" style={{ fontSize: '0.5rem', color: '#64748b' }}>EXP</span>
           <span className="font-pixel" style={{ fontSize: '0.5rem', color: '#64748b' }}>
@@ -193,12 +259,12 @@ export default function MainGame({
       </div>
 
       {/* Status bars */}
-      <div className="mx-4 mt-3">
+      <div className="mx-4 mt-2 shrink-0">
         <StatusBars creature={creature} typeColor={color} />
       </div>
 
       {/* Age display */}
-      <div className="mx-4 mt-1 flex justify-between">
+      <div className="mx-4 mt-1 flex justify-between shrink-0">
         <span className="font-pixel" style={{ fontSize: '0.55rem', color: '#64748b' }}>
           年齢: {Math.floor(creature.age)}日
         </span>
@@ -208,7 +274,7 @@ export default function MainGame({
       </div>
 
       {/* Action buttons */}
-      <div className="mx-4 mt-3 mb-6">
+      <div className="mx-4 mt-2 mb-3 shrink-0">
         <ActionButtons
           creature={creature}
           onFeed={onFeed}

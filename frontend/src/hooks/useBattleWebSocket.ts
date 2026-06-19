@@ -9,14 +9,9 @@ const RECONNECT_TOKEN_KEY = 'ws_reconnect_token'
 
 const BACKOFF_DELAYS = [1000, 2000, 4000, 8000, 16000, 30000]
 
-// 現在の進化ステージの customSprite のみ含めた creature データを作成
+// 送信用の creature データを作成
 function prepareCreatureForSend(creature: Creature): Record<string, unknown> {
-  const { customSprites, ...rest } = creature
-  const currentSprite = customSprites?.[creature.evolutionStage]
-  if (currentSprite) {
-    return { ...rest, customSprites: { [creature.evolutionStage]: currentSprite } }
-  }
-  return rest
+  return { ...creature }
 }
 
 export interface UseBattleWebSocketOptions {
@@ -230,7 +225,6 @@ export function useBattleWebSocket(options: UseBattleWebSocketOptions): UseBattl
   }, [clearPingTimer])
 
   const createRoom = useCallback((creature: Creature) => {
-    // 現在のステージの customSprite のみ含めてデータ量を抑える
     const creatureData = prepareCreatureForSend(creature)
     sendJson({ action: 'create_room', creature: creatureData })
   }, [sendJson])

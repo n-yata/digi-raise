@@ -1,7 +1,8 @@
 import type { Creature, CreatureType, EvolutionStage } from '../types/creature'
 import { EVOLUTION_NAMES, BASE_STATS, EXP_TO_LEVEL } from '../data/evolutions'
 
-export function createNewCreature(name: string, type: CreatureType): Creature {
+// タイプは開始時に選ばせず、誕生時は中立の 'Normal'。育成内容に応じて進化時に分岐する。
+export function createNewCreature(name: string, type: CreatureType = 'Normal'): Creature {
   const baseStats = BASE_STATS[0]
   const now = Date.now()
   return {

@@ -1,244 +1,389 @@
+import { useState, useEffect } from 'react'
 import type { CreatureType, EvolutionStage } from '../types/creature'
 import { TYPE_COLORS } from '../data/evolutions'
-import { STAGE_SIZES, SHADOW_WIDTHS } from '../data/spriteConfig'
-import { EggBody } from './creatures/EggBody'
-import { DefaultCreatureBody, hasDefaultSprite } from './creatures/DefaultCreatureBody'
 
-type AnimState = 'idle' | 'happy' | 'sleeping' | 'attack' | 'evolving' | 'dead' | 'sad' | 'hungry' | 'critical'
+type AnimState = 'idle' | 'happy' | 'sleeping' | 'attack' | 'evolving' | 'dead' | 'sad' | 'hungry' | 'critical' | 'eating' | 'walking'
 
 interface CreatureSpriteProps {
   type: CreatureType
   stage: EvolutionStage
   animState: AnimState
-  customSvg?: string
 }
 
-// Emoji base per type and stage
-const SPRITE_EMOJIS: Record<CreatureType, string[]> = {
-  Fire:    ['🥚', '🔴', '🦊', '🐉', '🔥', '☄️'],
-  Water:   ['🥚', '🔵', '🐟', '🐋', '🌊', '🌀'],
-  Plant:   ['🥚', '🟢', '🌱', '🌿', '🌸', '🌳'],
-  Thunder: ['🥚', '🟡', '⚡', '🌩️', '🌪️', '⚡'],
-  Dark:    ['🥚', '🟣', '👻', '💀', '🌑', '👁️'],
-  Light:   ['🥚', '⭐', '✨', '🌟', '💫', '🌈'],
+// タイプ別アクセントカラー（ドット絵のワンポイント）
+const ACCENT_COLORS: Record<CreatureType, string> = {
+  Normal:  '#e5e7eb',
+  Fire:    '#ffd166',
+  Water:   '#bfefff',
+  Plant:   '#ffe066',
+  Thunder: '#fff3b0',
+  Dark:    '#b388ff',
+  Light:   '#fff7cc',
 }
 
-// Pixel art body shapes per stage (CSS-based)
-function PixelBody({ type, stage, color }: { type: CreatureType; stage: EvolutionStage; color: string }) {
-  const sizes = [60, 80, 100, 120, 140, 160]
-  const size = sizes[stage]
+// 明度調整: amt>0 で白方向に、amt<0 で黒方向に
+function adjust(hex: string, amt: number): string {
+  const c = hex.replace('#', '')
+  const full = c.length === 3 ? c.split('').map((x) => x + x).join('') : c
+  const n = parseInt(full, 16)
+  const r = (n >> 16) & 255
+  const g = (n >> 8) & 255
+  const b = n & 255
+  const f = (v: number) =>
+    Math.max(0, Math.min(255, Math.round(amt >= 0 ? v + (255 - v) * amt : v * (1 + amt))))
+  return `#${((1 << 24) + (f(r) << 16) + (f(g) << 8) + f(b)).toString(16).slice(1)}`
+}
 
-  // Stage 0: Egg
-  if (stage === 0) {
-    return (
-      <div
-        className="relative flex items-center justify-center"
-        style={{
-          width: size,
-          height: size * 1.2,
-          background: `radial-gradient(ellipse at 40% 35%, white 0%, ${color}88 40%, ${color} 100%)`,
-          borderRadius: '50% 50% 45% 45%',
-          boxShadow: `0 0 20px ${color}88, inset 0 -10px 20px rgba(0,0,0,0.3)`,
-        }}
-      >
-        {/* Egg spots */}
-        <div className="absolute" style={{
-          width: 12, height: 8, borderRadius: '50%',
-          background: `${color}cc`, top: '35%', left: '20%',
-        }} />
-        <div className="absolute" style={{
-          width: 8, height: 6, borderRadius: '50%',
-          background: `${color}aa`, top: '55%', left: '60%',
-        }} />
-      </div>
-    )
+// ドット絵マップ（16x16）。各文字が色の役割に対応:
+// '.' 透明 / 'o' 輪郭 / 'M' 本体(タイプ色) / 'D' 影 / 'L' ハイライト
+// 'E' 目の白 / 'P' 瞳 / 'A' アクセント(タイプ別)
+const PIXEL_MAPS: Record<EvolutionStage, string[]> = {
+  // Stage 0: たまご
+  0: [
+    '................',
+    '......oooo......',
+    '....ooLLMMoo....',
+    '...oLLMMMMMoo...',
+    '..oLMMMMMMMMo...',
+    '..oMMMAMMMMMo...',
+    '.oMMMMMMMAMMMo..',
+    '.oMMAMMMMMMMMo..',
+    '.oMMMMMMMMAMMo..',
+    '.oMMMMMAMMMMMo..',
+    '.oMMMMMMMMMMMo..',
+    '..oMMMMMMMMMo...',
+    '..oMMMMMMMMMo...',
+    '...ooMMMMMoo....',
+    '.....ooooo......',
+    '................',
+  ],
+  // Stage 1: ベビー（まんまるスライム）
+  1: [
+    '................',
+    '................',
+    '.....oooooo.....',
+    '...ooLLMMMMoo...',
+    '..oLLMMMMMMMMo..',
+    '.oLMMMMMMMMMMMo.',
+    '.oMMMPMMMMPMMMo.',
+    '.oMMMPMMMMPMMMo.',
+    '.oMMMMMMMMMMMMo.',
+    '.oMMMMoooMMMMMo.',
+    '.oMMMMMMMMMMMMo.',
+    '..oMMMMMMMMMMo..',
+    '...ooMMMMMMoo...',
+    '....oo.oo.oo....',
+    '................',
+    '................',
+  ],
+  // Stage 2: チャイルド（耳と足）
+  2: [
+    '................',
+    '...o........o...',
+    '...oo......oo...',
+    '...oLoo..ooLo...',
+    '..oLLMMMMMMLLo..',
+    '.oLMMMMMMMMMMo..',
+    '.oMMPMMMMMMPMMo.',
+    '.oMMPMMMMMMPMMo.',
+    '.oMMMMMAAMMMMMo.',
+    '.oMMMMMMMMMMMMo.',
+    '.oMMMooooMMMMMo.',
+    '..oMMMMMMMMMMo..',
+    '..oMMMMMMMMMMo..',
+    '...oMMo..oMMo...',
+    '...ooo....ooo...',
+    '................',
+  ],
+  // Stage 3: ティーン（腕あり）
+  3: [
+    '................',
+    '...oo....oo.....',
+    '..oLLo..oLLo....',
+    '..oLMo..oMLo....',
+    '.ooLMMMMMMMLoo..',
+    '.oLMMMMMMMMMMLo.',
+    'oLMMPMMMMMMPMMLo',
+    'oMMMPMMMMMMPMMMo',
+    'oMMMMMMMMMMMMMMo',
+    'oMMMMMoooMMMMMMo',
+    'oMMMMMMMMMMMMMMo',
+    '.oMMMMAAAAMMMMo.',
+    '.oMMMMMMMMMMMMo.',
+    '..oMMo....oMMo..',
+    '..ooo......ooo..',
+    '................',
+  ],
+  // Stage 4: アダルト（角・翼）
+  4: [
+    '....o......o....',
+    '...oLo....oLo...',
+    '...oLoo..ooLo...',
+    '..ooLLMMMMLLoo..',
+    '.oLLMMMMMMMMLLo.',
+    'oLMMMMMMMMMMMMLo',
+    'oMMMPPMMMMPPMMMo',
+    'oMMMPPMMMMPPMMMo',
+    'oMMMMMMMMMMMMMMo',
+    'oMMMMMAAAAMMMMMo',
+    'oMMMMMMMMMMMMMMo',
+    'oLMMMMooooMMMMLo',
+    '.oLMMMMMMMMMMLo.',
+    '..oMMo....oMMo..',
+    '..ooo......ooo..',
+    '................',
+  ],
+  // Stage 5: パーフェクト（大型・オーラ）
+  5: [
+    '..A..o....o..A..',
+    '...oLo....oLo...',
+    '.A.oLoo..ooLo.A.',
+    '..ooLLMMMMLLoo..',
+    '.oLLMMMMMMMMLLo.',
+    'oLMMMMMMMMMMMMLo',
+    'oMMPPMMMMMMPPMMo',
+    'oMMPPMMMMMMPPMMo',
+    'oMMMMMMMMMMMMMMo',
+    'oMMMMAAAAAAMMMMo',
+    'oMMMMMMMMMMMMMMo',
+    'oLMMMMoooooMMMLo',
+    'AoLMMMMMMMMMMLoA',
+    '..oMMMo..oMMMo..',
+    '..ooo......ooo..',
+    '....A......A....',
+  ],
+}
+
+// 2枚目フレーム（モーション用）。目を閉じ（まばたき）・口を開け・足を1ドットずらした差分。
+// idle ではたまに混ぜて「まばたき＋ステップ」、happy/eating/attack では交互に出して口パク・動きを表現する。
+const PIXEL_MAPS_B: Record<EvolutionStage, string[]> = {
+  // Stage 0: たまご（顔なし。揺れはCSSで表現するため A と同一）
+  0: [
+    '................',
+    '......oooo......',
+    '....ooLLMMoo....',
+    '...oLLMMMMMoo...',
+    '..oLMMMMMMMMo...',
+    '..oMMMAMMMMMo...',
+    '.oMMMMMMMAMMMo..',
+    '.oMMAMMMMMMMMo..',
+    '.oMMMMMMMMAMMo..',
+    '.oMMMMMAMMMMMo..',
+    '.oMMMMMMMMMMMo..',
+    '..oMMMMMMMMMo...',
+    '..oMMMMMMMMMo...',
+    '...ooMMMMMoo....',
+    '.....ooooo......',
+    '................',
+  ],
+  // Stage 1
+  1: [
+    '................',
+    '................',
+    '.....oooooo.....',
+    '...ooLLMMMMoo...',
+    '..oLLMMMMMMMMo..',
+    '.oLMMMMMMMMMMMo.',
+    '.oMMMMMMMMMMMMo.',
+    '.oMMMMMMMMMMMMo.',
+    '.oMMMMMMMMMMMMo.',
+    '.oMMMMooooMMMMo.',
+    '.oMMMMMMMMMMMMo.',
+    '..oMMMMMMMMMMo..',
+    '...ooMMMMMMoo...',
+    '...oo.oo.oo.....',
+    '................',
+    '................',
+  ],
+  // Stage 2
+  2: [
+    '................',
+    '...o........o...',
+    '...oo......oo...',
+    '...oLoo..ooLo...',
+    '..oLLMMMMMMLLo..',
+    '.oLMMMMMMMMMMo..',
+    '.oMMMMMMMMMMMMo.',
+    '.oMMMMMMMMMMMMo.',
+    '.oMMMMMAAMMMMMo.',
+    '.oMMMMMMMMMMMMo.',
+    '.oMMooooooMMMMo.',
+    '..oMMMMMMMMMMo..',
+    '..oMMMMMMMMMMo..',
+    '..oMMo..oMMo....',
+    '..ooo....ooo....',
+    '................',
+  ],
+  // Stage 3
+  3: [
+    '................',
+    '...oo....oo.....',
+    '..oLLo..oLLo....',
+    '..oLMo..oMLo....',
+    '.ooLMMMMMMMLoo..',
+    '.oLMMMMMMMMMMLo.',
+    'oLMMMMMMMMMMMMLo',
+    'oMMMMMMMMMMMMMMo',
+    'oMMMMMMMMMMMMMMo',
+    'oMMMMoooooMMMMMo',
+    'oMMMMMMMMMMMMMMo',
+    '.oMMMMAAAAMMMMo.',
+    '.oMMMMMMMMMMMMo.',
+    '.oMMo....oMMo...',
+    '.ooo......ooo...',
+    '................',
+  ],
+  // Stage 4
+  4: [
+    '....o......o....',
+    '...oLo....oLo...',
+    '...oLoo..ooLo...',
+    '..ooLLMMMMLLoo..',
+    '.oLLMMMMMMMMLLo.',
+    'oLMMMMMMMMMMMMLo',
+    'oMMMMMMMMMMMMMMo',
+    'oMMMMMMMMMMMMMMo',
+    'oMMMMMMMMMMMMMMo',
+    'oMMMMMAAAAMMMMMo',
+    'oMMMMMMMMMMMMMMo',
+    'oLMMMooooooMMMLo',
+    '.oLMMMMMMMMMMLo.',
+    '.oMMo....oMMo...',
+    '.ooo......ooo...',
+    '................',
+  ],
+  // Stage 5
+  5: [
+    '..A..o....o..A..',
+    '...oLo....oLo...',
+    '.A.oLoo..ooLo.A.',
+    '..ooLLMMMMLLoo..',
+    '.oLLMMMMMMMMLLo.',
+    'oLMMMMMMMMMMMMLo',
+    'oMMMMMMMMMMMMMMo',
+    'oMMMMMMMMMMMMMMo',
+    'oMMMMMMMMMMMMMMo',
+    'oMMMMAAAAAAMMMMo',
+    'oMMMMMMMMMMMMMMo',
+    'oLMMMooooooMMMLo',
+    'AoLMMMMMMMMMMLoA',
+    '.oMMMo..oMMMo...',
+    '.ooo......ooo...',
+    '....A......A....',
+  ],
+}
+
+// アニメ状態ごとのフレーム列と速度。seq の値は 0=Aフレーム / 1=Bフレーム。
+// B フレームは「目を閉じ・口を開け」る差分。パラパラ切替はチラつきの原因になるため、
+// まばたき(idle)・口パク(eating)・噛みつき(attack)など「フレームで表現すべき」ものだけに限定する。
+// walking と happy は B に切り替えず A(目あき)のまま、滑らかな CSS アニメで動かす。
+const FRAME_PATTERNS: Partial<Record<AnimState, { seq: number[]; interval: number }>> = {
+  idle:   { seq: [0, 0, 0, 0, 0, 0, 0, 0, 0, 1], interval: 200 }, // たまに1回まばたき
+  eating: { seq: [0, 1], interval: 190 },                          // もぐもぐ口パク
+  attack: { seq: [0, 1], interval: 130 },                          // 噛みつき
+}
+
+// ステージごとの1ドットのサイズ(px)。成長に合わせて拡大
+const PIXEL_SIZES: Record<EvolutionStage, number> = {
+  0: 4, 1: 4, 2: 5, 3: 6, 4: 6, 5: 7,
+}
+
+// ドット絵スプライト本体（与えられたドットマップ × タイプ別カラーで描画）
+function PixelBody({ color, accent, map, px }: { color: string; accent: string; map: string[]; px: number }) {
+  const cols = map[0].length
+  const rows = map.length
+
+  const palette: Record<string, string | undefined> = {
+    o: adjust(color, -0.55),
+    M: color,
+    D: adjust(color, -0.28),
+    L: adjust(color, 0.4),
+    E: '#ffffff',
+    P: '#1b1b2e',
+    A: accent,
   }
 
-  // Stage 1: Baby - round blob
-  if (stage === 1) {
-    return (
-      <div
-        className="relative flex flex-col items-center"
-        style={{ width: size, height: size }}
-      >
-        {/* Body */}
-        <div style={{
-          width: size,
-          height: size * 0.8,
-          background: `radial-gradient(circle at 40% 35%, ${color}ff 0%, ${color}bb 60%, ${color}88 100%)`,
-          borderRadius: '50%',
-          boxShadow: `0 0 15px ${color}66, inset 0 -8px 15px rgba(0,0,0,0.2)`,
-          position: 'relative',
-        }}>
-          {/* Eyes */}
-          <div className="absolute flex gap-2" style={{ top: '30%', left: '25%' }}>
-            <div style={{ width: 8, height: 10, background: '#111', borderRadius: '40%' }}>
-              <div style={{ width: 3, height: 3, background: 'white', borderRadius: '50%', margin: '1px 0 0 4px' }} />
-            </div>
-            <div style={{ width: 8, height: 10, background: '#111', borderRadius: '40%' }}>
-              <div style={{ width: 3, height: 3, background: 'white', borderRadius: '50%', margin: '1px 0 0 4px' }} />
-            </div>
-          </div>
-          {/* Mouth */}
-          <div className="absolute" style={{
-            width: 10, height: 5, bottom: '25%', left: '37%',
-            borderBottom: '3px solid #111', borderRadius: '0 0 5px 5px',
-          }} />
-        </div>
-        {/* Tiny feet */}
-        <div className="flex gap-3 -mt-1">
-          <div style={{ width: 14, height: 10, background: color, borderRadius: '50% 50% 40% 40%' }} />
-          <div style={{ width: 14, height: 10, background: color, borderRadius: '50% 50% 40% 40%' }} />
-        </div>
-      </div>
-    )
-  }
-
-  // Stage 2: Child - more defined
-  if (stage === 2) {
-    return (
-      <div className="relative flex flex-col items-center" style={{ width: size, height: size }}>
-        {/* Head */}
-        <div style={{
-          width: size * 0.65,
-          height: size * 0.55,
-          background: `radial-gradient(circle at 40% 35%, ${color}ff, ${color}99)`,
-          borderRadius: '50% 50% 40% 40%',
-          boxShadow: `0 0 12px ${color}55`,
-          position: 'relative',
-        }}>
-          <div className="absolute flex gap-2" style={{ top: '25%', left: '18%' }}>
-            <div style={{ width: 9, height: 11, background: '#111', borderRadius: '40%' }}>
-              <div style={{ width: 3, height: 3, background: 'white', borderRadius: '50%', margin: '1px 0 0 5px' }} />
-            </div>
-            <div style={{ width: 9, height: 11, background: '#111', borderRadius: '40%' }}>
-              <div style={{ width: 3, height: 3, background: 'white', borderRadius: '50%', margin: '1px 0 0 5px' }} />
-            </div>
-          </div>
-          {/* Type feature on head */}
-          <div className="absolute" style={{ top: -8, left: '42%', fontSize: 16 }}>
-            {type === 'Fire' ? '🔥' : type === 'Water' ? '💧' : type === 'Plant' ? '🌿' :
-             type === 'Thunder' ? '⚡' : type === 'Dark' ? '🌑' : '✨'}
-          </div>
-        </div>
-        {/* Body */}
-        <div style={{
-          width: size * 0.55,
-          height: size * 0.4,
-          background: `linear-gradient(180deg, ${color}dd, ${color}99)`,
-          borderRadius: '30% 30% 40% 40%',
-          marginTop: -4,
-        }} />
-        {/* Legs */}
-        <div className="flex gap-2 -mt-1">
-          <div style={{ width: 16, height: 16, background: color, borderRadius: '40% 40% 50% 50%' }} />
-          <div style={{ width: 16, height: 16, background: color, borderRadius: '40% 40% 50% 50%' }} />
-        </div>
-      </div>
-    )
-  }
-
-  // Stage 3+: Adult and beyond - use large emoji + decorations
-  const emoji = SPRITE_EMOJIS[type][stage]
-  const emojiFontSizes = [0, 0, 0, 52, 64, 76]
   return (
-    <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
-      {/* Aura ring */}
-      <div className="absolute inset-0 rounded-full" style={{
-        background: `radial-gradient(circle, ${color}22 0%, transparent 70%)`,
-      }} />
-      {/* Decorative elements */}
-      {stage >= 4 && (
-        <>
-          <div className="absolute" style={{ top: 0, left: 0, fontSize: 18, filter: 'blur(0.5px)' }}>✦</div>
-          <div className="absolute" style={{ top: 0, right: 0, fontSize: 18, filter: 'blur(0.5px)' }}>✦</div>
-        </>
-      )}
-      <div style={{ fontSize: emojiFontSizes[stage], lineHeight: 1, filter: `drop-shadow(0 0 8px ${color})` }}>
-        {emoji}
-      </div>
-      {/* Power level indicator rings for high stages */}
-      {stage >= 5 && (
-        <div className="absolute inset-0 rounded-full border-2 animate-ping" style={{ borderColor: color, opacity: 0.4 }} />
+    <div
+      style={{
+        display: 'grid',
+        gridTemplateColumns: `repeat(${cols}, ${px}px)`,
+        gridTemplateRows: `repeat(${rows}, ${px}px)`,
+        width: cols * px,
+        height: rows * px,
+        imageRendering: 'pixelated',
+        filter: `drop-shadow(0 0 6px ${color}66)`,
+      }}
+    >
+      {map.flatMap((row, y) =>
+        row.split('').map((ch, x) => {
+          const bg = palette[ch]
+          return <div key={`${x}-${y}`} style={bg ? { background: bg } : undefined} />
+        }),
       )}
     </div>
   )
 }
 
-export default function CreatureSprite({ type, stage, animState, customSvg }: CreatureSpriteProps) {
+export default function CreatureSprite({ type, stage, animState }: CreatureSpriteProps) {
   const color = TYPE_COLORS[type]
+  const accent = ACCENT_COLORS[type]
+
+  // 2フレームのパラパラアニメ。状態に応じて A/B フレームを切り替える。
+  const pattern = FRAME_PATTERNS[animState]
+  const [step, setStep] = useState(0)
+  useEffect(() => {
+    setStep(0)
+    if (!pattern) return
+    const id = setInterval(() => setStep(s => s + 1), pattern.interval)
+    return () => clearInterval(id)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [animState])
+
+  const frameIdx = pattern
+    ? pattern.seq[step % pattern.seq.length]
+    : (animState === 'sleeping' ? 1 : 0) // 睡眠は目を閉じた B フレームで静止
+  const map = (frameIdx === 1 ? PIXEL_MAPS_B : PIXEL_MAPS)[stage]
+  const px = PIXEL_SIZES[stage]
 
   const getAnimClass = () => {
     switch (animState) {
       case 'happy':    return 'animate-happy-jump'
+      case 'eating':   return 'animate-eat-nod'
       case 'sleeping': return 'animate-idle-breathe opacity-70'
-      case 'attack':   return 'animate-attack-flash'
+      case 'attack':   return 'animate-attack-lunge'
       case 'evolving': return 'animate-evolve-glow'
       case 'dead':     return 'opacity-40 grayscale'
       case 'sad':      return 'animate-sad-sway'
       case 'hungry':   return 'animate-hungry-droop'
       case 'critical': return 'animate-critical-blink'
+      case 'walking':  return 'animate-walk-bounce'
       case 'idle':
       default:         return 'animate-idle-breathe'
     }
   }
 
-  const shadowWidth = SHADOW_WIDTHS[stage]
+  const shadowWidth = [40, 55, 70, 85, 100, 115][stage]
 
   return (
     <div className="relative flex flex-col items-center justify-center">
       {/* Sleeping ZZZ */}
       {animState === 'sleeping' && (
-        <div className="absolute -top-8 right-0 text-xl animate-sleep-zzz select-none z-10">
-          💤
-        </div>
-      )}
-
-      {/* Happy sparkles */}
-      {animState === 'happy' && (
-        <div className="absolute inset-0 pointer-events-none">
-          <span className="absolute text-xs" style={{ top: '5%', left: '10%', animationDelay: '0s' }}>✨</span>
-          <span className="absolute text-xs" style={{ top: '5%', right: '10%', animationDelay: '0.5s' }}>⭐</span>
-        </div>
-      )}
-
-      {/* Sad teardrops */}
-      {animState === 'sad' && (
-        <div className="absolute inset-0 pointer-events-none">
-          <span className="absolute animate-sad-drop" style={{ top: '20%', left: '5%', fontSize: 14, animationDelay: '0s' }}>💧</span>
-          <span className="absolute animate-sad-drop" style={{ top: '20%', right: '5%', fontSize: 14, animationDelay: '0.8s' }}>💧</span>
-        </div>
-      )}
-
-      {/* Hungry callout */}
-      {animState === 'hungry' && (
-        <div className="absolute pointer-events-none animate-hungry-callout" style={{ top: '-28px', left: '50%', transform: 'translateX(-50%)', fontSize: 20, whiteSpace: 'nowrap' }}>
-          🍖
+        <div className="absolute -top-8 right-0 text-sm font-pixel animate-sleep-zzz select-none z-10" style={{ color: 'rgba(255,255,255,0.85)' }}>
+          Zzz
         </div>
       )}
 
       {/* Critical warning */}
       {animState === 'critical' && (
-        <div className="absolute pointer-events-none animate-critical-warn" style={{ top: '-28px', left: '50%', transform: 'translateX(-50%)', fontSize: 18, whiteSpace: 'nowrap' }}>
-          ⚠️
+        <div className="absolute pointer-events-none animate-critical-warn font-pixel" style={{ top: '-28px', left: '50%', transform: 'translateX(-50%)', fontSize: 18, color: '#ef4444', whiteSpace: 'nowrap' }}>
+          ！
         </div>
       )}
 
       {/* Main sprite */}
       <div className={`transition-all duration-300 ${getAnimClass()}`}>
-        {customSvg ? (
-          // Sanitized SVG (sanitized at assignment point before reaching here)
-          <div
-            style={{ width: 100, height: 100 }}
-            dangerouslySetInnerHTML={{ __html: customSvg }}
-          />
-        ) : stage === 0 ? (
-          <EggBody color={color} size={STAGE_SIZES[0]} />
-        ) : hasDefaultSprite(type, stage) ? (
-          <DefaultCreatureBody type={type} stage={stage} />
-        ) : (
-          <PixelBody type={type} stage={stage} color={color} />
-        )}
+        <PixelBody color={color} accent={accent} map={map} px={px} />
       </div>
 
       {/* Shadow */}

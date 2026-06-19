@@ -14,14 +14,13 @@ interface ActionButtonsProps {
 
 interface BtnProps {
   label: string
-  icon: string
   onClick: () => void
   disabled?: boolean
   accent?: string
   pulse?: boolean
 }
 
-function ActionBtn({ label, icon, onClick, disabled, accent = '#4fc3f7', pulse }: BtnProps) {
+function ActionBtn({ label, onClick, disabled, accent = '#4fc3f7', pulse }: BtnProps) {
   return (
     <button
       onClick={onClick}
@@ -33,9 +32,9 @@ function ActionBtn({ label, icon, onClick, disabled, accent = '#4fc3f7', pulse }
         ${pulse ? 'animate-pulse' : ''}
       `}
       style={{
-        minHeight: 64,
+        minHeight: 52,
         minWidth: 72,
-        padding: '8px 4px',
+        padding: '6px 4px',
         background: disabled
           ? 'rgba(255,255,255,0.05)'
           : `linear-gradient(135deg, ${accent}22, ${accent}11)`,
@@ -43,8 +42,7 @@ function ActionBtn({ label, icon, onClick, disabled, accent = '#4fc3f7', pulse }
         boxShadow: disabled ? 'none' : `0 2px 8px ${accent}33`,
       }}
     >
-      <span style={{ fontSize: 22 }}>{icon}</span>
-      <span style={{ fontSize: '0.5rem', color: disabled ? '#666' : '#ccc', letterSpacing: '0.05em' }}>
+      <span style={{ fontSize: '0.62rem', fontWeight: 700, color: disabled ? '#666' : '#ccc', letterSpacing: '0.05em' }}>
         {label}
       </span>
     </button>
@@ -86,7 +84,7 @@ export default function ActionButtons({
             boxShadow: '0 0 24px #ffd70099',
           }}
         >
-          🥚 タップして生まれる！
+          タップして生まれる！
         </button>
         <style>{`
           @keyframes hatch {
@@ -116,14 +114,14 @@ export default function ActionButtons({
             boxShadow: '0 0 20px #ffd70088',
           }}
         >
-          ⭐ 進化できる！タップして進化！ ⭐
+          進化できる！タップして進化！
         </button>
       )}
 
       {/* Evolution conditions (when can't evolve) */}
       {evolutionProgress.length > 0 && (
         <div className="mb-3 p-2 rounded-lg" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
-          <p style={{ fontSize: '0.6rem', color: '#aaa', marginBottom: 4, letterSpacing: '0.05em' }}>🔒 進化条件</p>
+          <p style={{ fontSize: '0.6rem', color: '#aaa', marginBottom: 4, letterSpacing: '0.05em' }}>進化条件</p>
           <div className="flex flex-wrap gap-2">
             {evolutionProgress.map((c) => (
               <span
@@ -138,7 +136,7 @@ export default function ActionButtons({
                   letterSpacing: '0.03em',
                 }}
               >
-                {c.met ? '✓' : '✗'} {c.label}: {c.value}/{c.max}
+                {c.met ? '達成' : '未達'} {c.label}: {c.value}/{c.max}
               </span>
             ))}
           </div>
@@ -148,25 +146,25 @@ export default function ActionButtons({
       {/* Main action grid */}
       <div className="grid grid-cols-4 gap-2">
         <ActionBtn
-          label="ご飯" icon="🍖"
+          label="ご飯"
           onClick={onFeed}
           disabled={sleeping}
           accent="#fb923c"
         />
         <ActionBtn
-          label="トレーニング" icon="🏋️"
+          label="トレーニング"
           onClick={onTrain}
           disabled={sleeping || creature.hunger <= 0}
           accent="#f43f5e"
         />
         <ActionBtn
-          label="遊ぶ" icon="🎮"
+          label="遊ぶ"
           onClick={onPlay}
           disabled={sleeping || creature.hunger <= 0}
           accent="#a78bfa"
         />
         <ActionBtn
-          label={sleeping ? '起こす' : '寝る'} icon={sleeping ? '☀️' : '💤'}
+          label={sleeping ? '起こす' : '寝る'}
           onClick={onSleep}
           accent="#60a5fa"
         />
@@ -175,13 +173,13 @@ export default function ActionButtons({
       {/* Battle & Status buttons */}
       <div className="mt-2 grid grid-cols-2 gap-2">
         <ActionBtn
-          label="バトル" icon="⚔️"
+          label="バトル"
           onClick={onBattle}
           disabled={sleeping || !creature.isAlive}
           accent="#ef4444"
         />
         <ActionBtn
-          label="ステータス" icon="📊"
+          label="ステータス"
           onClick={onStatus}
           accent="#94a3b8"
         />

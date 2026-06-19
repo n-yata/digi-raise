@@ -161,7 +161,7 @@ export default function TrainingMiniGame({ creature, onResult }: Props) {
       >
         {/* Header */}
         <div className="text-center mb-1 font-pixel" style={{ fontSize: '0.7rem', color }}>
-          ⚔️ トレーニング！
+          トレーニング！
         </div>
         <div className="text-center mb-4 font-pixel" style={{ fontSize: '0.7rem', color: '#94a3b8' }}>
           {phase === 'playing' ? 'もぐらを叩け！' : '\u00a0'}
@@ -222,11 +222,14 @@ export default function TrainingMiniGame({ creature, onResult }: Props) {
                     <span
                       style={{
                         display: 'inline-block',
+                        width: '1.8rem',
+                        height: '1.8rem',
+                        borderRadius: '50%',
+                        background: color,
+                        boxShadow: `0 0 10px ${color}88`,
                         animation: 'mole-pop 0.15s ease-out',
                       }}
-                    >
-                      🐾
-                    </span>
+                    />
                   ) : null}
                 </button>
               )
@@ -244,7 +247,7 @@ export default function TrainingMiniGame({ creature, onResult }: Props) {
                 color: result === 'success' ? '#4ade80' : '#f87171',
               }}
             >
-              {result === 'success' ? '🎯 成功！' : '💥 失敗…'}
+              {result === 'success' ? '成功！' : '失敗…'}
             </div>
             <div
               className="font-pixel"
