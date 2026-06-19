@@ -66,7 +66,7 @@
 
 ### 絶対に守ってください！
 
-以下の順序を省略しない。
+非軽微な作業は以下の順序を省略しない。軽微な作業（バグ修正・小改善）はバイブコーディングセクションを参照。
 
 1. **影響分析** — 永続的ドキュメント（`docs/`）への影響を確認。基本設計に影響するなら `docs/` 更新を計画に含める
 2. **ステアリングディレクトリ作成** — `mkdir -p .steering/[YYYYMMDD]-[開発タイトル]`
@@ -76,6 +76,14 @@
 6. **品質チェック** — クルトワ（security-engineer）レビュー → コミット
 
 > 詳細手順とテンプレ参照は `steering` skill が自動発火して案内する。
+
+### バイブコーディング（直接実装依頼）時の必須対応
+
+`/plan-feature` や `/add-feature` を経由せず「実装して」と直接依頼された場合も、以下を**モドリッチが自発的に実行**する。省略禁止。Git ワークフロー（worktree / feature ブランチ / PR 経由マージ）は引き続き適用。
+
+1. **`steering` スキルを自分で発火** — `.steering/[YYYYMMDD]-[タイトル]/` を作成し、tasklist.md でタスク追跡する（軽微な作業は retrospective.md のみでも可）
+2. **コミット前に `/security-review` を実行** — シャビから指示がなくてもモドリッチ自身が発動する
+3. **実装後に `verify` スキルを発動** — 実際にアプリを動かして変更が機能することを確認する
 
 ### ゲームデザインの判断はシャビ確認必須
 
@@ -118,7 +126,7 @@ git worktree remove ../digi-raise-worktrees/<branch-name>
 # ローカルブランチはマージ時に削除済みのため不要
 ```
 
-- **コミット前にクルトワ（security-engineer）のレビューを通す**: PR マージ前に必ずレビューを実施する。
+- **コミット前にクルトワ（security-engineer）のレビューを通す**: コミットのたびに必ずレビューを実施する。
 - **hooks による機械的ブロック**: `--no-verify` / `-n` / `--no-gpg-sign` / `-c core.hooksPath=` は `.claude/hooks/block-no-verify.ps1` によりハーネス層で拒否される。
 
 ---
@@ -155,7 +163,6 @@ git worktree remove ../digi-raise-worktrees/<branch-name>
 ```bash
 npm run dev      # 開発サーバー起動 (localhost:5173)
 npm run build    # TypeScript チェック + Vite ビルド
-npm run preview  # ビルド成果物のプレビュー
 npm run lint     # ESLint (max-warnings 0)
 npm run test:run # テスト実行
 ```

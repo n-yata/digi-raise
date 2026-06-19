@@ -3,7 +3,7 @@
 | 項目 | 内容 |
 |------|------|
 | 作成日 | 2026-05-03 |
-| 最終更新 | 2026-06-19 |
+| 最終更新 | 2026-06-20 |
 | 担当 | バルベルデ（architecture-designer） |
 
 ---
@@ -58,33 +58,33 @@ sequenceDiagram
 
 | コンポーネント | ファイル | 責務 |
 |-------------|---------|------|
-| `App` | `frontend/src/App.tsx` | ルート、画面ルーティング、`useState` 群による中央状態管理 |
-| `TitleScreen` | `frontend/src/components/TitleScreen.tsx` | タイトル・セーブロード |
-| `CreatureSetup` | `frontend/src/components/CreatureSetup.tsx` | 新規クリーチャーの名前・タイプ選択 |
-| `MainGame` | `frontend/src/components/MainGame.tsx` | メイン画面（ステータスバー・アクション・バトルボタン） |
-| `StatusScreen` | `frontend/src/components/StatusScreen.tsx` | ステータス詳細・複数クリーチャー一覧・切替・個別削除 |
-| `EvolutionScreen` | `frontend/src/components/EvolutionScreen.tsx` | 進化演出 |
-| `CreatureDrawingScreen` | `frontend/src/components/CreatureDrawingScreen.tsx` | 進化後の 64×64 お絵描き |
-| `DeathScreen` | `frontend/src/components/DeathScreen.tsx` | 死亡画面 |
-| `BattleLobbyScreen` | `frontend/src/components/BattleLobbyScreen.tsx` | CPU 戦タブ |
-| `BattleScreen` | `frontend/src/components/BattleScreen.tsx` | バトルメイン画面（左:自分 / 右:相手） |
-| `BattleActionButtons` | `frontend/src/components/BattleActionButtons.tsx` | attack / guard / special ボタン |
-| `BattleResult` | `frontend/src/components/BattleResult.tsx` | 勝敗結果モーダル |
-| `TrainingMiniGame` | `frontend/src/components/TrainingMiniGame.tsx` | もぐらたたきミニゲーム |
-| `PlayMiniGame` | `frontend/src/components/PlayMiniGame.tsx` | 神経衰弱ミニゲーム |
-| `FeedMiniGame` | `frontend/src/components/FeedMiniGame.tsx` | ごはんポップアップ演出 |
+| `App` | `src/App.tsx` | ルート、画面ルーティング、`useState` 群による中央状態管理 |
+| `TitleScreen` | `src/components/TitleScreen.tsx` | タイトル・セーブロード |
+| `CreatureSetup` | `src/components/CreatureSetup.tsx` | 新規クリーチャーの名前・タイプ選択 |
+| `MainGame` | `src/components/MainGame.tsx` | メイン画面（ステータスバー・アクション・バトルボタン） |
+| `StatusScreen` | `src/components/StatusScreen.tsx` | ステータス詳細・複数クリーチャー一覧・切替・個別削除 |
+| `EvolutionScreen` | `src/components/EvolutionScreen.tsx` | 進化演出 |
+| `CreatureDrawingScreen` | `src/components/CreatureDrawingScreen.tsx` | 進化後の 64×64 お絵描き |
+| `DeathScreen` | `src/components/DeathScreen.tsx` | 死亡画面 |
+| `BattleLobbyScreen` | `src/components/BattleLobbyScreen.tsx` | CPU 戦タブ |
+| `BattleScreen` | `src/components/BattleScreen.tsx` | バトルメイン画面（左:自分 / 右:相手） |
+| `BattleActionButtons` | `src/components/BattleActionButtons.tsx` | attack / guard / special ボタン |
+| `BattleResult` | `src/components/BattleResult.tsx` | 勝敗結果モーダル |
+| `TrainingMiniGame` | `src/components/TrainingMiniGame.tsx` | もぐらたたきミニゲーム |
+| `PlayMiniGame` | `src/components/PlayMiniGame.tsx` | 神経衰弱ミニゲーム |
+| `FeedMiniGame` | `src/components/FeedMiniGame.tsx` | ごはんポップアップ演出 |
 
 #### フック・ユーティリティ
 
 | 名前 | ファイル | 責務 |
 |------|---------|------|
-| `useBattleState` | `frontend/src/hooks/useBattleState.ts` | `useReducer` によるバトル状態管理 |
-| `battleLogic` | `frontend/src/utils/battleLogic.ts` | ダメージ計算・タイプ相性・LCG 乱数生成器・ターン解決 |
-| `cpuBattle` | `frontend/src/utils/cpuBattle.ts` | CPU クリーチャー生成・アクション選択 |
-| `evolution` | `frontend/src/utils/evolution.ts` | 進化条件判定 |
-| `gameLogic` | `frontend/src/utils/gameLogic.ts` | えさ・トレーニング・あそぶ・睡眠・時間更新 |
-| `storage` | `frontend/src/utils/storage.ts` | IndexedDB CRUD・JSON エクスポート/インポート（File System Access API 対応） |
-| `floodFill` | `frontend/src/utils/floodFill.ts` | お絵描き塗りつぶしアルゴリズム |
+| `useBattleState` | `src/hooks/useBattleState.ts` | `useReducer` によるバトル状態管理 |
+| `battleLogic` | `src/utils/battleLogic.ts` | ダメージ計算・タイプ相性・LCG 乱数生成器・ターン解決 |
+| `cpuBattle` | `src/utils/cpuBattle.ts` | CPU クリーチャー生成・アクション選択 |
+| `evolution` | `src/utils/evolution.ts` | 進化条件判定 |
+| `gameLogic` | `src/utils/gameLogic.ts` | えさ・トレーニング・あそぶ・睡眠・時間更新 |
+| `storage` | `src/utils/storage.ts` | IndexedDB CRUD・JSON エクスポート/インポート（File System Access API 対応） |
+| `floodFill` | `src/utils/floodFill.ts` | お絵描き塗りつぶしアルゴリズム |
 
 ### データ層
 
@@ -96,7 +96,7 @@ sequenceDiagram
 
 ## データモデル
 
-### フロントエンド主要型（`frontend/src/types/`）
+### フロントエンド主要型（`src/types/`）
 
 ```typescript
 // creature.ts
@@ -168,7 +168,7 @@ finalDamage = max(1, floor(baseDamage * typeMod * spdMod))
 | Dark    | 1.0  | 1.0   | 1.0   | 1.2     | 1.0  | 0.8   |
 | Light   | 1.0  | 1.0   | 1.0   | 0.8     | 1.2  | 1.0   |
 
-正本は `frontend/src/utils/battleLogic.ts` の `TYPE_ADVANTAGE`。本ドキュメントとコードに乖離があればコードを正とする。
+正本は `src/utils/battleLogic.ts` の `TYPE_ADVANTAGE`。本ドキュメントとコードに乖離があればコードを正とする。
 
 ### 特殊アクション（special、クールダウン2ターン）
 
@@ -221,7 +221,7 @@ HP はバトル終了時の値を維持する。
 | ステージ | 名称 | 進化条件 |
 |---------|------|----------|
 | 0 | タマゴ | — |
-| 1 | ベイビー | タマゴをタップ（即時） |
+| 1 | ベイビー | minAge: 0 を満たした時点で自動ふ化（タップ不要） |
 | 2 | チャイルド | `age ≥ 1` |
 | 3 | アダルト | `age ≥ 3` AND `happiness ≥ 50` |
 | 4 | パーフェクト | `age ≥ 6` AND `level ≥ 8` AND `atk + def + spd ≥ 40` |
@@ -265,5 +265,5 @@ stateDiagram-v2
 | 要件カテゴリ | 設計上の対応 |
 |------------|-------------|
 | パフォーマンス | フロントエンド完結のバトル計算。Service Worker による静的アセットキャッシュ |
-| セキュリティ | カスタム SVG をエクスポート対象から除外（XSS 対策）、React 自動エスケープに依存 |
-| 拡張性 | 新タイプ・新進化系統は `frontend/src/data/evolutions.ts` の追加のみで対応可能 |
+| セキュリティ | カスタム SVG をエクスポート対象から除外（XSS 対策）。`dangerouslySetInnerHTML` は現時点未使用（`customSvg` は `ReactNode` として JSX 描画）。将来使用時は DOMPurify 必須 |
+| 拡張性 | 新タイプ・新進化系統は `src/data/evolutions.ts` の追加のみで対応可能 |

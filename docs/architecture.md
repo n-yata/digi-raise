@@ -3,7 +3,7 @@
 | 項目 | 内容 |
 |------|------|
 | 作成日 | 2026-05-04 |
-| 最終更新 | 2026-06-19 |
+| 最終更新 | 2026-06-20 |
 | 担当 | バルベルデ（architecture-designer） |
 
 ---
@@ -113,7 +113,7 @@ GitHub Pages（フロントエンド配信、Service Worker キャッシュ）
 
 ### シークレット管理
 
-- フロントエンドビルド時の環境変数: `frontend/.env`（`.gitignore` 対象）
+- フロントエンドビルド時の環境変数: `.env`（`.gitignore` 対象、ルート直下）
 - ソースコード・ドキュメントには実 URL / 実キーを書かない
 
 ### 通信暗号化
@@ -122,7 +122,8 @@ GitHub Pages（フロントエンド配信、Service Worker キャッシュ）
 
 ### XSS 対策
 
-- React の自動エスケープに依存（`dangerouslySetInnerHTML` を使わない）
+- React の自動エスケープを基本とする
+- `dangerouslySetInnerHTML` は現時点のコードベースでは未使用（`customSvg` は `ReactNode` として JSX 描画）。将来使用する場合は必ず `DOMPurify.sanitize({ USE_PROFILES: { svg: true } })` を通す
 - カスタム SVG（ユーザー描画）はエクスポート時に除外し、表示は信頼境界内（同一オリジン）に限定
 
 ### コミット前のセキュリティレビュー
