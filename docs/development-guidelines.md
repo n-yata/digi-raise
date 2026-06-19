@@ -3,7 +3,7 @@
 | 項目 | 内容 |
 |------|------|
 | 作成日 | 2026-05-04 |
-| 最終更新 | 2026-06-19 |
+| 最終更新 | 2026-06-20 |
 | 担当 | モドリッチ |
 
 ---
@@ -31,7 +31,8 @@
 
 ### セキュリティ
 
-- React は自動エスケープに依存。`dangerouslySetInnerHTML` は使わない
+- React の自動エスケープを基本とする
+- `dangerouslySetInnerHTML` は現時点未使用（`customSvg` は `ReactNode` として JSX 描画）。将来使用する場合は必ず `DOMPurify.sanitize({ USE_PROFILES: { svg: true } })` を通す（詳細は C-2 参照）
 - カスタム SVG（ユーザー描画）はエクスポート対象から除外し、表示は信頼境界内に限定
 
 ---
@@ -263,6 +264,14 @@ Vite の `VITE_*` はビルド時にバンドル埋め込みされるため、Gi
 - IndexedDB に保存する `customSprites` は **エクスポート時に除外**（XSS 経路を増やさない）
 - 表示は信頼境界内（同一オリジン）に限定
 - 進化ステージごとに別々のキーで保存し、衝突を防ぐ
+
+#### C-2. `dangerouslySetInnerHTML` と DOMPurify（将来実装時のガイド）
+
+現時点のコードでは `dangerouslySetInnerHTML` は未使用（`customSvg` は `ReactNode` として JSX 描画）。WebSocket バックエンド削除により外部 SVG の受信経路も消滅。将来 `dangerouslySetInnerHTML` を導入する際は以下を守ること:
+
+- 使用箇所は **必ず** `DOMPurify.sanitize(svg, { USE_PROFILES: { svg: true }, FORBID_TAGS: ['foreignObject'] })` を通す
+- 自分のクリーチャー（IndexedDB 由来）と外部データ由来で、サニタイズのライフサイクルが非対称になりやすい。外部経路のデータは受け取り直後にサニタイズする（入口で処理）
+- `customSvg` を扱う経路が複数になる場合は、型レベルで「サニタイズ済み」を保証するラッパーの導入を検討する
 
 ---
 
