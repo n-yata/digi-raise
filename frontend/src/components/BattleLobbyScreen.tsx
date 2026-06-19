@@ -331,7 +331,7 @@ export default function BattleLobbyScreen({
 
             <button
               onClick={handleCpuBattleStart}
-              className="w-full py-3 rounded-lg font-pixel transition-all active:scale-95 animate-pulse"
+              className="w-full py-3 rounded-lg font-pixel transition-all active:scale-95 animate-retro-blink"
               style={{
                 fontSize: '0.75rem',
                 background: 'linear-gradient(90deg, #ffd700, #ff8c00, #ffd700)',
@@ -442,7 +442,7 @@ export default function BattleLobbyScreen({
                 className="px-3 py-6 rounded-lg flex flex-col items-center gap-3"
                 style={{ background: '#16213e', border: '1px solid #0f3460' }}
               >
-                <div className="animate-pulse" style={{ width: 24, height: 24, borderRadius: '50%', background: '#4fc3f7', boxShadow: '0 0 12px #4fc3f7' }} />
+                <div className="animate-retro-blink" style={{ width: 24, height: 24, borderRadius: '50%', background: '#4fc3f7', boxShadow: '0 0 12px #4fc3f7' }} />
                 <div className="font-pixel" style={{ fontSize: '0.65rem', color: '#64748b' }}>
                   接続中...
                 </div>
@@ -470,7 +470,7 @@ export default function BattleLobbyScreen({
                 >
                   {roomCode}
                 </div>
-                <div className="font-pixel animate-pulse" style={{ fontSize: '0.65rem', color: '#64748b' }}>
+                <div className="font-pixel animate-retro-blink" style={{ fontSize: '0.65rem', color: '#64748b' }}>
                   相手を待っています...
                 </div>
                 <button
@@ -495,11 +495,11 @@ export default function BattleLobbyScreen({
                 className="px-3 py-6 rounded-lg flex flex-col items-center gap-3"
                 style={{ background: '#16213e', border: '1px solid #0f3460' }}
               >
-                <div className="animate-pulse" style={{ width: 24, height: 24, borderRadius: '50%', background: '#f43f5e', boxShadow: '0 0 12px #f43f5e' }} />
+                <div className="animate-retro-blink" style={{ width: 24, height: 24, borderRadius: '50%', background: '#f43f5e', boxShadow: '0 0 12px #f43f5e' }} />
                 <div className="font-pixel" style={{ fontSize: '0.65rem', color: '#4fc3f7' }}>
                   相手が見つかりました！
                 </div>
-                <div className="font-pixel animate-pulse" style={{ fontSize: '0.65rem', color: '#64748b' }}>
+                <div className="font-pixel animate-retro-blink" style={{ fontSize: '0.65rem', color: '#64748b' }}>
                   バトル開始中...
                 </div>
               </div>

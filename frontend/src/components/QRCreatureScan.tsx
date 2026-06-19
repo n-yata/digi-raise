@@ -268,7 +268,7 @@ export default function QRCreatureScan({ myCreature, onOpponentScanned, onCancel
 
         <button
           onClick={() => onOpponentScanned(opponent)}
-          className="w-full py-3 rounded-lg font-pixel transition-all active:scale-95 animate-pulse"
+          className="w-full py-3 rounded-lg font-pixel transition-all active:scale-95 animate-retro-blink"
           style={{
             fontSize: '0.75rem',
             background: 'linear-gradient(90deg, #ffd700, #ff8c00, #ffd700)',

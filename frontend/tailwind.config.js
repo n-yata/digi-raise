@@ -31,7 +31,11 @@ export default {
         dark: '#ce93d8',
         light: '#fff9c4',
       },
+      transitionDuration: {
+        '150': '50ms',
+      },
       animation: {
+        'retro-blink': 'retroBlink 1s steps(1) infinite',
         'idle-breathe': 'idleBreathe 3s ease-in-out infinite',
         'happy-jump': 'happyJump 0.72s ease-in-out infinite',
         'sleep-zzz': 'sleepZzz 1.5s ease-in-out infinite',
@@ -50,6 +54,10 @@ export default {
         'walk-bounce': 'walkBounce 0.55s ease-in-out infinite',
       },
       keyframes: {
+        retroBlink: {
+          '0%, 49%': { opacity: '1' },
+          '50%, 100%': { opacity: '0' },
+        },
         idleBreathe: {
           '0%, 100%': { transform: 'scaleY(1) scaleX(1) translateY(0px)' },
           '35%': { transform: 'scaleY(1.04) scaleX(0.97) translateY(-2px)' },

@@ -29,7 +29,7 @@ function ActionBtn({ label, onClick, disabled, accent = '#4fc3f7', pulse }: BtnP
         relative flex flex-col items-center justify-center gap-1
         rounded-lg transition-all duration-150 active:scale-95
         ${disabled ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer hover:brightness-125'}
-        ${pulse ? 'animate-pulse' : ''}
+        ${pulse ? 'animate-retro-blink' : ''}
       `}
       style={{
         minHeight: 52,
@@ -77,11 +77,11 @@ export default function ActionButtons({
       {canEvolveNow && (
         <button
           onClick={onEvolve}
-          className="w-full mb-3 py-3 rounded-lg font-pixel text-sm animate-pulse"
+          className="w-full mb-3 py-3 rounded-lg font-pixel text-sm animate-retro-blink"
           style={{
             background: 'linear-gradient(90deg, #ffd700, #ff8c00, #ffd700)',
             backgroundSize: '200% 100%',
-            animation: 'evolveGradient 2s linear infinite, pulse 1s ease-in-out infinite',
+            animation: 'evolveGradient 2s linear infinite, retroBlink 1s steps(1) infinite',
             border: '2px solid #ffd700',
             color: '#111',
             fontSize: '0.9rem',

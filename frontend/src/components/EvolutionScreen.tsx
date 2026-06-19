@@ -45,7 +45,7 @@ export default function EvolutionScreen({ creature, evolvedFrom, onContinue }: E
               boxShadow: '0 0 40px #ffd700',
             }}
           />
-          <div className="font-pixel text-2xl mt-4 animate-pulse" style={{ color: '#ffd700' }}>
+          <div className="font-pixel text-2xl mt-4 animate-retro-blink" style={{ color: '#ffd700' }}>
             進化中！！
           </div>
         </div>
@@ -59,7 +59,7 @@ export default function EvolutionScreen({ creature, evolvedFrom, onContinue }: E
           </div>
 
           <div
-            className="font-pixel text-center mb-6 animate-pulse"
+            className="font-pixel text-center mb-6 animate-retro-blink"
             style={{ fontSize: '1.2rem', color: '#ffd700', textShadow: `0 0 20px ${color}` }}
           >
             {newName}
