@@ -6,6 +6,7 @@ import { getAnimationState } from '../utils/gameLogic'
 import CreatureSprite from './CreatureSprite'
 import StatusBars from './StatusBars'
 import ActionButtons from './ActionButtons'
+import { TypeIcon } from './TypeIcon'
 
 interface MainGameProps {
   creature: Creature
@@ -155,6 +156,7 @@ export default function MainGame({
             className="font-pixel px-2 py-0.5 rounded-full"
             style={{ fontSize: '0.5rem', background: `${color}22`, color, border: `1px solid ${color}44` }}
           >
+            <TypeIcon type={creature.type} size={10} />
             {creature.type.toUpperCase()}
           </span>
           {creature.isSleeping && (
