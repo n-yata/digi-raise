@@ -38,6 +38,20 @@
 - `vite-plugin-pwa` — Service Worker 自動生成・ホーム画面追加対応
 - File System Access API（標準、フォールバックあり） — セーブデータ JSON ファイルのエクスポート/インポート
 
+クリーチャー描画アーキテクチャ:
+
+```
+CreatureSprite
+  ├── stage === 0 → EggBody（卵 CSS描画）
+  └── stage 1-5  → DefaultCreatureBody
+                      ├── SPRITE_DISPATCH[type][stage] が定義済み → 各タイプスプライト（FireSprites 等）
+                      └── 未定義 → FallbackSilhouette（タイプカラーの楕円 + 表情パーツ）
+```
+
+- スプライトは viewBox `0 0 100 100` に統一し、`size` prop でスケーリング
+- 色は `TYPE_COLORS[type]` のみ使用（SVG 内ハードコード禁止）
+- ユーザー描画（`customSvg`）は `CreatureSprite` で最優先表示し、標準スプライトを上書き
+
 ### インフラ・ホスティング
 
 - フロントエンド配信: GitHub Pages（カスタムドメインなし）

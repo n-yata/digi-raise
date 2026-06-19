@@ -19,6 +19,8 @@ digi-raise/
 │   │   ├── index.css             # グローバルスタイル（Tailwind directives）
 │   │   ├── vite-env.d.ts         # Vite 環境変数の型定義
 │   │   ├── components/           # 画面・UI コンポーネント
+│   │   │   ├── creatures/        # クリーチャー描画コンポーネント（CreatureSprite・DefaultCreatureBody・EggBody・FallbackSilhouette・*Sprites）
+│   │   │   │   └── parts/        # 共通 SVG パーツ（Eye・Mouth・FlamePlume 等）
 │   │   ├── hooks/                # useBattleState 等のカスタムフック
 │   │   ├── types/                # creature.ts / battle.ts
 │   │   ├── utils/                # battleLogic / cpuBattle / evolution / gameLogic / storage / floodFill
@@ -59,6 +61,8 @@ digi-raise/
 |------------|------|
 | `frontend/` | React PWA。GitHub Pages にデプロイ |
 | `frontend/src/components/` | 画面単位・UI 部品単位の React コンポーネント |
+| `frontend/src/components/creatures/` | クリーチャー描画専用コンポーネント群（DefaultCreatureBody がタイプ×ステージを SPRITE_DISPATCH でルーティング） |
+| `frontend/src/components/creatures/parts/` | 共通 SVG パーツ（Eye・Mouth・FlamePlume・WaterFin・Leaf・Bolt・ShadowVeil・Halo） |
 | `frontend/src/hooks/` | 状態管理・副作用をカプセル化したカスタムフック |
 | `frontend/src/utils/` | 純粋関数中心のロジック（バトル計算・進化判定・ストレージ等） |
 | `frontend/src/data/` | 静的データ（進化系統テーブル等） |

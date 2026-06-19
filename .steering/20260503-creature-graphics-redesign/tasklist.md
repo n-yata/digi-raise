@@ -116,20 +116,11 @@
 
 ## P7: クルトワ（security-engineer）レビュー + コミット
 
-- [ ] **P7-1**: 変更ファイルすべてのセキュリティレビューをクルトワに依頼
-  - **必ず含める観点**:
-    - SVG 内の色値ハードコーディング有無（`TYPE_COLORS` 経由になっているか）
-    - URL/エンドポイントのハードコーディングなし（本スプリントでは追加なしのはず）
-    - シークレット/キーのハードコーディングなし
-    - `dangerouslySetInnerHTML` の使用箇所が標準 SVG では追加されていない（既存 `customSvg` 経路のみ）
-    - SVG 内の `<script>` `<foreignObject>` 等の危険要素混入なし
-    - ナレッジ E-4（カスタム SVG XSS 経路）の方針が破られていない
-- [ ] **P7-2**: 指摘事項を確認
-  - Critical / High なし → 自動で次タスクへ
-  - **Critical / High あり → 止めてシャビに確認**
-- [ ] **P7-3**: 指摘修正（あれば）
-- [ ] **P7-4**: シャビへレビュー結果報告 → コミット承認取得（CLAUDE.md コミット前ルール）
-- [ ] **P7-5**: コミット作成
+- [x] **P7-1**: クルトワ（security-engineer）レビュー実施 — Critical/High/Medium ゼロ（2026-06-20）
+- [x] **P7-2**: 指摘事項確認 — クリア
+- [x] **P7-3**: 修正不要
+- [x] **P7-4**: シャビへ報告済み
+- [x] **P7-5**: コミット作成（e0ecfc2）→ main マージ（09acf7a）
 
 ---
 
@@ -137,11 +128,11 @@
 
 > 実装完了 + 動作確認後にまとめて更新
 
-- [ ] **P8-1**: `docs/repository-structure.md` に新規ディレクトリ `frontend/src/components/creatures/` および `frontend/src/components/creatures/parts/` を反映
-- [ ] **P8-2**: `docs/architecture.md` のフロントエンド構成図に `DefaultCreatureBody` 経路を追加（必要なら）
-- [ ] **P8-3**: `docs/development-guidelines.md` のフロントエンド規約に「クリーチャー SVG の見た目言語（viewBox 100 / 線幅 3-5% / `TYPE_COLORS + SVG_OUTLINE_COLOR` のみ / グラデ禁止）」を追記
-- [ ] **P8-4**: `docs/glossary.md` に「シルエット継承」「特徴パーツ」など新規ドメイン用語があれば追加
-- [ ] **P8-5**: 必要があれば `docs/functional-design.md` の UI セクションを更新
+- [x] **P8-1**: `docs/repository-structure.md` に `creatures/` および `creatures/parts/` を反映
+- [x] **P8-2**: `docs/architecture.md` にクリーチャー描画アーキテクチャ図（CreatureSprite → DefaultCreatureBody → SPRITE_DISPATCH）を追記
+- [x] **P8-3**: `docs/development-guidelines.md` に C-0 セクション「クリーチャー標準 SVG の見た目言語」を追記
+- [x] **P8-4**: `docs/glossary.md` に「シルエット継承」「特徴パーツ」「スプライトディスパッチ」「TypeIcon」を追加
+- [x] **P8-5**: `docs/functional-design.md` 更新不要（UI セクションに影響する変更なし）
 
 ---
 

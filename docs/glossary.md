@@ -43,6 +43,10 @@
 | 防御バフ | Defense Buff | Light の特殊効果。自 DEF × 1.5、2 ターン継続 |
 | devMode | — | 時間スケール加速モード（30 分 → 30 秒）。メイン画面ヘッダー「DEV」ボタンで切替 |
 | お絵描き | Drawing | 進化のたびに表示される 64×64 ピクセルアートキャンバス。SVG として保存 |
+| シルエット継承 | Silhouette Inheritance | 進化ステージを重ねるにつれて「特徴パーツ」が大きく/複雑になる表現方針。例: FireBaby の小さな炎が FireUltimate では全身を覆う。低ステージの造形を上位ステージが包含することで「育てた感」を演出する |
+| 特徴パーツ | Feature Part | タイプの個性を表す SVG パーツコンポーネント（FlamePlume・WaterFin・Leaf・Bolt・ShadowVeil・Halo 等）。`parts/` ディレクトリに配置し、各タイプのスプライトから scale/位置を変えて使い回す |
+| スプライトディスパッチ | Sprite Dispatch | `DefaultCreatureBody.tsx` 内の `SPRITE_DISPATCH` テーブル。`CreatureType × EvolutionStage` をキーに対応するスプライトコンポーネントを返す。未定義の組み合わせは `FallbackSilhouette` にフォールバック |
+| TypeIcon | — | タイプを示す 24×24 SVG アイコン。`TypeIcon.tsx` が実装し、パスは `typeIconPaths.ts` の `TYPE_ICON_PATHS` に集約。UI のバッジや進化画面で使用 |
 | CPU バトル | CPU Battle | フロントエンド完結のオフライン対戦。CPU はランダムにアクション選択 |
 
 ---
