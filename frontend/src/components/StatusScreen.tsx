@@ -5,6 +5,7 @@ import { EXP_TO_LEVEL } from '../data/evolutions'
 import { canEvolve, getEvolutionProgress } from '../utils/evolution'
 import { exportSave, importSave } from '../utils/storage'
 import type { SaveData } from '../utils/storage'
+import { TypeIcon } from './TypeIcon'
 
 interface StatusScreenProps {
   creature: Creature
@@ -103,7 +104,7 @@ export default function StatusScreen({ creature, allCreatures, activeCreatureId,
               {creature.evolutionName}
             </div>
             <div className="font-pixel mt-0.5" style={{ fontSize: '0.55rem', color: '#64748b' }}>
-              {STAGE_NAMES[creature.evolutionStage]} | {creature.type}
+              {STAGE_NAMES[creature.evolutionStage]} | <TypeIcon type={creature.type} size={10} /> {creature.type}
             </div>
           </div>
         </div>
