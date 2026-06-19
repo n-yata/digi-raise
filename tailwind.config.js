@@ -18,7 +18,7 @@ export default {
     },
     extend: {
       fontFamily: {
-        pixel: ['"Press Start 2P"', 'monospace'],
+        pixel: ['"DotGothic16"', 'monospace'],
       },
       colors: {
         'game-bg': '#1a1a2e',
