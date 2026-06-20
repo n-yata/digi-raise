@@ -3,14 +3,18 @@ import type { Creature } from '../types/creature'
 import { BRANCH_COLORS, BRANCH_NAMES, STAGE_NAMES, getCreatureBranch } from '../data/evolutions'
 import { EXP_TO_LEVEL } from '../data/evolutions'
 import { getAnimationState } from '../utils/gameLogic'
+import type { ActionAnim } from '../utils/gameLogic'
 import CreatureSprite from './CreatureSprite'
 import StatusBars from './StatusBars'
 import ActionButtons from './ActionButtons'
+import TrainingMiniGame from './TrainingMiniGame'
 
 interface MainGameProps {
   creature: Creature
   devMode: boolean
-  attackAnimation: boolean
+  actionAnimation: ActionAnim | null
+  trainingActive: boolean
+  onTrainResult: (success: boolean) => void
   message: string | null
   pendingEvolution: boolean
   hatching: boolean
@@ -27,7 +31,9 @@ interface MainGameProps {
 export default function MainGame({
   creature,
   devMode,
-  attackAnimation,
+  actionAnimation,
+  trainingActive,
+  onTrainResult,
   message,
   pendingEvolution,
   hatching,
@@ -42,7 +48,7 @@ export default function MainGame({
 }: MainGameProps) {
   const branch = getCreatureBranch(creature.creatureId)
   const color = BRANCH_COLORS[branch]
-  const animState = getAnimationState(creature, attackAnimation)
+  const animState = getAnimationState(creature, actionAnimation)
   const bgClass = `branch-bg-${branch}`
   const expNeeded = EXP_TO_LEVEL(creature.level)
   const expPct = Math.min(100, (creature.exp / expNeeded) * 100)
@@ -52,7 +58,8 @@ export default function MainGame({
 
   // 徘徊behavior: 卵(stage0)は歩かず静止。生後は「歩く(動)」と「立ち止まる(静)」を交互に繰り返す。
   const isEgg = creature.evolutionStage === 0
-  const ambient = !isEgg && (animState === 'idle' || animState === 'happy')
+  // アクション演出中（ごはん/遊び）・トレ連打中はその場でアニメを見せるため徘徊を止める
+  const ambient = !isEgg && !actionAnimation && !trainingActive && (animState === 'idle' || animState === 'happy')
 
   const [walkX, setWalkX] = useState(0)
   const [facing, setFacing] = useState<1 | -1>(1)
@@ -104,14 +111,16 @@ export default function MainGame({
     return () => { clearTimeout(phaseTimer); clearInterval(mover) }
   }, [ambient])
 
-  // スプライト状態: 卵=静止 / 徘徊中=歩行(動)or休憩(静) / それ以外=感情そのまま
+  // スプライト状態: 卵=静止 / トレ連打中=attack / 徘徊中=歩行(動)or休憩(静) / それ以外=感情そのまま
   const spriteAnim: typeof animState | 'walking' = isEgg
     ? 'idle'
-    : !ambient
-      ? animState
-      : phase === 'walk'
-        ? 'walking'
-        : animState === 'happy' ? 'happy' : 'idle'
+    : trainingActive
+      ? 'attack'
+      : !ambient
+        ? animState
+        : phase === 'walk'
+          ? 'walking'
+          : animState === 'happy' ? 'happy' : 'idle'
 
   return (
     <div
@@ -212,6 +221,11 @@ export default function MainGame({
             />
           </div>
         </div>
+
+        {/* トレーニング連打ミニゲーム（クリーチャー表示エリア内オーバーレイ） */}
+        {trainingActive && (
+          <TrainingMiniGame color={color} onResult={onTrainResult} />
+        )}
 
         {/* 卵のふ化フラッシュ（殻が割れてクリーチャーが現れる閃光） */}
         {hatching && (

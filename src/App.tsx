@@ -18,7 +18,10 @@ import ZukanScreen from './components/ZukanScreen'
 import BattleLobbyScreen from './components/BattleLobbyScreen'
 import BattleScreen from './components/BattleScreen'
 import { feedCreature, trainCreature, playWithCreature, toggleSleep } from './utils/gameLogic'
+import type { ActionAnim } from './utils/gameLogic'
 
+/** ごはん/遊びのアクション演出（eating/happy）を再生する時間（ms）。 */
+const ACTION_ANIM_MS = 1200
 /** 卵をメイン画面に見せてから、ふ化演出を始めるまでの待ち時間（ms）。 */
 const EGG_HATCH_DELAY_MS = 3000
 /** ふ化演出（殻が割れる振動＋閃光）の長さ（ms）。これを過ぎたらクリーチャーへ切り替える。 */
@@ -29,7 +32,8 @@ export default function App() {
   const [creatures, setCreatures] = useState<Creature[]>([])
   const [activeCreatureId, setActiveCreatureId] = useState<string | null>(null)
   const [devMode, setDevMode] = useState(false)
-  const [attackAnimation, setAttackAnimation] = useState(false)
+  const [actionAnimation, setActionAnimation] = useState<ActionAnim | null>(null)
+  const [showTrainingGame, setShowTrainingGame] = useState(false)
   const [pendingEvolution, setPendingEvolution] = useState(false)
   const [hatching, setHatching] = useState(false)
   const [evolvedFrom, setEvolvedFrom] = useState<EvolutionStage | null>(null)
@@ -47,6 +51,7 @@ export default function App() {
   const creatureRef = useRef<Creature | null>(null)
   const devModeRef = useRef(devMode)
   const activeCreatureIdRef = useRef<string | null>(null)
+  const actionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const discoveredRef = useRef<Set<CreatureId>>(new Set())
 
   // Derive active creature
@@ -75,6 +80,20 @@ export default function App() {
     setMessage(msg)
     setTimeout(() => setMessage(null), 2500)
   }, [])
+
+  // メイン画面で一時的にアクション演出（eating/happy/attack）を再生し、一定時間後に自動解除する。
+  // 連打されても前のタイマーを破棄して多重発火を防ぐ。
+  const triggerAction = useCallback((kind: ActionAnim) => {
+    if (actionTimerRef.current) clearTimeout(actionTimerRef.current)
+    setActionAnimation(kind)
+    actionTimerRef.current = setTimeout(() => {
+      setActionAnimation(null)
+      actionTimerRef.current = null
+    }, ACTION_ANIM_MS)
+  }, [])
+
+  // unmount 時にアクションタイマーを確実に解除（リーク防止）
+  useEffect(() => () => { if (actionTimerRef.current) clearTimeout(actionTimerRef.current) }, [])
 
   const persistActiveCreature = useCallback((updated: Creature) => {
     setCreatures(prev => {
@@ -227,7 +246,7 @@ export default function App() {
     setPendingEvolution(false)
   }, [])
 
-  // ごはん: メイン画面のまま即時に満腹度を回復（満腹なら不可）
+  // ごはん: メイン画面のまま即時に満腹度を回復（満腹なら不可）。食べる動作を演出。
   const handleFeed = useCallback(() => {
     const c = creatureRef.current
     if (!c) return
@@ -237,28 +256,36 @@ export default function App() {
     }
     const updated = feedCreature(c)
     persistActiveCreature(updated)
+    triggerAction('eating')
     showMessage('もぐもぐ！ご飯を食べた！')
-  }, [persistActiveCreature, showMessage])
+  }, [persistActiveCreature, showMessage, triggerAction])
 
-  // トレーニング: メイン画面のまま1タップで完了（常に成功扱い）
+  // トレーニング: ミニゲーム（2分の1の成否）を開く（就寝中は不可）
   const handleTrain = useCallback(() => {
     const c = creatureRef.current
     if (!c || c.isSleeping) return
-    const updated = trainCreature(c, true)
-    persistActiveCreature(updated)
-    setAttackAnimation(true)
-    showMessage('トレーニング成功！大きく強くなった！')
-    setTimeout(() => setAttackAnimation(false), 1200)
+    setShowTrainingGame(true)
+  }, [])
+
+  // トレーニングミニゲームの結果を適用（成否で成長量が変わる）
+  const handleTrainResult = useCallback((success: boolean) => {
+    const c = creatureRef.current
+    if (c) {
+      persistActiveCreature(trainCreature(c, success))
+      showMessage(success ? 'トレーニング成功！大きく強くなった！' : 'トレーニング失敗…でも経験になった')
+    }
+    setShowTrainingGame(false)
   }, [persistActiveCreature, showMessage])
 
-  // 遊び: メイン画面のまま即時に幸福度を回復（常に成功扱い）
+  // 遊び: メイン画面のまま即時に幸福度を回復（常に成功扱い）。喜ぶ動作を演出。
   const handlePlay = useCallback(() => {
     const c = creatureRef.current
     if (!c || c.isSleeping) return
     const updated = playWithCreature(c, true)
     persistActiveCreature(updated)
+    triggerAction('happy')
     showMessage('一緒に遊んだ！楽しかった！')
-  }, [persistActiveCreature, showMessage])
+  }, [persistActiveCreature, showMessage, triggerAction])
 
   const handleSleep = useCallback(() => {
     if (!creatureRef.current) return
@@ -442,7 +469,9 @@ export default function App() {
         <MainGame
           creature={activeCreature}
           devMode={devMode}
-          attackAnimation={attackAnimation}
+          actionAnimation={actionAnimation}
+          trainingActive={showTrainingGame}
+          onTrainResult={handleTrainResult}
           message={message}
           pendingEvolution={pendingEvolution}
           hatching={hatching}
