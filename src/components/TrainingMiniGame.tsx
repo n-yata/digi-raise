@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
+import { ItemSprite } from './items/ItemSprite'
+import { SANDBAG_SPRITES } from './items/sandbagSprites'
 
 interface Props {
   /** ブランチ色（UI装飾用） */
@@ -23,53 +25,29 @@ function damageStage(taps: number): 0 | 1 | 2 {
   return 0
 }
 
-/** 破壊段階ごとのサンドバッグSVG。座標系は 0 0 64 96。 */
-function Sandbag({ stage, color }: { stage: 0 | 1 | 2; color: string }) {
+/**
+ * 破壊段階ごとのサンドバッグをドット絵で描画する。
+ * クリーチャー本体・遊び道具と同じ ItemSprite（文字グリッド + パレット）方式で統一。
+ * 大破時のみ衝撃で少し傾ける。SVG は親要素いっぱいに伸縮させる。
+ */
+function Sandbag({ stage }: { stage: 0 | 1 | 2 }) {
   const tilt = stage === 2 ? -8 : 0
   return (
-    <svg
-      viewBox="0 0 64 96"
-      width="100%"
-      height="100%"
-      style={{ transform: `rotate(${tilt}deg)`, transformOrigin: '32px 8px', transition: 'transform 120ms ease-out' }}
-      shapeRendering="crispEdges"
+    <div
+      style={{
+        width: '100%',
+        height: '100%',
+        transform: `rotate(${tilt}deg)`,
+        transformOrigin: 'top center',
+        transition: 'transform 120ms ease-out',
+        // ItemSprite は size 指定だが、ここでは親いっぱいに伸ばしたいので SVG を上書き。
+        display: 'grid',
+        placeItems: 'center',
+      }}
+      className="[&>svg]:h-full [&>svg]:w-auto"
     >
-      {/* 吊り下げ用のチェーン/ストラップ */}
-      <rect x="30" y="0" width="4" height="14" fill="#9ca3af" />
-      <rect x="26" y="12" width="12" height="6" fill="#6b7280" />
-      {/* 本体 */}
-      <rect x="18" y="16" width="28" height="64" rx="12" fill="#b45309" stroke="#78350f" strokeWidth="2" />
-      {/* 上下のベルト */}
-      <rect x="18" y="26" width="28" height="5" fill="#78350f" />
-      <rect x="18" y="66" width="28" height="5" fill="#78350f" />
-      {/* ハイライト */}
-      <rect x="23" y="34" width="5" height="28" rx="2" fill="#f59e0b" opacity="0.7" />
-
-      {/* ヒビ（stage>=1） */}
-      {stage >= 1 && (
-        <g stroke="#1c1917" strokeWidth="1.5" fill="none" strokeLinejoin="round">
-          <polyline points="40,32 35,40 39,46 34,54" />
-          <polyline points="35,40 30,42" />
-          <polyline points="28,60 33,66 29,72" />
-        </g>
-      )}
-
-      {/* 大破（stage>=2）: 裂け目と飛び出す詰め物 */}
-      {stage >= 2 && (
-        <>
-          <polygon points="32,44 44,50 40,60 30,58" fill="#1c1917" />
-          <circle cx="42" cy="48" r="3" fill="#fef3c7" />
-          <circle cx="46" cy="54" r="2.5" fill="#fde68a" />
-          <circle cx="40" cy="62" r="2.5" fill="#fef3c7" />
-          {/* インパクトの星 */}
-          <g stroke={color} strokeWidth="2" strokeLinecap="round">
-            <line x1="50" y1="38" x2="56" y2="34" />
-            <line x1="52" y1="44" x2="59" y2="44" />
-            <line x1="50" y1="50" x2="56" y2="54" />
-          </g>
-        </>
-      )}
-    </svg>
+      <ItemSprite data={SANDBAG_SPRITES[stage]} size={0} />
+    </div>
   )
 }
 
@@ -144,7 +122,7 @@ export default function TrainingMiniGame({ color, onResult }: Props) {
           transition: 'transform 60ms ease-out',
         }}
       >
-        <Sandbag stage={stage} color={color} />
+        <Sandbag stage={stage} />
       </div>
 
       {/* 下部: 残り時間バー */}
