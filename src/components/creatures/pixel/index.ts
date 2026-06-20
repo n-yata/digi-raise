@@ -39,6 +39,7 @@ import { lightUltimatePixel } from './lightUltimate'
 
 export type { PixelSpriteData }
 export { PixelSprite } from './PixelSprite'
+export { getEggPixel } from './egg'
 
 /**
  * タイプ × ステージ → ドット絵データの対応表（6タイプ × 5ステージ = 30体）。

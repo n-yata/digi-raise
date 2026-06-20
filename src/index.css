@@ -169,6 +169,46 @@
   animation: shake 0.4s ease-in-out;
 }
 
+/* 卵: ふ化前のゆらゆら（底を支点に左右へロッキング） */
+@keyframes eggWobble {
+  0%, 100% { transform: rotate(-5deg); }
+  50% { transform: rotate(5deg); }
+}
+
+.egg-wobble {
+  transform-origin: 50% 88%;
+  animation: eggWobble 1.4s ease-in-out infinite;
+}
+
+/* 卵: ふ化の瞬間（激しく振動 → 最後に弾けて殻が割れる） */
+@keyframes eggHatch {
+  0%   { transform: translateX(0) rotate(0deg); }
+  12%  { transform: translateX(-3px) rotate(-8deg); }
+  26%  { transform: translateX(3px) rotate(8deg); }
+  40%  { transform: translateX(-3px) rotate(-8deg); }
+  54%  { transform: translateX(3px) rotate(7deg); }
+  68%  { transform: translateX(-2px) rotate(-5deg); }
+  82%  { transform: translateX(0) scale(1.2); }
+  100% { transform: translateX(0) scale(1); }
+}
+
+.egg-hatch {
+  transform-origin: 50% 88%;
+  animation: eggHatch 0.7s ease-in-out;
+}
+
+/* 卵: ふ化フラッシュ（殻が割れてクリーチャーが現れる瞬間の閃光） */
+@keyframes eggHatchFlash {
+  0%   { opacity: 0; }
+  55%  { opacity: 0; }
+  76%  { opacity: 0.95; }
+  100% { opacity: 0; }
+}
+
+.egg-hatch-flash {
+  animation: eggHatchFlash 0.7s ease-out forwards;
+}
+
 /* Sparkle float */
 @keyframes sparkleFloat {
   0% { opacity: 0; transform: translateY(0) scale(0); }

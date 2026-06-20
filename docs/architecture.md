@@ -42,7 +42,7 @@
 
 ```
 CreatureSprite
-  ├── stage === 0 → EggBody（卵 CSS描画）
+  ├── stage === 0 → PixelSprite（卵 32×32 ドット絵 / getEggPixel(type)）
   └── stage 1-5  → DefaultCreatureBody
                       ├── SPRITE_DISPATCH[type][stage] が定義済み → 各タイプスプライト（FireSprites 等）
                       └── 未定義 → FallbackSilhouette（タイプカラーの楕円 + 表情パーツ）

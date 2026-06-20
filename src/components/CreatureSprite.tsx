@@ -1,11 +1,9 @@
 import type { ReactNode } from 'react'
 import type { CreatureType, EvolutionStage } from '../types/creature'
-import { TYPE_COLORS } from '../data/evolutions'
 import { STAGE_SIZES } from '../data/spriteConfig'
-import { EggBody } from './creatures/EggBody'
 import { DefaultCreatureBody } from './creatures/DefaultCreatureBody'
 import type { AnimState } from './creatures/DefaultCreatureBody'
-import { PixelSprite, getPixelSprite } from './creatures/pixel'
+import { PixelSprite, getPixelSprite, getEggPixel } from './creatures/pixel'
 
 interface CreatureSpriteProps {
   type: CreatureType
@@ -32,7 +30,6 @@ function getAnimClass(animState: AnimState): string {
 }
 
 export default function CreatureSprite({ type, stage, animState, customSvg }: CreatureSpriteProps) {
-  const color = TYPE_COLORS[type]
   const size = STAGE_SIZES[stage]
   const shadowWidth = [40, 55, 70, 85, 100, 115][stage]
 
@@ -40,7 +37,7 @@ export default function CreatureSprite({ type, stage, animState, customSvg }: Cr
 
   const body = customSvg ?? (
     stage === 0
-      ? <EggBody color={color} size={size} />
+      ? <PixelSprite data={getEggPixel(type)} size={size} />
       : pixelData
         ? <PixelSprite data={pixelData} size={size} />
         : <DefaultCreatureBody type={type} stage={stage} animState={animState} />
