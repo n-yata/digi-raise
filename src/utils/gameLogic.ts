@@ -21,6 +21,7 @@ export function createNewCreature(name: string): Creature {
     age: 0,
     weight: 10,
     isSleeping: false,
+    lightsOn: true,
     isAlive: true,
     lastUpdated: now,
     evolutionName: CREATURE_TREE['egg'].name,
@@ -95,11 +96,26 @@ export function playWithCreature(creature: Creature, success: boolean = true): C
   }
 }
 
-export function toggleSleep(creature: Creature): Creature {
+/** 部屋の照明が ON か。未指定（既存セーブ）は ON 扱い。 */
+export function isLightsOn(creature: Creature): boolean {
+  return creature.lightsOn ?? true
+}
+
+/**
+ * 実時刻が「夜」（自動睡眠の時間帯）かを判定する。
+ * 夜は 22:00〜翌 6:00。引数を省略すると現在時刻で判定する。
+ */
+export function isNightTime(date: Date = new Date()): boolean {
+  const hour = date.getHours()
+  return hour >= 22 || hour < 6
+}
+
+/** 部屋の照明 ON/OFF を切り替える。 */
+export function toggleLights(creature: Creature): Creature {
   if (!creature.isAlive) return creature
   return {
     ...creature,
-    isSleeping: !creature.isSleeping,
+    lightsOn: !isLightsOn(creature),
     lastUpdated: Date.now(),
   }
 }
@@ -108,23 +124,37 @@ export function applyTimeUpdate(creature: Creature, devMode: boolean): Creature 
   if (!creature.isAlive) return creature
 
   const now = Date.now()
+  const night = isNightTime(new Date(now))
+  const lightsOn = isLightsOn(creature)
+
   const elapsed = now - creature.lastUpdated
   const thirtyMinutes = devMode ? 1000 * 30 : 1000 * 60 * 30
 
   const thirtyMinTicks = Math.floor(elapsed / thirtyMinutes)
 
-  if (thirtyMinTicks === 0) return creature
+  // 経過ティックが無くても睡眠状態だけは実時刻へ同期する
+  if (thirtyMinTicks === 0) {
+    return creature.isSleeping === night ? creature : { ...creature, isSleeping: night }
+  }
 
-  let updated = { ...creature }
+  let updated = { ...creature, isSleeping: night }
 
   // Apply 30-min ticks
   updated.hunger = Math.max(0, updated.hunger - thirtyMinTicks * 5)
-  updated.happiness = Math.max(0, updated.happiness - thirtyMinTicks * 2)
+
+  // 通常の幸福度減少 + 照明ミスマッチの追加ペナルティ。
+  //  - 夜（睡眠中）に電気 ON のまま: 眩しくて眠れない
+  //  - 日中（起床中）に電気 OFF のまま: 暗くて不快
+  const lightMismatch = night ? lightsOn : !lightsOn
+  const happinessLoss = thirtyMinTicks * (lightMismatch ? 5 : 2)
+  updated.happiness = Math.max(0, updated.happiness - happinessLoss)
 
   // Apply hourly effects: 2 thirty-min ticks = 1 game-hour
   // age はティック数 × 0.5 ずつ増える（float。表示は Math.floor）
   updated.age = updated.age + thirtyMinTicks * 0.5
-  if (updated.isSleeping) {
+
+  // HP回復は「夜 ＋ 電気OFF」で快適に眠れているときのみ
+  if (night && !lightsOn) {
     // 30分ティックごとに最大HPの10%を回復
     const hpPerTick = Math.ceil(updated.maxHp * 0.1)
     updated.hp = Math.min(updated.maxHp, updated.hp + thirtyMinTicks * hpPerTick)

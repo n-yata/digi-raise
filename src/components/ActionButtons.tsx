@@ -6,7 +6,7 @@ interface ActionButtonsProps {
   onFeed: () => void
   onTrain: () => void
   onPlay: () => void
-  onSleep: () => void
+  onToggleLights: () => void
   onEvolve: () => void
   onStatus: () => void
   onBattle: () => void
@@ -54,12 +54,13 @@ export default function ActionButtons({
   onFeed,
   onTrain,
   onPlay,
-  onSleep,
+  onToggleLights,
   onEvolve,
   onStatus,
   onBattle,
 }: ActionButtonsProps) {
   const sleeping = creature.isSleeping
+  const lightsOn = creature.lightsOn ?? true
   const canEvolveNow = canEvolve(creature)
   const isEgg = creature.evolutionStage === 0
 
@@ -111,8 +112,8 @@ export default function ActionButtons({
           accent="#a78bfa"
         />
         <ActionBtn
-          label={sleeping ? '起こす' : '寝る'}
-          onClick={onSleep}
+          label={lightsOn ? '電気を消す' : '電気をつける'}
+          onClick={onToggleLights}
           accent="#60a5fa"
         />
       </div>

@@ -19,6 +19,7 @@ export function validateCreature(c: unknown): c is Creature {
 
   if (typeof obj.isAlive !== 'boolean') return false
   if (typeof obj.isSleeping !== 'boolean') return false
+  if (obj.lightsOn !== undefined && typeof obj.lightsOn !== 'boolean') return false
 
   const stage = obj.evolutionStage
   if (typeof stage !== 'number' || !Number.isInteger(stage) || stage < 0 || stage > 5) return false

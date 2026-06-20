@@ -5,7 +5,8 @@ import {
   feedCreature,
   trainCreature,
   playWithCreature,
-  toggleSleep,
+  toggleLights,
+  isNightTime,
   applyTimeUpdate,
   getAnimationState,
 } from './gameLogic'
@@ -66,10 +67,11 @@ describe('createNewCreature', () => {
     expect(creature.age).toBe(0)
   })
 
-  it('isAlive:true, isSleeping:falseで生成される', () => {
+  it('isAlive:true, isSleeping:false, lightsOn:trueで生成される', () => {
     const creature = createNewCreature('テスト')
     expect(creature.isAlive).toBe(true)
     expect(creature.isSleeping).toBe(false)
+    expect(creature.lightsOn).toBe(true)
   })
 
   it('evolutionStage:0, level:1, exp:0で生成される', () => {
@@ -350,25 +352,46 @@ describe('playWithCreature', () => {
 })
 
 // ----------------------------------------------------------------
-// 5. toggleSleep
+// 5. toggleLights / isNightTime
 // ----------------------------------------------------------------
-describe('toggleSleep', () => {
-  it('isSleeping:false のとき true に切り替わる', () => {
-    const creature = makeCreature({ isSleeping: false })
-    const result = toggleSleep(creature)
-    expect(result.isSleeping).toBe(true)
+describe('toggleLights', () => {
+  it('lightsOn:true のとき false に切り替わる', () => {
+    const creature = makeCreature({ lightsOn: true })
+    const result = toggleLights(creature)
+    expect(result.lightsOn).toBe(false)
   })
 
-  it('isSleeping:true のとき false に切り替わる', () => {
-    const creature = makeCreature({ isSleeping: true })
-    const result = toggleSleep(creature)
-    expect(result.isSleeping).toBe(false)
+  it('lightsOn:false のとき true に切り替わる', () => {
+    const creature = makeCreature({ lightsOn: false })
+    const result = toggleLights(creature)
+    expect(result.lightsOn).toBe(true)
   })
 
-  it('isAlive:false のときそのまま返す (isSleeping は変化しない)', () => {
-    const creature = makeCreature({ isAlive: false, isSleeping: false })
-    const result = toggleSleep(creature)
-    expect(result.isSleeping).toBe(false)
+  it('lightsOn 未指定（既存セーブ）は ON 扱いで false に切り替わる', () => {
+    const creature = makeCreature({ lightsOn: undefined })
+    const result = toggleLights(creature)
+    expect(result.lightsOn).toBe(false)
+  })
+
+  it('isAlive:false のときそのまま返す (lightsOn は変化しない)', () => {
+    const creature = makeCreature({ isAlive: false, lightsOn: true })
+    const result = toggleLights(creature)
+    expect(result.lightsOn).toBe(true)
+  })
+})
+
+describe('isNightTime', () => {
+  it('22:00〜翌6:00未満を夜と判定する', () => {
+    expect(isNightTime(new Date(2026, 5, 21, 22, 0, 0))).toBe(true)  // 22:00
+    expect(isNightTime(new Date(2026, 5, 21, 23, 30, 0))).toBe(true) // 23:30
+    expect(isNightTime(new Date(2026, 5, 21, 0, 0, 0))).toBe(true)   // 0:00
+    expect(isNightTime(new Date(2026, 5, 21, 5, 59, 0))).toBe(true)  // 5:59
+  })
+
+  it('6:00〜22:00未満を昼と判定する', () => {
+    expect(isNightTime(new Date(2026, 5, 21, 6, 0, 0))).toBe(false)  // 6:00
+    expect(isNightTime(new Date(2026, 5, 21, 12, 0, 0))).toBe(false) // 12:00
+    expect(isNightTime(new Date(2026, 5, 21, 21, 59, 0))).toBe(false)// 21:59
   })
 })
 
@@ -376,60 +399,95 @@ describe('toggleSleep', () => {
 // 6. applyTimeUpdate
 // ----------------------------------------------------------------
 describe('applyTimeUpdate', () => {
-  const BASE_TIME = 1000000000000 // 固定ベースタイム
+  // ローカル時刻で昼(12:00)/夜(23:00)を固定。TZ非依存で getHours() が安定する。
+  const DAY_TIME = new Date(2026, 5, 21, 12, 0, 0).getTime()   // 昼 12:00
+  const NIGHT_TIME = new Date(2026, 5, 21, 23, 0, 0).getTime() // 夜 23:00
 
   afterEach(() => {
     vi.restoreAllMocks()
   })
 
-  it('経過時間が 30 分未満(ticks=0)のときそのまま返す', () => {
-    const creature = makeCreature({ lastUpdated: BASE_TIME, hunger: 60, happiness: 60 })
-    vi.spyOn(Date, 'now').mockReturnValue(BASE_TIME + 1000 * 60 * 29) // 29分後
+  it('経過時間が 30 分未満(ticks=0)のときステータスは変わらない', () => {
+    const creature = makeCreature({ lastUpdated: DAY_TIME, hunger: 60, happiness: 60, lightsOn: true })
+    vi.spyOn(Date, 'now').mockReturnValue(DAY_TIME + 1000 * 60 * 29) // 29分後
     const result = applyTimeUpdate(creature, false)
     expect(result.hunger).toBe(60)
     expect(result.happiness).toBe(60)
     expect(result.age).toBe(2)
   })
 
-  it('30 分経過(ticks=1)で hunger-5, happiness-2, age+0.5', () => {
-    const creature = makeCreature({ lastUpdated: BASE_TIME, hunger: 60, happiness: 60, age: 2 })
-    vi.spyOn(Date, 'now').mockReturnValue(BASE_TIME + 1000 * 60 * 30) // 30分後
+  it('ticks=0 でも睡眠状態は実時刻に同期する（夜なら isSleeping:true）', () => {
+    const creature = makeCreature({ lastUpdated: NIGHT_TIME, isSleeping: false })
+    vi.spyOn(Date, 'now').mockReturnValue(NIGHT_TIME + 1000 * 60 * 10) // 10分後・夜
     const result = applyTimeUpdate(creature, false)
+    expect(result.isSleeping).toBe(true)
+  })
+
+  it('昼は isSleeping:false に同期し、電気ONなら happiness は -2/tick のみ', () => {
+    const creature = makeCreature({ lastUpdated: DAY_TIME, hunger: 60, happiness: 60, age: 2, isSleeping: true, lightsOn: true })
+    vi.spyOn(Date, 'now').mockReturnValue(DAY_TIME + 1000 * 60 * 30) // 1 tick・昼
+    const result = applyTimeUpdate(creature, false)
+    expect(result.isSleeping).toBe(false)
     expect(result.hunger).toBe(55)
     expect(result.happiness).toBe(58)
     expect(result.age).toBe(2.5)
   })
 
-  it('60 分経過(ticks=2)で hunger-10, happiness-4, age+1.0', () => {
-    const creature = makeCreature({ lastUpdated: BASE_TIME, hunger: 60, happiness: 60, age: 2 })
-    vi.spyOn(Date, 'now').mockReturnValue(BASE_TIME + 1000 * 60 * 60) // 60分後
+  it('夜は isSleeping:true に同期し、電気OFFなら happiness は -2/tick のみ', () => {
+    const creature = makeCreature({ lastUpdated: NIGHT_TIME, happiness: 60, isSleeping: false, lightsOn: false })
+    vi.spyOn(Date, 'now').mockReturnValue(NIGHT_TIME + 1000 * 60 * 60) // 2 ticks・夜
     const result = applyTimeUpdate(creature, false)
-    expect(result.hunger).toBe(50)
-    expect(result.happiness).toBe(56)
-    expect(result.age).toBe(3)
+    expect(result.isSleeping).toBe(true)
+    expect(result.happiness).toBe(56) // 60 - 2*2
   })
 
-  it('睡眠中(isSleeping:true)のとき hp が ticks×ceil(maxHp*0.1) 回復する', () => {
+  it('夜に電気ONのままだと happiness が追加で下がる(-5/tick)', () => {
+    const creature = makeCreature({ lastUpdated: NIGHT_TIME, happiness: 60, lightsOn: true })
+    vi.spyOn(Date, 'now').mockReturnValue(NIGHT_TIME + 1000 * 60 * 30) // 1 tick・夜
+    const result = applyTimeUpdate(creature, false)
+    expect(result.happiness).toBe(55) // 60 - 5
+  })
+
+  it('日中に電気OFFのままだと happiness が追加で下がる(-5/tick)', () => {
+    const creature = makeCreature({ lastUpdated: DAY_TIME, happiness: 60, lightsOn: false })
+    vi.spyOn(Date, 'now').mockReturnValue(DAY_TIME + 1000 * 60 * 30) // 1 tick・昼
+    const result = applyTimeUpdate(creature, false)
+    expect(result.happiness).toBe(55) // 60 - 5
+  })
+
+  it('夜＋電気OFFのとき hp が ticks×ceil(maxHp*0.1) 回復する', () => {
     const creature = makeCreature({
-      lastUpdated: BASE_TIME,
-      isSleeping: true,
+      lastUpdated: NIGHT_TIME,
+      lightsOn: false,
       hp: 100,
       maxHp: 150,
     })
-    vi.spyOn(Date, 'now').mockReturnValue(BASE_TIME + 1000 * 60 * 30) // 1 tick
+    vi.spyOn(Date, 'now').mockReturnValue(NIGHT_TIME + 1000 * 60 * 30) // 1 tick・夜
     const result = applyTimeUpdate(creature, false)
     // ceil(150 * 0.1) = 15, 100 + 15 = 115
     expect(result.hp).toBe(115)
   })
 
-  it('睡眠中の hp 回復は maxHp を超えない', () => {
+  it('夜でも電気ONのときは hp が回復しない', () => {
     const creature = makeCreature({
-      lastUpdated: BASE_TIME,
-      isSleeping: true,
+      lastUpdated: NIGHT_TIME,
+      lightsOn: true,
+      hp: 100,
+      maxHp: 150,
+    })
+    vi.spyOn(Date, 'now').mockReturnValue(NIGHT_TIME + 1000 * 60 * 30) // 1 tick・夜
+    const result = applyTimeUpdate(creature, false)
+    expect(result.hp).toBe(100)
+  })
+
+  it('夜＋電気OFFの hp 回復は maxHp を超えない', () => {
+    const creature = makeCreature({
+      lastUpdated: NIGHT_TIME,
+      lightsOn: false,
       hp: 38,
       maxHp: 40,
     })
-    vi.spyOn(Date, 'now').mockReturnValue(BASE_TIME + 1000 * 60 * 60) // 2 ticks
+    vi.spyOn(Date, 'now').mockReturnValue(NIGHT_TIME + 1000 * 60 * 60) // 2 ticks
     const result = applyTimeUpdate(creature, false)
     // ceil(40 * 0.1) = 4, 38 + 4*2 = 46 → capped at 40
     expect(result.hp).toBe(40)
@@ -437,13 +495,13 @@ describe('applyTimeUpdate', () => {
 
   it('hunger が 0 になったとき飢餓ダメージで hp が ticks×5 減少する', () => {
     const creature = makeCreature({
-      lastUpdated: BASE_TIME,
+      lastUpdated: DAY_TIME,
       hunger: 5,
       hp: 40,
       maxHp: 40,
     })
     // 2 ticks: hunger=5-10=-5 → clamp→0, hp=40-10=30
-    vi.spyOn(Date, 'now').mockReturnValue(BASE_TIME + 1000 * 60 * 60)
+    vi.spyOn(Date, 'now').mockReturnValue(DAY_TIME + 1000 * 60 * 60)
     const result = applyTimeUpdate(creature, false)
     expect(result.hunger).toBe(0)
     expect(result.hp).toBe(30)
@@ -451,29 +509,29 @@ describe('applyTimeUpdate', () => {
 
   it('hp が 0 以下になったとき isAlive:false かつ hp:0 になる', () => {
     const creature = makeCreature({
-      lastUpdated: BASE_TIME,
+      lastUpdated: DAY_TIME,
       hunger: 0,
       hp: 5,
       maxHp: 40,
     })
     // 2 ticks: hunger=0-10 → clamp→0(既に飢餓), hp=5-10=-5 → isAlive=false
-    vi.spyOn(Date, 'now').mockReturnValue(BASE_TIME + 1000 * 60 * 60)
+    vi.spyOn(Date, 'now').mockReturnValue(DAY_TIME + 1000 * 60 * 60)
     const result = applyTimeUpdate(creature, false)
     expect(result.isAlive).toBe(false)
     expect(result.hp).toBe(0)
   })
 
   it('devMode:true のとき 30 秒が 1 tick になる', () => {
-    const creature = makeCreature({ lastUpdated: BASE_TIME, hunger: 60, happiness: 60, age: 0 })
-    vi.spyOn(Date, 'now').mockReturnValue(BASE_TIME + 1000 * 30) // 30秒後
+    const creature = makeCreature({ lastUpdated: DAY_TIME, hunger: 60, happiness: 60, age: 0, lightsOn: true })
+    vi.spyOn(Date, 'now').mockReturnValue(DAY_TIME + 1000 * 30) // 30秒後・昼
     const result = applyTimeUpdate(creature, true)
     expect(result.hunger).toBe(55) // 1 tick
     expect(result.age).toBe(0.5)
   })
 
   it('isAlive:false のときそのまま返す', () => {
-    const creature = makeCreature({ isAlive: false, lastUpdated: BASE_TIME, hunger: 60 })
-    vi.spyOn(Date, 'now').mockReturnValue(BASE_TIME + 1000 * 60 * 60)
+    const creature = makeCreature({ isAlive: false, lastUpdated: DAY_TIME, hunger: 60 })
+    vi.spyOn(Date, 'now').mockReturnValue(DAY_TIME + 1000 * 60 * 60)
     const result = applyTimeUpdate(creature, false)
     expect(result.hunger).toBe(60)
     expect(result.isAlive).toBe(false)

@@ -27,7 +27,7 @@ interface MainGameProps {
   onFeed: () => void
   onTrain: () => void
   onPlay: () => void
-  onSleep: () => void
+  onToggleLights: () => void
   onEvolve: () => void
   onStatus: () => void
   onToggleDevMode: () => void
@@ -48,7 +48,7 @@ export default function MainGame({
   onFeed,
   onTrain,
   onPlay,
-  onSleep,
+  onToggleLights,
   onEvolve,
   onStatus,
   onToggleDevMode,
@@ -194,6 +194,13 @@ export default function MainGame({
             <span className="font-pixel px-2 py-0.5 rounded-full"
               style={{ fontSize: '0.5rem', background: '#60a5fa22', color: '#60a5fa', border: '1px solid #60a5fa44' }}>
               おやすみ中
+            </span>
+          )}
+          {/* 時刻と照明が噛み合わず幸福度が下がっている状態のヒント */}
+          {(creature.isSleeping ? (creature.lightsOn ?? true) : !(creature.lightsOn ?? true)) && (
+            <span className="font-pixel px-2 py-0.5 rounded-full"
+              style={{ fontSize: '0.5rem', background: '#f59e0b22', color: '#f59e0b', border: '1px solid #f59e0b44' }}>
+              {creature.isSleeping ? '電気つけっぱ💡' : '部屋が暗い🌑'}
             </span>
           )}
           {devMode && (
@@ -353,7 +360,7 @@ export default function MainGame({
           onFeed={onFeed}
           onTrain={onTrain}
           onPlay={onPlay}
-          onSleep={onSleep}
+          onToggleLights={onToggleLights}
           onEvolve={onEvolve}
           onStatus={onStatus}
           onBattle={onBattle}
