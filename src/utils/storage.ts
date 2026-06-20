@@ -11,12 +11,23 @@ export function validateCreature(c: unknown): c is Creature {
   if (typeof obj.creatureId !== 'string') return false
   if (!Object.prototype.hasOwnProperty.call(CREATURE_TREE, obj.creatureId)) return false
 
-  const numFields: (keyof Creature)[] = ['hp', 'maxHp', 'atk', 'def', 'spd', 'level', 'exp', 'hunger', 'happiness', 'age', 'weight']
+  const numFields: (keyof Creature)[] = [
+    'hp', 'maxHp', 'atk', 'def', 'spd', 'level', 'exp', 'hunger', 'happiness', 'age', 'weight',
+    // 競合解決（cloudSave.getLocalUpdatedAt）に直結する lastUpdated、および型上必須の集計フィールド
+    'lastUpdated', 'totalDeaths', 'trainCount', 'playCount', 'feedCount',
+  ]
   for (const field of numFields) {
     const val = obj[field]
     if (typeof val !== 'number' || !isFinite(val)) return false
   }
 
+  // 任意フィールドは存在する場合のみ数値検証する
+  const optionalNumFields: (keyof Creature)[] = ['wins', 'losses']
+  for (const field of optionalNumFields) {
+    if (obj[field] !== undefined && (typeof obj[field] !== 'number' || !isFinite(obj[field] as number))) return false
+  }
+
+  if (typeof obj.evolutionName !== 'string') return false
   if (typeof obj.isAlive !== 'boolean') return false
   if (typeof obj.isSleeping !== 'boolean') return false
   if (obj.lightsOn !== undefined && typeof obj.lightsOn !== 'boolean') return false
@@ -93,7 +104,14 @@ export async function loadSaveData(): Promise<SaveData | null> {
   try {
     const database = await getDB()
     const saveData = await database.get(STORE_NAME, SAVE_DATA_KEY)
-    return saveData ?? null
+    if (saveData == null) return null
+    // IndexedDB の生データを信用せず検証する。失敗時は破棄して null を返し、
+    // 呼び出し側で新規作成へフォールバックさせる（クラウド経路 pullFromCloud と同じ挙動）。
+    if (!validateSaveData(saveData)) {
+      console.error('Local save data failed validation, ignoring')
+      return null
+    }
+    return saveData
   } catch (err) {
     console.error('Failed to load save data:', err)
     return null
