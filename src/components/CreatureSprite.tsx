@@ -49,12 +49,6 @@ export default function CreatureSprite({ creatureId, stage, animState, customSvg
 
   return (
     <div className="relative flex flex-col items-center justify-center">
-      {animState === 'sleeping' && (
-        <div className="absolute -top-8 right-0 text-sm font-pixel animate-sleep-zzz select-none z-10" style={{ color: 'rgba(255,255,255,0.85)' }}>
-          Zzz
-        </div>
-      )}
-
       <div className={`creature-sprite transition-all duration-300 ${getAnimClass(animState)}`}>
         {body}
       </div>
