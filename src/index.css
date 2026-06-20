@@ -186,6 +186,16 @@
   z-index: 11;
 }
 
+/* 消灯時の暗転オーバーレイ。pointer-events:none で下のボタン操作は維持する */
+.room-dark-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 8, 0.72);
+  pointer-events: none;
+  z-index: 12;
+  transition: background 0.6s ease;
+}
+
 /* Evolution flash */
 @keyframes evolutionFlash {
   0%, 100% { background: transparent; }
