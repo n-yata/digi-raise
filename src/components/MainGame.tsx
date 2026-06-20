@@ -71,6 +71,7 @@ export default function MainGame({
     : ''
   const isActionPlaying = (actionAnimation === 'eating' || actionAnimation === 'happy') && !!itemData
   const bgClass = `branch-bg-${branch}`
+  const lightsOn = creature.lightsOn ?? true
   const expNeeded = EXP_TO_LEVEL(creature.level)
   const expPct = Math.min(100, (creature.exp / expNeeded) * 100)
 
@@ -148,6 +149,9 @@ export default function MainGame({
       className={`h-[100dvh] overflow-hidden flex flex-col ${bgClass} scanlines`}
       style={{ maxWidth: 420, margin: '0 auto' }}
     >
+      {/* 消灯時は部屋全体を暗くする（ボタン操作は pointer-events:none で維持） */}
+      {!lightsOn && <div className="room-dark-overlay" aria-hidden="true" />}
+
       {/* Header */}
       <div
         className="px-4 pt-3 pb-2 shrink-0"
@@ -353,8 +357,8 @@ export default function MainGame({
         </span>
       </div>
 
-      {/* Action buttons */}
-      <div className="mx-4 mt-2 mb-3 shrink-0">
+      {/* Action buttons（消灯時も暗幕より前面に出して明るく保つ） */}
+      <div className="mx-4 mt-2 mb-3 shrink-0 relative" style={{ zIndex: 13 }}>
         <ActionButtons
           creature={creature}
           onFeed={onFeed}
