@@ -2,9 +2,7 @@ import { openDB, type IDBPDatabase } from 'idb'
 import type { Creature } from '../types/creature'
 import { CREATURE_TREE } from '../data/evolutions'
 
-const MAX_FILE_SIZE = 1 * 1024 * 1024 // 1MB
-
-function validateCreature(c: unknown): c is Creature {
+export function validateCreature(c: unknown): c is Creature {
   if (typeof c !== 'object' || c === null) return false
   const obj = c as Record<string, unknown>
 
@@ -28,7 +26,7 @@ function validateCreature(c: unknown): c is Creature {
   return true
 }
 
-function validateSaveData(data: unknown): data is SaveData {
+export function validateSaveData(data: unknown): data is SaveData {
   if (typeof data !== 'object' || data === null) return false
   const obj = data as Record<string, unknown>
 
@@ -129,126 +127,3 @@ export async function migrateLegacyData(): Promise<void> {
   }
 }
 
-// File System Access API - Export save
-export async function exportSave(saveData: SaveData): Promise<void> {
-  const data = {
-    version: 2,
-    exportedAt: new Date().toISOString(),
-    saveData,
-  }
-  const json = JSON.stringify(data, null, 2)
-  const fileName = `digi-raise-save-${Date.now()}.json`
-
-  if ('showSaveFilePicker' in window) {
-    try {
-      const handle = await (window as Window & { showSaveFilePicker: (options: unknown) => Promise<FileSystemFileHandle> }).showSaveFilePicker({
-        suggestedName: fileName,
-        types: [
-          {
-            description: 'DigiRaise Save File',
-            accept: { 'application/json': ['.json'] },
-          },
-        ],
-      })
-      const writable = await handle.createWritable()
-      await writable.write(json)
-      await writable.close()
-      return
-    } catch (err) {
-      if ((err as { name: string }).name !== 'AbortError') {
-        console.error('File save error:', err)
-      }
-      return
-    }
-  }
-
-  // Fallback: download via anchor
-  const blob = new Blob([json], { type: 'application/json' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = fileName
-  document.body.appendChild(a)
-  a.click()
-  document.body.removeChild(a)
-  URL.revokeObjectURL(url)
-}
-
-// File System Access API - Import save
-export async function importSave(): Promise<SaveData | null> {
-  if ('showOpenFilePicker' in window) {
-    try {
-      const [handle] = await (window as Window & { showOpenFilePicker: (options: unknown) => Promise<FileSystemFileHandle[]> }).showOpenFilePicker({
-        types: [
-          {
-            description: 'DigiRaise Save File',
-            accept: { 'application/json': ['.json'] },
-          },
-        ],
-      })
-      const file = await handle.getFile()
-      if (file.size > MAX_FILE_SIZE) {
-        console.error('Save file exceeds 1MB limit')
-        return null
-      }
-      const text = await file.text()
-      return parseSaveFile(text)
-    } catch (err) {
-      if ((err as { name: string }).name !== 'AbortError') {
-        console.error('File open error:', err)
-      }
-      return null
-    }
-  }
-
-  // Fallback: file input
-  return new Promise((resolve) => {
-    const input = document.createElement('input')
-    input.type = 'file'
-    input.accept = '.json'
-    input.onchange = async () => {
-      const file = input.files?.[0]
-      if (!file) { resolve(null); return }
-      if (file.size > MAX_FILE_SIZE) {
-        console.error('Save file exceeds 1MB limit')
-        resolve(null)
-        return
-      }
-      const text = await file.text()
-      resolve(parseSaveFile(text))
-    }
-    input.click()
-  })
-}
-
-function parseSaveFile(text: string): SaveData | null {
-  try {
-    const parsed = JSON.parse(text)
-
-    // バージョンチェック
-    if (parsed.version !== undefined && parsed.version !== 1 && parsed.version !== 2) {
-      return null
-    }
-
-    // version 2: SaveData 形式
-    if (parsed.saveData != null) {
-      const saveData = parsed.saveData as SaveData
-      if (!validateSaveData(saveData)) return null
-      return saveData
-    }
-
-    // version 1 (後方互換): 単体クリーチャー形式
-    if (parsed.creature != null) {
-      const creature = parsed.creature as Creature
-      if (!validateCreature(creature)) return null
-      return {
-        creatures: [creature],
-        activeCreatureId: creature.id,
-      }
-    }
-
-    return null
-  } catch {
-    return null
-  }
-}

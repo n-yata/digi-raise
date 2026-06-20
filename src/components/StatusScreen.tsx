@@ -3,15 +3,12 @@ import type { Creature } from '../types/creature'
 import { BRANCH_COLORS, BRANCH_NAMES, STAGE_NAMES, CREATURE_TREE, getCreatureBranch } from '../data/evolutions'
 import { EXP_TO_LEVEL } from '../data/evolutions'
 import { canEvolve, getEvolutionProgress } from '../utils/evolution'
-import { exportSave, importSave } from '../utils/storage'
-import type { SaveData } from '../utils/storage'
 
 interface StatusScreenProps {
   creature: Creature
   allCreatures: Creature[]
   activeCreatureId: string
   onBack: () => void
-  onLoad: (saveData: SaveData) => void
   onSelectCreature: (id: string) => void
   onDeleteCreature: (id: string) => void
   onNewCreature: () => void
@@ -34,24 +31,13 @@ function TypeDot({ color, size }: { color: string; size: number }) {
   )
 }
 
-export default function StatusScreen({ creature, allCreatures, activeCreatureId, onBack, onLoad, onSelectCreature, onDeleteCreature, onNewCreature }: StatusScreenProps) {
+export default function StatusScreen({ creature, allCreatures, activeCreatureId, onBack, onSelectCreature, onDeleteCreature, onNewCreature }: StatusScreenProps) {
   const canAddCreature = allCreatures.length < MAX_CREATURES
   const branch = getCreatureBranch(creature.creatureId)
   const color = BRANCH_COLORS[branch]
   const expNeeded = EXP_TO_LEVEL(creature.level)
   const evolutionChecks = getEvolutionProgress(creature).filter(c => c.label !== '幸福度')
   const canEvolveNow = canEvolve(creature)
-
-  const handleExport = async () => {
-    await exportSave({ creatures: allCreatures, activeCreatureId })
-  }
-
-  const handleImport = async () => {
-    const loaded = await importSave()
-    if (loaded) {
-      onLoad(loaded)
-    }
-  }
 
   const statRows = [
     { label: 'HP', value: `${creature.hp} / ${creature.maxHp}` },
@@ -291,33 +277,6 @@ export default function StatusScreen({ creature, allCreatures, activeCreatureId,
         </button>
       </div>
 
-      {/* Save/Load buttons */}
-      <div className="flex gap-3 mb-6">
-        <button
-          onClick={handleExport}
-          className="flex-1 py-3 rounded-lg font-pixel transition-all active:scale-95"
-          style={{
-            fontSize: '0.75rem',
-            background: '#16213e',
-            border: '1px solid #4ade8066',
-            color: '#4ade80',
-          }}
-        >
-          セーブデータ出力
-        </button>
-        <button
-          onClick={handleImport}
-          className="flex-1 py-3 rounded-lg font-pixel transition-all active:scale-95"
-          style={{
-            fontSize: '0.75rem',
-            background: '#16213e',
-            border: '1px solid #fb923c66',
-            color: '#fb923c',
-          }}
-        >
-          セーブデータ読込
-        </button>
-      </div>
     </div>
   )
 }
