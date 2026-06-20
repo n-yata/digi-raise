@@ -79,17 +79,17 @@ export default function MainGame({
         setFacing(moveRef.current.dir)
         phaseRef.current = 'walk'
         setPhase('walk')
-        phaseTimer = setTimeout(nextPhase, 1500 + Math.random() * 2500) // 動: 1.5〜4秒
+        phaseTimer = setTimeout(nextPhase, 900 + Math.random() * 1300) // 動: 0.9〜2.2秒（短め）
       } else {
         phaseRef.current = 'rest'
         setPhase('rest')
-        phaseTimer = setTimeout(nextPhase, 1400 + Math.random() * 2600) // 静: 1.4〜4秒
+        phaseTimer = setTimeout(nextPhase, 4000 + Math.random() * 5000) // 静: 4〜9秒（長め＝落ち着く）
       }
     }
     // 立ち止まりから開始し、しばらくして歩き出す
     phaseRef.current = 'rest'
     setPhase('rest')
-    phaseTimer = setTimeout(nextPhase, 1000 + Math.random() * 1500)
+    phaseTimer = setTimeout(nextPhase, 2500 + Math.random() * 3000)
 
     const mover = setInterval(() => {
       if (phaseRef.current !== 'walk') return
