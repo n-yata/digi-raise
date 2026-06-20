@@ -5,6 +5,9 @@ import { applyTimeUpdate } from './utils/gameLogic'
 import { canEvolve, evolveCreature } from './utils/evolution'
 import { saveSaveData, loadSaveData, deleteSaveData, migrateLegacyData } from './utils/storage'
 import type { SaveData } from './utils/storage'
+import { useAuth } from './hooks/useAuth'
+import { useCloudSave } from './hooks/useCloudSave'
+import AuthButton from './components/AuthButton'
 import TitleScreen from './components/TitleScreen'
 import CreatureSetup from './components/CreatureSetup'
 import MainGame from './components/MainGame'
@@ -353,15 +356,17 @@ export default function App() {
     setScreen('main')
   }, [creatures])
 
-  const handleLoadFromFile = useCallback((loaded: SaveData) => {
+  const handleCloudData = useCallback((loaded: SaveData) => {
     setCreatures(loaded.creatures)
     const active = loaded.creatures.find(c => c.id === loaded.activeCreatureId) ?? loaded.creatures.find(c => c.isAlive)
-    if (!active) return
-    setActiveCreatureId(active.id)
-    saveSaveData(loaded)
-    setScreen('main')
-    showMessage('セーブデータを読み込みました！')
-  }, [showMessage])
+    if (active) setActiveCreatureId(active.id)
+    setHasExistingSave(loaded.creatures.some(c => c.isAlive))
+  }, [])
+
+  const { authState, signIn, signOut } = useAuth()
+  const uid = authState.status === 'signedIn' ? authState.uid : null
+  const currentSaveData: SaveData | null = creatures.length > 0 ? { creatures, activeCreatureId } : null
+  const { syncStatus, lastSyncedAt } = useCloudSave({ uid, saveData: currentSaveData, onCloudData: handleCloudData })
 
   if (loading) {
     return (
@@ -379,6 +384,18 @@ export default function App() {
 
   return (
     <div className="min-h-screen" style={{ background: '#1a1a2e' }}>
+      <div
+        className="fixed top-2 right-2 z-50 flex items-center"
+        style={{ pointerEvents: 'auto' }}
+      >
+        <AuthButton
+          authState={authState}
+          syncStatus={syncStatus}
+          lastSyncedAt={lastSyncedAt}
+          onSignIn={signIn}
+          onSignOut={signOut}
+        />
+      </div>
       {screen === 'title' && (
         <TitleScreen
           hasExistingSave={hasExistingSave}
@@ -436,7 +453,6 @@ export default function App() {
           allCreatures={creatures}
           activeCreatureId={activeCreatureId!}
           onBack={() => setScreen('main')}
-          onLoad={handleLoadFromFile}
           onSelectCreature={handleSelectCreature}
           onDeleteCreature={handleDeleteCreature}
           onNewCreature={() => setScreen('setup')}
