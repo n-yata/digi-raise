@@ -37,7 +37,7 @@ export default {
       animation: {
         'retro-blink': 'retroBlink 1s steps(1) infinite',
         'idle-breathe': 'idleBreathe 3s ease-in-out infinite',
-        'happy-jump': 'happyJump 0.72s ease-in-out infinite',
+        'happy-jump': 'happyJump 1s ease-in-out infinite',
         'sleep-zzz': 'sleepZzz 1.5s ease-in-out infinite',
         'attack-flash': 'attackFlash 0.3s ease-in-out 3',
         'attack-lunge': 'attackLunge 0.55s ease-in-out infinite',
