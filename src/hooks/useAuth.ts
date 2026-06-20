@@ -50,8 +50,25 @@ export function useAuth() {
         setAuthState({ status: 'error', message: 'Firebase が設定されていません' })
         return
       }
-      const { signInWithRedirect, GoogleAuthProvider } = await import('firebase/auth')
-      await signInWithRedirect(auth, new GoogleAuthProvider())
+      const { signInWithPopup, signInWithRedirect, GoogleAuthProvider } = await import('firebase/auth')
+      const provider = new GoogleAuthProvider()
+      try {
+        // ポップアップ優先（ページリロードなし）
+        await signInWithPopup(auth, provider)
+      } catch (popupErr) {
+        const code = (popupErr as { code?: string }).code
+        // 連続クリックで先行ポップアップが破棄された場合は静かに終了
+        if (code === 'auth/cancelled-popup-request') return
+        // ポップアップ不可環境の場合はリダイレクトにフォールバック
+        const shouldFallback = code === 'auth/popup-blocked'
+          || code === 'auth/popup-closed-by-user'
+          || code === 'auth/operation-not-supported-in-this-environment'
+        if (shouldFallback) {
+          await signInWithRedirect(auth, provider)
+        } else {
+          throw popupErr
+        }
+      }
     } catch {
       setAuthState({ status: 'error', message: 'サインインに失敗しました' })
     }
