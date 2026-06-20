@@ -497,41 +497,56 @@ describe('applyTimeUpdate', () => {
 describe('getAnimationState', () => {
   it('isAlive:false のとき "dead" を返す', () => {
     const creature = makeCreature({ isAlive: false })
-    expect(getAnimationState(creature, false)).toBe('dead')
+    expect(getAnimationState(creature, null)).toBe('dead')
   })
 
-  it('isAttacking:true のとき "attack" を返す', () => {
+  it('actionOverride:"attack" のとき "attack" を返す', () => {
     const creature = makeCreature({ isAlive: true })
-    expect(getAnimationState(creature, true)).toBe('attack')
+    expect(getAnimationState(creature, 'attack')).toBe('attack')
   })
 
-  it('isSleeping:true のとき "sleeping" を返す (isAttacking:false)', () => {
+  it('actionOverride:"eating" のとき "eating" を返す', () => {
+    const creature = makeCreature({ isAlive: true })
+    expect(getAnimationState(creature, 'eating')).toBe('eating')
+  })
+
+  it('actionOverride:"happy" のとき "happy" を返す', () => {
+    const creature = makeCreature({ isAlive: true, happiness: 50 })
+    expect(getAnimationState(creature, 'happy')).toBe('happy')
+  })
+
+  it('actionOverride 省略時はデフォルト null として扱われる', () => {
+    const creature = makeCreature({ happiness: 50 })
+    expect(getAnimationState(creature)).toBe('idle')
+  })
+
+  it('isSleeping:true のとき "sleeping" を返す (actionOverride:null)', () => {
     const creature = makeCreature({ isSleeping: true })
-    expect(getAnimationState(creature, false)).toBe('sleeping')
+    expect(getAnimationState(creature, null)).toBe('sleeping')
   })
 
   it('happiness > 70 のとき "happy" を返す', () => {
     const creature = makeCreature({ happiness: 71 })
-    expect(getAnimationState(creature, false)).toBe('happy')
+    expect(getAnimationState(creature, null)).toBe('happy')
   })
 
   it('happiness が 70 ちょうどのとき "idle" を返す', () => {
     const creature = makeCreature({ happiness: 70 })
-    expect(getAnimationState(creature, false)).toBe('idle')
+    expect(getAnimationState(creature, null)).toBe('idle')
   })
 
   it('happiness < 70 のとき "idle" を返す', () => {
     const creature = makeCreature({ happiness: 50 })
-    expect(getAnimationState(creature, false)).toBe('idle')
+    expect(getAnimationState(creature, null)).toBe('idle')
   })
 
-  it('dead が isAttacking より優先される', () => {
+  it('dead が actionOverride より優先される', () => {
     const creature = makeCreature({ isAlive: false })
-    expect(getAnimationState(creature, true)).toBe('dead')
+    expect(getAnimationState(creature, 'attack')).toBe('dead')
   })
 
-  it('isAttacking が sleeping より優先される', () => {
+  it('actionOverride が sleeping より優先される', () => {
     const creature = makeCreature({ isSleeping: true })
-    expect(getAnimationState(creature, true)).toBe('attack')
+    expect(getAnimationState(creature, 'attack')).toBe('attack')
   })
 })

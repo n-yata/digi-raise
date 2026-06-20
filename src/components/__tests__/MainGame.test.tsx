@@ -40,9 +40,12 @@ function makeCreature(overrides: Partial<Creature> = {}): Creature {
 const defaultProps = {
   creature: makeCreature(),
   devMode: false,
-  attackAnimation: false,
+  actionAnimation: null,
+  trainingActive: false,
+  onTrainResult: vi.fn(),
   message: null,
   pendingEvolution: false,
+  hatching: false,
   onFeed: vi.fn(),
   onTrain: vi.fn(),
   onPlay: vi.fn(),
@@ -217,5 +220,26 @@ describe('MainGame', () => {
     const statusBtn = screen.getByText('ステータス').closest('button')!
     fireEvent.click(statusBtn)
     expect(onStatus).toHaveBeenCalledTimes(1)
+  })
+
+  describe('トレーニング連打オーバーレイ', () => {
+    it('trainingActive=false のとき連打UIは表示されない', () => {
+      render(<MainGame {...defaultProps} trainingActive={false} />)
+      expect(screen.queryByText('連打！')).not.toBeInTheDocument()
+    })
+
+    it('trainingActive=true のときメイン画面内に連打UI（「連打！」と残りタップ数）が表示される', () => {
+      render(<MainGame {...defaultProps} trainingActive={true} />)
+      expect(screen.getByText('連打！')).toBeInTheDocument()
+      // 目標10回・未タップなので「あと 10 回」
+      expect(screen.getByText(/あと\s*10\s*回/)).toBeInTheDocument()
+    })
+
+    it('連打UIをタップすると残りタップ数が減る', () => {
+      render(<MainGame {...defaultProps} trainingActive={true} />)
+      const overlay = screen.getByText('連打！').closest('button')!
+      fireEvent.click(overlay)
+      expect(screen.getByText(/あと\s*9\s*回/)).toBeInTheDocument()
+    })
   })
 })

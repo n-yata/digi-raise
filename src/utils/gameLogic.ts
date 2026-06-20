@@ -136,12 +136,16 @@ export function applyTimeUpdate(creature: Creature, devMode: boolean): Creature 
   return updated
 }
 
+/** メイン画面で一時的に再生するアクション演出の種別。 */
+export type ActionAnim = 'attack' | 'eating' | 'happy'
+
 export function getAnimationState(
   creature: Creature,
-  isAttacking: boolean
-): 'idle' | 'happy' | 'sleeping' | 'attack' | 'evolving' | 'dead' | 'sad' | 'hungry' | 'critical' {
+  actionOverride: ActionAnim | null = null
+): 'idle' | 'happy' | 'sleeping' | 'attack' | 'eating' | 'evolving' | 'dead' | 'sad' | 'hungry' | 'critical' {
   if (!creature.isAlive) return 'dead'
-  if (isAttacking) return 'attack'
+  // 明示アクション（ごはん/遊び/トレ）はその場で即フィードバック。dead 以外より優先。
+  if (actionOverride) return actionOverride
   if (creature.isSleeping) return 'sleeping'
   if (creature.hp <= creature.maxHp * 0.2) return 'critical'
   if (creature.hunger <= 20) return 'hungry'
