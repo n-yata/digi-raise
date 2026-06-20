@@ -597,6 +597,7 @@ export default function App() {
           onDeleteCreature={handleDeleteCreature}
           onNewCreature={() => setScreen('setup')}
           onZukan={() => { setZukanReturnScreen('status'); setScreen('zukan') }}
+          devMode={devMode}
           authState={authState}
           syncStatus={syncStatus}
           lastSyncedAt={lastSyncedAt}

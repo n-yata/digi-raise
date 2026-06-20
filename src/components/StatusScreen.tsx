@@ -16,6 +16,8 @@ interface StatusScreenProps {
   onDeleteCreature: (id: string) => void
   onNewCreature: () => void
   onZukan?: () => void
+  /** 開発モード。進化条件の表示はこのときのみ行う。 */
+  devMode?: boolean
   authState?: AuthState
   syncStatus?: SyncStatus
   lastSyncedAt?: number | null
@@ -40,7 +42,7 @@ function TypeDot({ color, size }: { color: string; size: number }) {
   )
 }
 
-export default function StatusScreen({ creature, allCreatures, activeCreatureId, onBack, onSelectCreature, onDeleteCreature, onNewCreature, onZukan, authState, syncStatus, lastSyncedAt, onSignIn, onSignOut }: StatusScreenProps) {
+export default function StatusScreen({ creature, allCreatures, activeCreatureId, onBack, onSelectCreature, onDeleteCreature, onNewCreature, onZukan, devMode, authState, syncStatus, lastSyncedAt, onSignIn, onSignOut }: StatusScreenProps) {
   const canAddCreature = allCreatures.length < MAX_CREATURES
   const branch = getCreatureBranch(creature.creatureId)
   const color = BRANCH_COLORS[branch]
@@ -179,8 +181,8 @@ export default function StatusScreen({ creature, allCreatures, activeCreatureId,
         </div>
       </div>
 
-      {/* Evolution conditions */}
-      {creature.evolutionStage < 5 && (
+      {/* Evolution conditions（開発モードのときのみ表示） */}
+      {devMode && creature.evolutionStage < 5 && (
         <div className="px-4 py-3 rounded-xl mb-4" style={{
           background: '#16213e',
           border: `1px solid ${canEvolveNow ? '#ffd70044' : '#0f3460'}`,
