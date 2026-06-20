@@ -5,6 +5,8 @@ import type { SyncStatus } from '../hooks/useCloudSave'
 import { BRANCH_COLORS, BRANCH_NAMES, STAGE_NAMES, CREATURE_TREE, getCreatureBranch } from '../data/evolutions'
 import { EXP_TO_LEVEL } from '../data/evolutions'
 import { canEvolve, getEvolutionProgress } from '../utils/evolution'
+import { useSound } from '../hooks/useSound'
+import { playSound } from '../utils/sound'
 import AuthButton from './AuthButton'
 
 interface StatusScreenProps {
@@ -62,6 +64,14 @@ export default function StatusScreen({ creature, allCreatures, activeCreatureId,
 
   const currentDef = CREATURE_TREE[creature.creatureId]
   const evolutionPath: string[] = [currentDef.name, ...currentDef.evolvesTo.map(id => CREATURE_TREE[id].name)]
+
+  const { muted, toggleMuted } = useSound()
+  const handleToggleSound = () => {
+    const wasMuted = muted
+    toggleMuted()
+    // ミュート解除（音ON）にした瞬間は確認音を鳴らす
+    if (wasMuted) playSound('tap')
+  }
 
   return (
     <div
@@ -300,6 +310,30 @@ export default function StatusScreen({ creature, allCreatures, activeCreatureId,
             ? '+ 新しいクリーチャーを育てる'
             : `上限${MAX_CREATURES}体に達しています`}
         </button>
+      </div>
+
+      {/* Sound settings */}
+      <div className="px-4 py-3 rounded-xl mb-4" style={{ background: '#16213e', border: '1px solid #0f3460' }}>
+        <div className="font-pixel mb-3" style={{ fontSize: '0.75rem', color }}>サウンド設定</div>
+        <div className="flex items-center justify-between">
+          <span className="font-pixel" style={{ fontSize: '0.6rem', color: '#94a3b8' }}>操作効果音</span>
+          <button
+            onClick={handleToggleSound}
+            role="switch"
+            aria-checked={!muted}
+            aria-label="操作効果音の切り替え"
+            className="font-pixel px-3 py-2 rounded-lg transition-all active:scale-95"
+            style={{
+              fontSize: '0.65rem',
+              background: muted ? 'transparent' : `${color}22`,
+              border: `1px solid ${muted ? '#475569' : color}`,
+              color: muted ? '#94a3b8' : color,
+              minWidth: 76,
+            }}
+          >
+            {muted ? 'OFF' : 'ON'}
+          </button>
+        </div>
       </div>
 
       {/* Account / cloud sync */}

@@ -18,6 +18,7 @@ import BattleLobbyScreen from './components/BattleLobbyScreen'
 import BattleScreen from './components/BattleScreen'
 import { feedCreature, trainCreature, playWithCreature, toggleSleep } from './utils/gameLogic'
 import type { ActionAnim } from './utils/gameLogic'
+import { playSound } from './utils/sound'
 
 /** ごはん/遊びのアクション演出（eating/happy）を再生する時間（ms）。 */
 const ACTION_ANIM_MS = 1200
@@ -184,6 +185,7 @@ export default function App() {
       persistActiveCreature(hatched)
       setHatching(false)
       setPendingEvolution(false)
+      playSound('hatch')
       showMessage(`${hatched.name} が うまれた！`)
     }, EGG_HATCH_ANIM_MS)
     return () => clearTimeout(timer)
@@ -272,6 +274,7 @@ export default function App() {
     const updated = feedCreature(c)
     persistActiveCreature(updated)
     triggerAction('eating')
+    playSound('feed')
     showMessage('もぐもぐ！ご飯を食べた！')
   }, [persistActiveCreature, showMessage, triggerAction])
 
@@ -287,6 +290,7 @@ export default function App() {
     const c = creatureRef.current
     if (c) {
       persistActiveCreature(trainCreature(c, success))
+      playSound(success ? 'trainSuccess' : 'trainFail')
       showMessage(success ? 'トレーニング成功！大きく強くなった！' : 'トレーニング失敗…でも経験になった')
     }
     setShowTrainingGame(false)
@@ -299,6 +303,7 @@ export default function App() {
     const updated = playWithCreature(c, true)
     persistActiveCreature(updated)
     triggerAction('happy')
+    playSound('play')
     showMessage('一緒に遊んだ！楽しかった！')
   }, [persistActiveCreature, showMessage, triggerAction])
 
@@ -306,6 +311,7 @@ export default function App() {
     if (!creatureRef.current) return
     const updated = toggleSleep(creatureRef.current)
     persistActiveCreature(updated)
+    playSound(updated.isSleeping ? 'sleep' : 'wake')
     showMessage(updated.isSleeping ? 'おやすみなさい…' : 'おはよう！元気いっぱい！')
   }, [persistActiveCreature, showMessage])
 
@@ -322,6 +328,7 @@ export default function App() {
     setEvolvedFrom(prevStage)
     persistActiveCreature(evolved)
     setPendingEvolution(false)
+    playSound('evolve')
     setScreen('evolution')
   }, [persistActiveCreature])
 
@@ -339,6 +346,7 @@ export default function App() {
     setBattleOpponent(opponentCreature)
     setBattleSeed(seed)
     setBattleMode('cpu')
+    playSound('battleStart')
     setScreen('battle')
   }, [])
 
@@ -347,6 +355,7 @@ export default function App() {
     setBattleOpponent(opponentCreature)
     setBattleSeed(seed)
     setBattleMode('qr')
+    playSound('battleStart')
     setScreen('battle')
   }, [])
 
@@ -362,6 +371,7 @@ export default function App() {
       losses: result.result === 'lose' ? (c.losses ?? 0) + 1 : (c.losses ?? 0),
     }
     persistActiveCreature(updated)
+    playSound(result.result === 'win' ? 'win' : result.result === 'lose' ? 'lose' : 'tap')
     setScreen('main')
     showMessage(result.result === 'win' ? '勝利！強さを証明した！' : result.result === 'lose' ? '敗北...次は勝つぞ！' : '引き分け...いい戦いだった')
   }, [persistActiveCreature, showMessage])
