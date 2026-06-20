@@ -1,12 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import type { Creature } from '../types/creature'
-import { TYPE_COLORS, STAGE_NAMES } from '../data/evolutions'
+import { BRANCH_COLORS, BRANCH_NAMES, STAGE_NAMES, getCreatureBranch } from '../data/evolutions'
 import { EXP_TO_LEVEL } from '../data/evolutions'
 import { getAnimationState } from '../utils/gameLogic'
 import CreatureSprite from './CreatureSprite'
 import StatusBars from './StatusBars'
 import ActionButtons from './ActionButtons'
-import { TypeIcon } from './TypeIcon'
 
 interface MainGameProps {
   creature: Creature
@@ -41,9 +40,10 @@ export default function MainGame({
   onToggleDevMode,
   onBattle,
 }: MainGameProps) {
-  const color = TYPE_COLORS[creature.type]
+  const branch = getCreatureBranch(creature.creatureId)
+  const color = BRANCH_COLORS[branch]
   const animState = getAnimationState(creature, attackAnimation)
-  const bgClass = `type-bg-${creature.type.toLowerCase()}`
+  const bgClass = `branch-bg-${branch}`
   const expNeeded = EXP_TO_LEVEL(creature.level)
   const expPct = Math.min(100, (creature.exp / expNeeded) * 100)
 
@@ -158,8 +158,7 @@ export default function MainGame({
             className="font-pixel px-2 py-0.5 rounded-full"
             style={{ fontSize: '0.5rem', background: `${color}22`, color, border: `1px solid ${color}44` }}
           >
-            <TypeIcon type={creature.type} size={10} />
-            {creature.type.toUpperCase()}
+            {BRANCH_NAMES[branch]}
           </span>
           {creature.isSleeping && (
             <span className="font-pixel px-2 py-0.5 rounded-full"
@@ -207,7 +206,7 @@ export default function MainGame({
         >
           <div style={{ transform: `scaleX(${facing})` }}>
             <CreatureSprite
-              type={creature.type}
+              creatureId={creature.creatureId}
               stage={creature.evolutionStage}
               animState={spriteAnim}
             />

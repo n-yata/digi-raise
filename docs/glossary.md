@@ -26,7 +26,11 @@
 | アダルト | Adult | 進化ステージ 3。`age ≥ 3` AND `happiness ≥ 50` で進化 |
 | パーフェクト | Perfect | 進化ステージ 4。`age ≥ 6` AND `level ≥ 8` AND `atk + def + spd ≥ 40` で進化 |
 | アルティメット | Ultimate | 進化ステージ 5（最終）。`age ≥ 12` AND `level ≥ 14` AND 各ステータス `≥ 20` で進化 |
-| タイプ | Type | クリーチャーの属性。Fire / Water / Plant / Thunder / Dark / Light の 6 種 |
+| ブランチ | Branch | クリーチャーの育ち方による系統。善(A)・悪(B)・中間(C)・none（未分岐）の4種。幸福度によって決まる |
+| 善（A系） | Branch A | しあわせ度が高い育て方で分岐する神聖テーマの系統。カラー: #ffd700 |
+| 悪（B系） | Branch B | しあわせ度が低い放置気味の育て方で分岐する禍々しいテーマの系統。カラー: #9b59b6 |
+| 中間（C系） | Branch C | しあわせ度が中間的な育て方で分岐するクールテーマの系統。カラー: #3498db |
+| 終点クリーチャー | Terminal Creature | `evolvesTo: []` を持ちアルティメットへ進化しないクリーチャー。perfectA2/B2/C2 の3体 |
 | ティック | Tick | 時間更新の最小単位。通常モード 30 分、devMode 30 秒 |
 | age | age | クリーチャー年齢（float）。1 ティックごとに +0.5。表示は `Math.floor(age)` 日 |
 | 満腹度 | Hunger | 0〜100。0 で餓死ダメージ、100 でこれ以上食べられない |
@@ -45,8 +49,7 @@
 | お絵描き | Drawing | 進化のたびに表示される 64×64 ピクセルアートキャンバス。SVG として保存 |
 | シルエット継承 | Silhouette Inheritance | 進化ステージを重ねるにつれて「特徴パーツ」が大きく/複雑になる表現方針。例: FireBaby の小さな炎が FireUltimate では全身を覆う。低ステージの造形を上位ステージが包含することで「育てた感」を演出する |
 | 特徴パーツ | Feature Part | タイプの個性を表す SVG パーツコンポーネント（FlamePlume・WaterFin・Leaf・Bolt・ShadowVeil・Halo 等）。`parts/` ディレクトリに配置し、各タイプのスプライトから scale/位置を変えて使い回す |
-| スプライトディスパッチ | Sprite Dispatch | `DefaultCreatureBody.tsx` 内の `SPRITE_DISPATCH` テーブル。`CreatureType × EvolutionStage` をキーに対応するスプライトコンポーネントを返す。未定義の組み合わせは `FallbackSilhouette` にフォールバック |
-| TypeIcon | — | タイプを示す 24×24 SVG アイコン。`TypeIcon.tsx` が実装し、パスは `typeIconPaths.ts` の `TYPE_ICON_PATHS` に集約。UI のバッジや進化画面で使用 |
+| スプライトディスパッチ | Sprite Dispatch | `pixel/index.ts` の `getPixelSprite(creatureId)` がスプライトデータを返す。現在は全件 null（FallbackSilhouette にフォールバック）。スプライト差し替えは次スプリント以降 |
 | CPU バトル | CPU Battle | フロントエンド完結のオフライン対戦。CPU はランダムにアクション選択 |
 
 ---
@@ -78,7 +81,10 @@
 
 | コード上の名前 | 意味 |
 |-------------|------|
-| `Creature` | クリーチャー型（`frontend/src/types/creature.ts`） |
+| `Creature` | クリーチャー型（`src/types/creature.ts`） |
+| `CreatureId` | 進化ツリー上の識別子型。egg/baby/childA〜ultimateC の20種 |
+| `CreatureBranch` | ブランチ型。`'A' \| 'B' \| 'C' \| 'none'` |
+| `CREATURE_TREE` | 全20体の進化定義マップ（`src/data/evolutions.ts`） |
 | `GameState` | 画面・状態管理の中央型 |
 | `SaveData` | 永続化用シリアライズ型（`{ creatures, activeCreatureId }`） |
 | `BattleState` | バトル中の状態型（`frontend/src/types/battle.ts`） |

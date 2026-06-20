@@ -1,12 +1,21 @@
-// 'Normal' は誕生〜ベイビーの中立タイプ。チャイルド進化で6属性のいずれかに分岐する。
-export type CreatureType = 'Normal' | 'Fire' | 'Water' | 'Plant' | 'Thunder' | 'Dark' | 'Light'
+export type CreatureId =
+  | 'egg'
+  | 'baby'
+  | 'childA' | 'childB' | 'childC'
+  | 'adultA1' | 'adultA2'
+  | 'adultB1' | 'adultB2'
+  | 'adultC1' | 'adultC2'
+  | 'perfectA1' | 'perfectA2'
+  | 'perfectB1' | 'perfectB2'
+  | 'perfectC1' | 'perfectC2'
+  | 'ultimateA' | 'ultimateB' | 'ultimateC'
 
 export type EvolutionStage = 0 | 1 | 2 | 3 | 4 | 5
 
 export interface Creature {
   id: string
   name: string
-  type: CreatureType
+  creatureId: CreatureId
   evolutionStage: EvolutionStage
   level: number
   exp: number

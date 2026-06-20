@@ -1,12 +1,13 @@
 import type { ReactNode } from 'react'
-import type { CreatureType, EvolutionStage } from '../types/creature'
+import type { CreatureId, EvolutionStage } from '../types/creature'
+import { BRANCH_COLORS, getCreatureBranch } from '../data/evolutions'
 import { STAGE_SIZES } from '../data/spriteConfig'
 import { DefaultCreatureBody } from './creatures/DefaultCreatureBody'
 import type { AnimState } from './creatures/DefaultCreatureBody'
-import { PixelSprite, getPixelSprite, getEggPixel } from './creatures/pixel'
+import { PixelSprite, getEggPixel } from './creatures/pixel'
 
 interface CreatureSpriteProps {
-  type: CreatureType
+  creatureId: CreatureId
   stage: EvolutionStage
   animState: AnimState
   customSvg?: ReactNode
@@ -29,18 +30,16 @@ function getAnimClass(animState: AnimState): string {
   }
 }
 
-export default function CreatureSprite({ type, stage, animState, customSvg }: CreatureSpriteProps) {
+export default function CreatureSprite({ creatureId, stage, animState, customSvg }: CreatureSpriteProps) {
+  const branch = getCreatureBranch(creatureId)
+  const color = BRANCH_COLORS[branch]
   const size = STAGE_SIZES[stage]
   const shadowWidth = [40, 55, 70, 85, 100, 115][stage]
 
-  const pixelData = stage > 0 ? getPixelSprite(type, stage) : null
-
   const body = customSvg ?? (
     stage === 0
-      ? <PixelSprite data={getEggPixel(type)} size={size} />
-      : pixelData
-        ? <PixelSprite data={pixelData} size={size} />
-        : <DefaultCreatureBody type={type} stage={stage} animState={animState} />
+      ? <PixelSprite data={getEggPixel(color)} size={size} />
+      : <DefaultCreatureBody color={color} stage={stage} animState={animState} />
   )
 
   return (
@@ -48,12 +47,6 @@ export default function CreatureSprite({ type, stage, animState, customSvg }: Cr
       {animState === 'sleeping' && (
         <div className="absolute -top-8 right-0 text-sm font-pixel animate-sleep-zzz select-none z-10" style={{ color: 'rgba(255,255,255,0.85)' }}>
           Zzz
-        </div>
-      )}
-
-      {animState === 'critical' && (
-        <div className="absolute pointer-events-none animate-critical-warn font-pixel" style={{ top: '-28px', left: '50%', transform: 'translateX(-50%)', fontSize: 18, color: '#ef4444', whiteSpace: 'nowrap' }}>
-          ！
         </div>
       )}
 

@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
-import type { Creature, CreatureType } from '../types/creature'
-import { TYPE_COLORS } from '../data/evolutions'
+import type { Creature } from '../types/creature'
+import { BRANCH_COLORS, getCreatureBranch, type CreatureBranch } from '../data/evolutions'
 
 interface Props {
   creature: Creature
@@ -9,15 +9,11 @@ interface Props {
 
 type CardIcon = string
 
-// 各タイプ3ペア分の色（メモリーゲームの識別用）
-const TYPE_ICONS: Record<CreatureType, [CardIcon, CardIcon, CardIcon]> = {
-  Normal:  ['#9ca3af', '#cbd5e1', '#6b7280'],
-  Fire:    ['#ff6b35', '#ffb347', '#ff3d3d'],
-  Water:   ['#4fc3f7', '#1e88e5', '#80deea'],
-  Plant:   ['#81c784', '#aed581', '#388e3c'],
-  Thunder: ['#ffd54f', '#fff176', '#ffb300'],
-  Dark:    ['#ce93d8', '#9575cd', '#5e35b1'],
-  Light:   ['#fff9c4', '#fff176', '#ffe082'],
+const BRANCH_ICONS: Record<CreatureBranch, [CardIcon, CardIcon, CardIcon]> = {
+  A:    ['#ffd700', '#ffe566', '#b8960c'],
+  B:    ['#9b59b6', '#c39bd3', '#6c3483'],
+  C:    ['#3498db', '#7fb3d3', '#1a5276'],
+  none: ['#9ca3af', '#cbd5e1', '#6b7280'],
 }
 
 const MAX_TURNS = 8
@@ -39,8 +35,8 @@ function shuffle<T>(arr: T[]): T[] {
   return a
 }
 
-function buildCards(type: CreatureType): CardState[] {
-  const icons = TYPE_ICONS[type]
+function buildCards(branch: CreatureBranch): CardState[] {
+  const icons = BRANCH_ICONS[branch]
   const pairs: CardState[] = []
   icons.forEach((icon, pairId) => {
     pairs.push({ id: pairId * 2,     icon, pairId, isFlipped: false, isMatched: false })
@@ -50,9 +46,10 @@ function buildCards(type: CreatureType): CardState[] {
 }
 
 export default function PlayMiniGame({ creature, onResult }: Props) {
-  const color = TYPE_COLORS[creature.type]
+  const branch = getCreatureBranch(creature.creatureId)
+  const color = BRANCH_COLORS[branch]
 
-  const [cards, setCards] = useState<CardState[]>(() => buildCards(creature.type))
+  const [cards, setCards] = useState<CardState[]>(() => buildCards(branch))
   const [, setFlippedIds] = useState<number[]>([])
   const [turns, setTurns] = useState(0)
   const [matchedCount, setMatchedCount] = useState(0)

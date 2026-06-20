@@ -1,11 +1,10 @@
 import React from 'react' // needed for JSX Fragment
 import type { Creature } from '../types/creature'
-import { TYPE_COLORS, STAGE_NAMES, EVOLUTION_NAMES } from '../data/evolutions'
+import { BRANCH_COLORS, BRANCH_NAMES, STAGE_NAMES, CREATURE_TREE, getCreatureBranch } from '../data/evolutions'
 import { EXP_TO_LEVEL } from '../data/evolutions'
 import { canEvolve, getEvolutionProgress } from '../utils/evolution'
 import { exportSave, importSave } from '../utils/storage'
 import type { SaveData } from '../utils/storage'
-import { TypeIcon } from './TypeIcon'
 
 interface StatusScreenProps {
   creature: Creature
@@ -37,7 +36,8 @@ function TypeDot({ color, size }: { color: string; size: number }) {
 
 export default function StatusScreen({ creature, allCreatures, activeCreatureId, onBack, onLoad, onSelectCreature, onDeleteCreature, onNewCreature }: StatusScreenProps) {
   const canAddCreature = allCreatures.length < MAX_CREATURES
-  const color = TYPE_COLORS[creature.type]
+  const branch = getCreatureBranch(creature.creatureId)
+  const color = BRANCH_COLORS[branch]
   const expNeeded = EXP_TO_LEVEL(creature.level)
   const evolutionChecks = getEvolutionProgress(creature).filter(c => c.label !== '幸福度')
   const canEvolveNow = canEvolve(creature)
@@ -65,7 +65,8 @@ export default function StatusScreen({ creature, allCreatures, activeCreatureId,
     { label: '空腹度', value: `${Math.floor(creature.hunger)}/100` },
   ]
 
-  const evolutionPath = EVOLUTION_NAMES[creature.type]
+  const currentDef = CREATURE_TREE[creature.creatureId]
+  const evolutionPath: string[] = [currentDef.name, ...currentDef.evolvesTo.map(id => CREATURE_TREE[id].name)]
 
   return (
     <div
@@ -104,7 +105,7 @@ export default function StatusScreen({ creature, allCreatures, activeCreatureId,
               {creature.evolutionName}
             </div>
             <div className="font-pixel mt-0.5" style={{ fontSize: '0.55rem', color: '#64748b' }}>
-              {STAGE_NAMES[creature.evolutionStage]} | <TypeIcon type={creature.type} size={10} /> {creature.type}
+              {STAGE_NAMES[creature.evolutionStage]} | {BRANCH_NAMES[branch]}
             </div>
           </div>
         </div>
@@ -152,9 +153,9 @@ export default function StatusScreen({ creature, allCreatures, activeCreatureId,
                 className="font-pixel px-2 py-1 rounded"
                 style={{
                   fontSize: '0.5rem',
-                  background: i === creature.evolutionStage ? `${color}33` : 'transparent',
-                  color: i === creature.evolutionStage ? color : i < creature.evolutionStage ? '#475569' : '#334155',
-                  border: i === creature.evolutionStage ? `1px solid ${color}` : '1px solid transparent',
+                  background: i === 0 ? `${color}33` : 'transparent',
+                  color: i === 0 ? color : '#334155',
+                  border: i === 0 ? `1px solid ${color}` : '1px solid transparent',
                 }}
               >
                 {ename}
@@ -200,7 +201,7 @@ export default function StatusScreen({ creature, allCreatures, activeCreatureId,
           const isActive = c.id === activeCreatureId
           const isDead = c.isAlive === false
           const isClickable = !isDead && !isActive
-          const cColor = TYPE_COLORS[c.type]
+          const cColor = BRANCH_COLORS[getCreatureBranch(c.creatureId)]
 
           const content = (
             <>

@@ -519,7 +519,7 @@ export default function App() {
           myCreature={{
             name: activeCreature.name,
             evolutionStage: activeCreature.evolutionStage,
-            type: activeCreature.type,
+            type: activeCreature.creatureId,
             hp: activeCreature.hp,
             maxHp: activeCreature.maxHp,
             atk: activeCreature.atk,
