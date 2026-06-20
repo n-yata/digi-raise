@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
-import type { Creature, GameScreen, EvolutionStage } from './types/creature'
+import type { Creature, GameScreen, EvolutionStage, CreatureId } from './types/creature'
 import type { BattleRole, CreatureSnapshot, BattleResult } from './types/battle'
 import { applyTimeUpdate } from './utils/gameLogic'
 import { canEvolve, evolveCreature } from './utils/evolution'
@@ -14,6 +14,7 @@ import MainGame from './components/MainGame'
 import EvolutionScreen from './components/EvolutionScreen'
 import DeathScreen from './components/DeathScreen'
 import StatusScreen from './components/StatusScreen'
+import ZukanScreen from './components/ZukanScreen'
 import BattleLobbyScreen from './components/BattleLobbyScreen'
 import BattleScreen from './components/BattleScreen'
 import { feedCreature, trainCreature, playWithCreature, toggleSleep } from './utils/gameLogic'
@@ -35,6 +36,8 @@ export default function App() {
   const [message, setMessage] = useState<string | null>(null)
   const [hasExistingSave, setHasExistingSave] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [discoveredCreatures, setDiscoveredCreatures] = useState<Set<CreatureId>>(new Set())
+  const [zukanReturnScreen, setZukanReturnScreen] = useState<GameScreen>('title')
 
   // Battle state
   const [battleRole, setBattleRole] = useState<BattleRole | null>(null)
@@ -44,6 +47,7 @@ export default function App() {
   const creatureRef = useRef<Creature | null>(null)
   const devModeRef = useRef(devMode)
   const activeCreatureIdRef = useRef<string | null>(null)
+  const discoveredRef = useRef<Set<CreatureId>>(new Set())
 
   // Derive active creature
   const activeCreature = creatures.find(c => c.id === activeCreatureId) ?? null
@@ -52,12 +56,16 @@ export default function App() {
   useEffect(() => { creatureRef.current = activeCreature }, [activeCreature])
   useEffect(() => { devModeRef.current = devMode }, [devMode])
   useEffect(() => { activeCreatureIdRef.current = activeCreatureId }, [activeCreatureId])
+  useEffect(() => { discoveredRef.current = discoveredCreatures }, [discoveredCreatures])
 
   // Load save on mount
   useEffect(() => {
     migrateLegacyData().then(() => loadSaveData()).then(saved => {
       if (saved && saved.creatures.length > 0 && saved.creatures.some(c => c.isAlive)) {
         setHasExistingSave(true)
+      }
+      if (saved?.discoveredCreatures) {
+        setDiscoveredCreatures(new Set(saved.discoveredCreatures))
       }
       setLoading(false)
     })
@@ -71,7 +79,7 @@ export default function App() {
   const persistActiveCreature = useCallback((updated: Creature) => {
     setCreatures(prev => {
       const newCreatures = prev.map(c => c.id === updated.id ? updated : c)
-      saveSaveData({ creatures: newCreatures, activeCreatureId: activeCreatureIdRef.current })
+      saveSaveData({ creatures: newCreatures, activeCreatureId: activeCreatureIdRef.current, discoveredCreatures: Array.from(discoveredRef.current) })
       return newCreatures
     })
   }, [])
@@ -144,6 +152,12 @@ export default function App() {
         return
       }
       const hatched = evolveCreature(c)
+      setDiscoveredCreatures(prev => {
+        const next = new Set(prev)
+        next.add(hatched.creatureId)
+        discoveredRef.current = next
+        return next
+      })
       persistActiveCreature(hatched)
       setHatching(false)
       setPendingEvolution(false)
@@ -169,7 +183,7 @@ export default function App() {
       const newCreatures = creatures.map(c => c.id === updated.id ? updated : c)
       setCreatures(newCreatures)
       setActiveCreatureId(updated.id)
-      saveSaveData({ creatures: newCreatures, activeCreatureId: updated.id })
+      saveSaveData({ creatures: newCreatures, activeCreatureId: updated.id, discoveredCreatures: Array.from(discoveredRef.current) })
       setScreen(updated.isAlive ? 'main' : 'death')
       return
     }
@@ -177,6 +191,7 @@ export default function App() {
     const saved = await loadSaveData()
     if (!saved || saved.creatures.length === 0) return
     setCreatures(saved.creatures)
+    if (saved.discoveredCreatures) setDiscoveredCreatures(new Set(saved.discoveredCreatures))
     const activeId = saved.activeCreatureId
     const activeCandidate = saved.creatures.find(c => c.id === activeId)
     const target = (activeCandidate && activeCandidate.isAlive)
@@ -187,7 +202,7 @@ export default function App() {
     const newCreatures = saved.creatures.map(c => c.id === updated.id ? updated : c)
     setCreatures(newCreatures)
     setActiveCreatureId(updated.id)
-    saveSaveData({ creatures: newCreatures, activeCreatureId: updated.id })
+    saveSaveData({ creatures: newCreatures, activeCreatureId: updated.id, discoveredCreatures: saved.discoveredCreatures ?? [] })
     if (!updated.isAlive) {
       setScreen('death')
     } else {
@@ -196,9 +211,15 @@ export default function App() {
   }, [creatures, activeCreatureId])
 
   const handleStartGame = useCallback((newCreature: Creature) => {
+    setDiscoveredCreatures(prev => {
+      const next = new Set(prev)
+      next.add('egg')
+      discoveredRef.current = next
+      return next
+    })
     setCreatures(prev => {
       const newCreatures = [...prev, newCreature]
-      saveSaveData({ creatures: newCreatures, activeCreatureId: newCreature.id })
+      saveSaveData({ creatures: newCreatures, activeCreatureId: newCreature.id, discoveredCreatures: Array.from(discoveredRef.current) })
       return newCreatures
     })
     setActiveCreatureId(newCreature.id)
@@ -250,6 +271,12 @@ export default function App() {
     if (!creatureRef.current) return
     const prevStage = creatureRef.current.evolutionStage
     const evolved = evolveCreature(creatureRef.current)
+    setDiscoveredCreatures(prev => {
+      const next = new Set(prev)
+      next.add(evolved.creatureId)
+      discoveredRef.current = next
+      return next
+    })
     setEvolvedFrom(prevStage)
     persistActiveCreature(evolved)
     setPendingEvolution(false)
@@ -307,7 +334,7 @@ export default function App() {
     const resetTarget = { ...alive, lastUpdated: Date.now() }
     setCreatures(prev => {
       const newCreatures = prev.map(c => c.id === alive.id ? resetTarget : c)
-      saveSaveData({ creatures: newCreatures, activeCreatureId: alive.id })
+      saveSaveData({ creatures: newCreatures, activeCreatureId: alive.id, discoveredCreatures: Array.from(discoveredRef.current) })
       return newCreatures
     })
     setActiveCreatureId(alive.id)
@@ -332,7 +359,7 @@ export default function App() {
     if (!window.confirm(`${label} を削除しますか？この操作は取り消せません。`)) return
     setCreatures(prev => {
       const newCreatures = prev.filter(c => c.id !== id)
-      saveSaveData({ creatures: newCreatures, activeCreatureId: activeCreatureId! })
+      saveSaveData({ creatures: newCreatures, activeCreatureId: activeCreatureId!, discoveredCreatures: Array.from(discoveredRef.current) })
       return newCreatures
     })
   }, [creatures, activeCreatureId])
@@ -343,7 +370,7 @@ export default function App() {
     const resetTarget = { ...target, lastUpdated: Date.now() }
     setCreatures(prev => {
       const newCreatures = prev.map(c => c.id === id ? resetTarget : c)
-      saveSaveData({ creatures: newCreatures, activeCreatureId: id })
+      saveSaveData({ creatures: newCreatures, activeCreatureId: id, discoveredCreatures: Array.from(discoveredRef.current) })
       return newCreatures
     })
     setActiveCreatureId(id)
@@ -355,11 +382,16 @@ export default function App() {
     const active = loaded.creatures.find(c => c.id === loaded.activeCreatureId) ?? loaded.creatures.find(c => c.isAlive)
     if (active) setActiveCreatureId(active.id)
     setHasExistingSave(loaded.creatures.some(c => c.isAlive))
+    if (loaded.discoveredCreatures) {
+      setDiscoveredCreatures(new Set(loaded.discoveredCreatures))
+    }
   }, [])
 
   const { authState, signIn, signOut } = useAuth()
   const uid = authState.status === 'signedIn' ? authState.uid : null
-  const currentSaveData: SaveData | null = creatures.length > 0 ? { creatures, activeCreatureId } : null
+  const currentSaveData: SaveData | null = creatures.length > 0
+    ? { creatures, activeCreatureId, discoveredCreatures: Array.from(discoveredCreatures) }
+    : null
   const { syncStatus, lastSyncedAt } = useCloudSave({ uid, saveData: currentSaveData, onCloudData: handleCloudData })
 
   if (loading) {
@@ -395,6 +427,7 @@ export default function App() {
           hasExistingSave={hasExistingSave}
           onNewGame={handleNewGame}
           onContinue={handleContinue}
+          onZukan={() => { setZukanReturnScreen('title'); setScreen('zukan') }}
         />
       )}
 
@@ -450,6 +483,15 @@ export default function App() {
           onSelectCreature={handleSelectCreature}
           onDeleteCreature={handleDeleteCreature}
           onNewCreature={() => setScreen('setup')}
+          onZukan={() => { setZukanReturnScreen('status'); setScreen('zukan') }}
+        />
+      )}
+
+      {screen === 'zukan' && (
+        <ZukanScreen
+          discoveredCreatures={discoveredCreatures}
+          devMode={devMode}
+          onBack={() => setScreen(zukanReturnScreen)}
         />
       )}
 

@@ -11,6 +11,8 @@ interface CreatureSpriteProps {
   stage: EvolutionStage
   animState: AnimState
   customSvg?: ReactNode
+  sizeOverride?: number
+  hideShadow?: boolean
 }
 
 function getAnimClass(animState: AnimState): string {
@@ -30,11 +32,11 @@ function getAnimClass(animState: AnimState): string {
   }
 }
 
-export default function CreatureSprite({ creatureId, stage, animState, customSvg }: CreatureSpriteProps) {
+export default function CreatureSprite({ creatureId, stage, animState, customSvg, sizeOverride, hideShadow }: CreatureSpriteProps) {
   const branch = getCreatureBranch(creatureId)
   const color = BRANCH_COLORS[branch]
-  const size = STAGE_SIZES[stage]
-  const shadowWidth = [40, 55, 70, 85, 100, 115][stage]
+  const size = sizeOverride ?? STAGE_SIZES[stage]
+  const shadowWidth = hideShadow ? 0 : [40, 55, 70, 85, 100, 115][stage]
 
   const pixelData = stage > 0 ? getPixelSprite(creatureId) : null
   const body = customSvg ?? (
