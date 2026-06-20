@@ -6,10 +6,37 @@ import { buildFaceOverlay } from '../face'
 import type { CreatureId } from '../../../../types/creature'
 
 describe('getPixelSprite', () => {
-  it('スプライト未実装のため常に null を返す', () => {
-    const ids: CreatureId[] = ['egg', 'baby', 'childA', 'adultA1', 'perfectA1', 'ultimateA']
-    for (const id of ids) {
-      expect(getPixelSprite(id)).toBeNull()
+  it('egg は null を返す（egg は getEggPixel で別処理）', () => {
+    expect(getPixelSprite('egg')).toBeNull()
+  })
+
+  it('実装済みクリーチャーは有効な PixelSpriteData を返す', () => {
+    const implemented: CreatureId[] = [
+      'baby', 'childA', 'childB', 'childC',
+      'adultA1', 'adultA2', 'adultB1', 'adultB2', 'adultC1', 'adultC2',
+      'perfectA1', 'perfectA2', 'perfectB1', 'perfectB2', 'perfectC1', 'perfectC2',
+      'ultimateA', 'ultimateB', 'ultimateC',
+    ]
+    for (const id of implemented) {
+      const sprite = getPixelSprite(id)
+      expect(sprite, `${id} should have a sprite`).not.toBeNull()
+      expect(sprite!.grid.length).toBe(32)
+      expect(sprite!.grid[0].length).toBe(32)
+      expect(Object.keys(sprite!.palette).length).toBeGreaterThan(0)
+    }
+  })
+
+  it('全スプライトに顔アンカーが設定されている', () => {
+    const implemented: CreatureId[] = [
+      'baby', 'childA', 'childB', 'childC',
+      'adultA1', 'adultA2', 'adultB1', 'adultB2', 'adultC1', 'adultC2',
+      'perfectA1', 'perfectA2', 'perfectB1', 'perfectB2', 'perfectC1', 'perfectC2',
+      'ultimateA', 'ultimateB', 'ultimateC',
+    ]
+    for (const id of implemented) {
+      const sprite = getPixelSprite(id)
+      expect(sprite!.face, `${id} should have face anchors`).toBeDefined()
+      expect(sprite!.face!.eyes.length).toBeGreaterThanOrEqual(2)
     }
   })
 })

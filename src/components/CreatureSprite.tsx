@@ -4,7 +4,7 @@ import { BRANCH_COLORS, getCreatureBranch } from '../data/evolutions'
 import { STAGE_SIZES } from '../data/spriteConfig'
 import { DefaultCreatureBody } from './creatures/DefaultCreatureBody'
 import type { AnimState } from './creatures/DefaultCreatureBody'
-import { PixelSprite, getEggPixel } from './creatures/pixel'
+import { PixelSprite, getEggPixel, getPixelSprite } from './creatures/pixel'
 
 interface CreatureSpriteProps {
   creatureId: CreatureId
@@ -36,10 +36,13 @@ export default function CreatureSprite({ creatureId, stage, animState, customSvg
   const size = STAGE_SIZES[stage]
   const shadowWidth = [40, 55, 70, 85, 100, 115][stage]
 
+  const pixelData = stage > 0 ? getPixelSprite(creatureId) : null
   const body = customSvg ?? (
     stage === 0
       ? <PixelSprite data={getEggPixel(color)} size={size} />
-      : <DefaultCreatureBody color={color} stage={stage} animState={animState} />
+      : pixelData
+        ? <PixelSprite data={pixelData} size={size} animState={animState} />
+        : <DefaultCreatureBody color={color} stage={stage} animState={animState} />
   )
 
   return (

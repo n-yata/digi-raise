@@ -3,6 +3,7 @@
  * k/o/d/r/l はベース色から HSL シフトで自動生成し、c/w/b は全タイプ共通の固定色。
  */
 export interface TypePalette {
+  [key: string]: string
   k: string // outline（アウトライン）
   o: string // deep shadow（濃影）
   d: string // shadow（影）

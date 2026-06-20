@@ -10,7 +10,7 @@ export function getCreatureBranch(id: CreatureId): CreatureBranch {
 }
 
 export const BRANCH_COLORS: Record<CreatureBranch, string> = {
-  A:    '#ffd700',
+  A:    '#e8e8ff',
   B:    '#9b59b6',
   C:    '#3498db',
   none: '#9ca3af',
