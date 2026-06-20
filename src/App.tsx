@@ -1,7 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import type { Creature, GameScreen, EvolutionStage } from './types/creature'
 import type { BattleRole, CreatureSnapshot, BattleResult } from './types/battle'
-import { useBattleWebSocket } from './hooks/useBattleWebSocket'
 import { applyTimeUpdate } from './utils/gameLogic'
 import { canEvolve, evolveCreature } from './utils/evolution'
 import { saveSaveData, loadSaveData, deleteSaveData, migrateLegacyData } from './utils/storage'
@@ -44,6 +43,7 @@ export default function App() {
   const [battleRole, setBattleRole] = useState<BattleRole | null>(null)
   const [battleOpponent, setBattleOpponent] = useState<CreatureSnapshot | null>(null)
   const [battleSeed, setBattleSeed] = useState<number>(0)
+  const [battleMode, setBattleMode] = useState<'cpu' | 'qr'>('cpu')
   const creatureRef = useRef<Creature | null>(null)
   const devModeRef = useRef(devMode)
   const activeCreatureIdRef = useRef<string | null>(null)
@@ -268,56 +268,11 @@ export default function App() {
     setScreen('battle_lobby')
   }, [])
 
-  const [battleMode, setBattleMode] = useState<'cpu' | 'qr' | 'online'>('cpu')
-  const [battleRoomCode, setBattleRoomCode] = useState<string | null>(null)
-
-  // オンラインバトル: BattleScreen の resolveOnlineActions を呼ぶための ref
-  const resolveOnlineActionsRef = useRef<
-    ((hostAction: string, guestAction: string, seed: number, turnNumber: number) => void) | null
-  >(null)
-
-  // オンラインバトル: ロビー状態管理 ref（useCallback の依存をシンプルに保つため）
-  const onlineLobbyCallbacks = useRef<{
-    onRoomCreated: (roomCode: string) => void
-    onOpponentJoined: (opponentCreature: CreatureSnapshot) => void
-    onBattleStart: (seed: number, role: BattleRole) => void
-    onError: (code: string, message: string) => void
-    onOpponentLeft: () => void
-    onOpponentDisconnected: (timeoutSec: number) => void
-  } | null>(null)
-
-  const onlineWs = useBattleWebSocket({
-    onRoomCreated: useCallback((roomCode: string) => {
-      onlineLobbyCallbacks.current?.onRoomCreated(roomCode)
-    }, []),
-    onOpponentJoined: useCallback((opponentCreature: CreatureSnapshot) => {
-      onlineLobbyCallbacks.current?.onOpponentJoined(opponentCreature)
-    }, []),
-    onBattleStart: useCallback((seed: number, role: BattleRole) => {
-      onlineLobbyCallbacks.current?.onBattleStart(seed, role)
-    }, []),
-    onActionsLocked: useCallback((hostAction: string, guestAction: string, seed: number, turnNumber: number) => {
-      resolveOnlineActionsRef.current?.(hostAction, guestAction, seed, turnNumber)
-    }, []),
-    onBattleEnd: useCallback(() => {}, []),
-    onOpponentDisconnected: useCallback((timeoutSec: number) => {
-      onlineLobbyCallbacks.current?.onOpponentDisconnected(timeoutSec)
-    }, []),
-    onReconnected: useCallback(() => {}, []),
-    onOpponentLeft: useCallback(() => {
-      onlineLobbyCallbacks.current?.onOpponentLeft()
-    }, []),
-    onError: useCallback((code: string, message: string) => {
-      onlineLobbyCallbacks.current?.onError(code, message)
-    }, []),
-  })
-
   const handleCpuBattleStart = useCallback((opponentCreature: CreatureSnapshot, seed: number) => {
     setBattleRole('host')
     setBattleOpponent(opponentCreature)
     setBattleSeed(seed)
     setBattleMode('cpu')
-    setBattleRoomCode(null)
     setScreen('battle')
   }, [])
 
@@ -326,21 +281,6 @@ export default function App() {
     setBattleOpponent(opponentCreature)
     setBattleSeed(seed)
     setBattleMode('qr')
-    setBattleRoomCode(null)
-    setScreen('battle')
-  }, [])
-
-  const handleOnlineBattleReady = useCallback((
-    opponent: CreatureSnapshot,
-    role: BattleRole,
-    seed: number,
-    roomCode: string,
-  ) => {
-    setBattleOpponent(opponent)
-    setBattleRole(role)
-    setBattleSeed(seed)
-    setBattleMode('online')
-    setBattleRoomCode(roomCode)
     setScreen('battle')
   }, [])
 
@@ -502,15 +442,13 @@ export default function App() {
           onNewCreature={() => setScreen('setup')}
         />
       )}
+
       {screen === 'battle_lobby' && activeCreature && (
         <BattleLobbyScreen
           creature={activeCreature}
           onCpuBattleStart={handleCpuBattleStart}
           onQrBattleStart={handleQrBattleStart}
-          onOnlineBattleReady={handleOnlineBattleReady}
           onCancel={() => setScreen('main')}
-          onlineWs={onlineWs}
-          onlineLobbyCallbacksRef={onlineLobbyCallbacks}
         />
       )}
 
@@ -532,11 +470,6 @@ export default function App() {
           seed={battleSeed}
           onBattleEnd={handleBattleEnd}
           battleMode={battleMode}
-          roomCode={battleRoomCode ?? undefined}
-          ws={battleMode === 'online' ? onlineWs : undefined}
-          onRegisterActionsLockedHandler={(handler) => {
-            resolveOnlineActionsRef.current = handler
-          }}
         />
       )}
 

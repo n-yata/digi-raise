@@ -28,9 +28,6 @@ jobs:
 
       - name: Build
         run: npm run build
-        env:
-          VITE_WS_ENDPOINT: ${{ secrets.VITE_WS_ENDPOINT }}
-          VITE_WS_SECRET_KEY: ${{ secrets.VITE_WS_SECRET_KEY }}
 
       - name: Deploy to gh-pages branch
         uses: peaceiris/actions-gh-pages@v4
