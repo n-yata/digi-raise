@@ -161,6 +161,19 @@ export default function App() {
   }, [])
 
   const handleContinue = useCallback(async () => {
+    // クラウド同期でメモリに読み込み済みの場合はそちらを優先する
+    const aliveInMemory = creatures.filter(c => c.isAlive)
+    if (aliveInMemory.length > 0) {
+      const target = creatures.find(c => c.id === activeCreatureId && c.isAlive) ?? aliveInMemory[0]
+      const updated = applyTimeUpdate(target, false)
+      const newCreatures = creatures.map(c => c.id === updated.id ? updated : c)
+      setCreatures(newCreatures)
+      setActiveCreatureId(updated.id)
+      saveSaveData({ creatures: newCreatures, activeCreatureId: updated.id })
+      setScreen(updated.isAlive ? 'main' : 'death')
+      return
+    }
+    // メモリにない場合はIndexedDBから読み込む
     const saved = await loadSaveData()
     if (!saved || saved.creatures.length === 0) return
     setCreatures(saved.creatures)
@@ -170,7 +183,6 @@ export default function App() {
       ? activeCandidate
       : saved.creatures.find(c => c.isAlive)
     if (!target) return // 全員死亡（起こらないはず）
-    // Apply time catch-up
     const updated = applyTimeUpdate(target, false)
     const newCreatures = saved.creatures.map(c => c.id === updated.id ? updated : c)
     setCreatures(newCreatures)
@@ -181,7 +193,7 @@ export default function App() {
     } else {
       setScreen('main')
     }
-  }, [])
+  }, [creatures, activeCreatureId])
 
   const handleStartGame = useCallback((newCreature: Creature) => {
     setCreatures(prev => {
