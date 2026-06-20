@@ -176,97 +176,86 @@ describe('trainCreature', () => {
     vi.restoreAllMocks()
   })
 
-  it('success=true のとき exp が 20 増加する (EXP_TO_LEVEL(1)=20 なのでちょうどレベルアップし exp:0, level:2 になる)', () => {
+  it('タップ数 × 2 の exp を獲得する (10タップ → +20, EXP_TO_LEVEL(1)=20 なのでちょうどレベルアップ)', () => {
     vi.mocked(Math.random).mockReturnValue(0.5) // floor(0.5*3)+1=2
     const creature = makeCreature({ exp: 0, level: 1 })
-    const result = trainCreature(creature, true)
+    const result = trainCreature(creature, 10)
     // exp=0+20=20, EXP_TO_LEVEL(1)=1*20=20 → レベルアップ → exp=0, level=2
     expect(result.exp).toBe(0)
     expect(result.level).toBe(2)
   })
 
-  it('success=false のとき exp が 5 増加する', () => {
-    vi.mocked(Math.random).mockReturnValue(0.5) // floor(0.5*2)=1
-    const creature = makeCreature({ exp: 0, level: 1 })
-    const result = trainCreature(creature, false)
-    expect(result.exp).toBe(5)
-  })
-
-  it('success=true と false の exp 差が正しい (level:5 で比較)', () => {
+  it('exp はタップ数に比例する (level:5 で 3タップ → +6, 25タップ → +50)', () => {
     vi.mocked(Math.random).mockReturnValue(0.5)
-    // level:5, EXP_TO_LEVEL(5)=100 なので20expも5expもレベルアップしない
-    const creatureSuccess = makeCreature({ exp: 0, level: 5 })
-    const creatureFail = makeCreature({ exp: 0, level: 5 })
-    const resultSuccess = trainCreature(creatureSuccess, true)
-    const resultFail = trainCreature(creatureFail, false)
-    expect(resultSuccess.exp).toBe(20)
-    expect(resultFail.exp).toBe(5)
+    // level:5, EXP_TO_LEVEL(5)=100 なのでレベルアップしない
+    const few = trainCreature(makeCreature({ exp: 0, level: 5 }), 3)
+    const many = trainCreature(makeCreature({ exp: 0, level: 5 }), 25)
+    expect(few.exp).toBe(6)
+    expect(many.exp).toBe(50)
   })
 
-  it('success=true のとき atk/def/spd が 1〜3 増加する (random=0 → +1)', () => {
+  it('タップ 0 回のときは何も変化しない', () => {
+    vi.mocked(Math.random).mockReturnValue(0.5)
+    const creature = makeCreature({ exp: 3, atk: 5, trainCount: 1, hunger: 60 })
+    const result = trainCreature(creature, 0)
+    expect(result).toBe(creature)
+  })
+
+  it('atk/def/spd が 1〜3 増加する (random=0 → +1)', () => {
     vi.mocked(Math.random).mockReturnValue(0) // floor(0*3)+1=1
     const creature = makeCreature({ atk: 5, def: 5, spd: 5 })
-    const result = trainCreature(creature, true)
+    const result = trainCreature(creature, 10)
     expect(result.atk).toBe(6)
     expect(result.def).toBe(6)
     expect(result.spd).toBe(6)
   })
 
-  it('success=true のとき atk/def/spd が 1〜3 増加する (random=0.99 → +3)', () => {
+  it('atk/def/spd が 1〜3 増加する (random=0.99 → +3)', () => {
     vi.mocked(Math.random).mockReturnValue(0.99) // floor(0.99*3)+1=3
     const creature = makeCreature({ atk: 5, def: 5, spd: 5 })
-    const result = trainCreature(creature, true)
+    const result = trainCreature(creature, 10)
     expect(result.atk).toBe(8)
     expect(result.def).toBe(8)
     expect(result.spd).toBe(8)
   })
 
-  it('success=false のとき atk/def/spd が 0〜1 増加する (random=0 → +0)', () => {
-    vi.mocked(Math.random).mockReturnValue(0) // floor(0*2)=0
-    const creature = makeCreature({ atk: 5, def: 5, spd: 5 })
-    const result = trainCreature(creature, false)
-    expect(result.atk).toBe(5)
-    expect(result.def).toBe(5)
-    expect(result.spd).toBe(5)
-  })
-
   it('trainCount が 1 増加する', () => {
     vi.mocked(Math.random).mockReturnValue(0.5)
     const creature = makeCreature({ trainCount: 2 })
-    const result = trainCreature(creature, true)
+    const result = trainCreature(creature, 10)
     expect(result.trainCount).toBe(3)
   })
 
   it('hunger が 10 減少する (下限0)', () => {
     vi.mocked(Math.random).mockReturnValue(0.5)
     const creature = makeCreature({ hunger: 60 })
-    const result = trainCreature(creature, true)
+    const result = trainCreature(creature, 10)
     expect(result.hunger).toBe(50)
   })
 
   it('hunger の下限は 0 を下回らない', () => {
     vi.mocked(Math.random).mockReturnValue(0.5)
     const creature = makeCreature({ hunger: 5 })
-    const result = trainCreature(creature, true)
+    const result = trainCreature(creature, 10)
     expect(result.hunger).toBe(0)
   })
 
   it('happiness が 5 減少する (下限0)', () => {
     vi.mocked(Math.random).mockReturnValue(0.5)
     const creature = makeCreature({ happiness: 60 })
-    const result = trainCreature(creature, true)
+    const result = trainCreature(creature, 10)
     expect(result.happiness).toBe(55)
   })
 
   it('isAlive:false のときそのまま返す', () => {
     const creature = makeCreature({ isAlive: false, trainCount: 0 })
-    const result = trainCreature(creature, true)
+    const result = trainCreature(creature, 10)
     expect(result.trainCount).toBe(0)
   })
 
   it('isSleeping:true のときそのまま返す', () => {
     const creature = makeCreature({ isSleeping: true, trainCount: 0 })
-    const result = trainCreature(creature, true)
+    const result = trainCreature(creature, 10)
     expect(result.trainCount).toBe(0)
   })
 })
