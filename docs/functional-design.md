@@ -100,13 +100,28 @@ sequenceDiagram
 
 ```typescript
 // creature.ts
-type CreatureType = 'fire' | 'water' | 'plant' | 'thunder' | 'dark' | 'light'
+type CreatureId =
+  | 'egg' | 'baby'
+  | 'childA' | 'childB' | 'childC'
+  | 'adultA1' | 'adultA2' | 'adultB1' | 'adultB2' | 'adultC1' | 'adultC2'
+  | 'perfectA1' | 'perfectA2' | 'perfectB1' | 'perfectB2' | 'perfectC1' | 'perfectC2'
+  | 'ultimateA' | 'ultimateB' | 'ultimateC'
+
 type EvolutionStage = 0 | 1 | 2 | 3 | 4 | 5
+type CreatureBranch = 'A' | 'B' | 'C' | 'none'
+
+// 進化ツリー定義（src/data/evolutions.ts の CREATURE_TREE）
+interface CreatureDefinition {
+  id: CreatureId
+  name: string             // 表示名（例: 'プチボール', 'セイラフィン'）
+  stage: EvolutionStage
+  evolvesTo: CreatureId[]  // [] = 終点クリーチャー
+}
 
 interface Creature {
   id: string
   name: string
-  type: CreatureType
+  creatureId: CreatureId   // 進化ツリー上の ID（旧 type フィールド）
   evolutionStage: EvolutionStage
   hp: number; maxHp: number
   hunger: number; happiness: number
@@ -117,6 +132,7 @@ interface Creature {
   isAlive: boolean         // false = 墓石
   isSleeping: boolean
   lastUpdated: number      // Unix ms
+  evolutionName: string    // 現在の進化形態の表示名
   wins?: number; losses?: number
   customSprites?: Partial<Record<EvolutionStage, string>>  // SVG文字列
 }
@@ -143,6 +159,67 @@ interface BattleState {
   error: string | null
 }
 ```
+
+---
+
+## 進化ツリー
+
+### ブランチ（分岐系統）
+
+| ブランチ | テーマ | カラー |
+|---------|--------|--------|
+| A（善） | 神聖・光 | #ffd700（ゴールド） |
+| B（悪） | 禍々しい・闇 | #9b59b6（パープル） |
+| C（中間） | カッコいい・クール | #3498db（ブルー） |
+| none | 未分岐（卵・ベイビー） | #9ca3af（グレー） |
+
+### 進化分岐ロジック
+
+```
+egg → baby（タップで即時進化）
+
+baby → child（age ≥ 1 で分岐）
+  happiness ≥ 70 → childA（善）
+  happiness ≤ 30 → childB（悪）
+  happiness 31〜69 → childC（中間）
+
+child → adult（age ≥ 3 AND happiness ≥ 50 で分岐）
+  happiness ≥ 70 → adultX1（高道）
+  happiness < 70  → adultX2（低道）
+
+adult → perfect（age ≥ 6 AND level ≥ 8 AND atk+def+spd ≥ 40）
+  → perfectX1（adultX1 から）または perfectX2（adultX2 から）
+
+perfectX1 → ultimate（age ≥ 12 AND level ≥ 14 AND 各 stat ≥ 20）
+  → ultimateA / B / C
+
+perfectX2 → 終点（evolvesTo: []）アルティメットには進化しない
+```
+
+### 20体一覧
+
+| CreatureId | 名前 | ステージ | 終点 |
+|-----------|------|---------|------|
+| egg | タマゴ | 0 | — |
+| baby | プチボール | 1 | — |
+| childA | セイラント | 2 | — |
+| childB | ダーコン | 2 | — |
+| childC | グレイン | 2 | — |
+| adultA1 | セイラフィン | 3 | — |
+| adultA2 | ルーメナ | 3 | — |
+| adultB1 | ヴォルカン | 3 | — |
+| adultB2 | グラウム | 3 | — |
+| adultC1 | ゼファリス | 3 | — |
+| adultC2 | ブレイズ | 3 | — |
+| perfectA1 | セラフィデス | 4 | — |
+| perfectA2 | ルーメニア | 4 | **終点** |
+| perfectB1 | ヴォルカニス | 4 | — |
+| perfectB2 | グラウマル | 4 | **終点** |
+| perfectC1 | ゼファリオン | 4 | — |
+| perfectC2 | ブレイゾン | 4 | **終点** |
+| ultimateA | セラフォム | 5 | 終点 |
+| ultimateB | ヴォルカルム | 5 | 終点 |
+| ultimateC | ゼファリウス | 5 | 終点 |
 
 ---
 
