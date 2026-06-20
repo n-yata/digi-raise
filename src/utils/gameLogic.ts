@@ -1,14 +1,13 @@
-import type { Creature, CreatureType, EvolutionStage } from '../types/creature'
-import { EVOLUTION_NAMES, BASE_STATS, EXP_TO_LEVEL } from '../data/evolutions'
+import type { Creature, EvolutionStage } from '../types/creature'
+import { CREATURE_TREE, BASE_STATS, EXP_TO_LEVEL } from '../data/evolutions'
 
-// タイプは開始時に選ばせず、誕生時は中立の 'Normal'。育成内容に応じて進化時に分岐する。
-export function createNewCreature(name: string, type: CreatureType = 'Normal'): Creature {
+export function createNewCreature(name: string): Creature {
   const baseStats = BASE_STATS[0]
   const now = Date.now()
   return {
-    id: `${type}-${now}`,
+    id: `egg-${now}`,
     name,
-    type,
+    creatureId: 'egg',
     evolutionStage: 0 as EvolutionStage,
     level: 1,
     exp: 0,
@@ -24,7 +23,7 @@ export function createNewCreature(name: string, type: CreatureType = 'Normal'): 
     isSleeping: false,
     isAlive: true,
     lastUpdated: now,
-    evolutionName: EVOLUTION_NAMES[type][0],
+    evolutionName: CREATURE_TREE['egg'].name,
     totalDeaths: 0,
     trainCount: 0,
     playCount: 0,

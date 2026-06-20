@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import type { Creature } from '../types/creature'
-import { TYPE_COLORS } from '../data/evolutions'
+import { BRANCH_COLORS, getCreatureBranch } from '../data/evolutions'
 import CreatureSprite from './CreatureSprite'
 
 interface Props {
@@ -25,7 +25,7 @@ export default function FeedMiniGame({ creature, onDone }: Props) {
   const [food, setFood] = useState<FoodItem | null>(null)
   const [showComplete, setShowComplete] = useState(false)
 
-  const color = TYPE_COLORS[creature.type]
+  const color = BRANCH_COLORS[getCreatureBranch(creature.creatureId)]
 
   // ミールシーケンスの制御
   useEffect(() => {
@@ -130,7 +130,7 @@ export default function FeedMiniGame({ creature, onDone }: Props) {
             }}
           >
             <CreatureSprite
-              type={creature.type}
+              creatureId={creature.creatureId}
               stage={creature.evolutionStage}
               animState={bounce ? 'eating' : 'idle'}
             />

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import CreatureSprite from './CreatureSprite'
-import type { CreatureType, EvolutionStage } from '../types/creature'
-import { TYPE_COLORS } from '../data/evolutions'
+import type { CreatureId, EvolutionStage } from '../types/creature'
+import { BRANCH_COLORS, getCreatureBranch } from '../data/evolutions'
 
 export type BattleEffectType = 'hit' | 'guard' | 'special' | 'heal' | 'poison' | 'paralysis' | null
 
@@ -30,7 +30,7 @@ export default function BattleCreatureDisplay({
   const [showDamage, setShowDamage] = useState<number | null>(null)
   const [effectKey, setEffectKey] = useState(0)
 
-  const color = TYPE_COLORS[type as CreatureType] || '#888'
+  const color = BRANCH_COLORS[getCreatureBranch(type as CreatureId)] || '#888'
 
   useEffect(() => {
     if (effect) {
@@ -84,7 +84,7 @@ export default function BattleCreatureDisplay({
         }}
       >
         <CreatureSprite
-          type={type as CreatureType}
+          creatureId={type as CreatureId}
           stage={evolutionStage as EvolutionStage}
           animState={animState}
         />

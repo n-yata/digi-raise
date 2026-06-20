@@ -1,9 +1,8 @@
 import { openDB, type IDBPDatabase } from 'idb'
-import type { Creature, CreatureType } from '../types/creature'
+import type { Creature } from '../types/creature'
+import { CREATURE_TREE } from '../data/evolutions'
 
 const MAX_FILE_SIZE = 1 * 1024 * 1024 // 1MB
-
-const VALID_CREATURE_TYPES: CreatureType[] = ['Normal', 'Fire', 'Water', 'Plant', 'Thunder', 'Dark', 'Light']
 
 function validateCreature(c: unknown): c is Creature {
   if (typeof c !== 'object' || c === null) return false
@@ -11,7 +10,8 @@ function validateCreature(c: unknown): c is Creature {
 
   if (typeof obj.id !== 'string' || obj.id.length > 64) return false
   if (typeof obj.name !== 'string' || obj.name.length < 1 || obj.name.length > 30) return false
-  if (!VALID_CREATURE_TYPES.includes(obj.type as CreatureType)) return false
+  if (typeof obj.creatureId !== 'string') return false
+  if (!Object.prototype.hasOwnProperty.call(CREATURE_TREE, obj.creatureId)) return false
 
   const numFields: (keyof Creature)[] = ['hp', 'maxHp', 'atk', 'def', 'spd', 'level', 'exp', 'hunger', 'happiness', 'age', 'weight']
   for (const field of numFields) {

@@ -36,7 +36,7 @@ describe('CreatureSetup', () => {
     expect(screen.getByText(/3\/12/)).toBeInTheDocument()
   })
 
-  it('名前を入力して「ゲームスタート！」で onStart が呼ばれ、type は Normal で生成される', () => {
+  it('名前を入力して「ゲームスタート！」で onStart が呼ばれ、creatureId は egg で生成される', () => {
     render(<CreatureSetup onStart={onStart} onBack={onBack} />)
     fireEvent.change(screen.getByPlaceholderText('なまえ...'), { target: { value: 'マイモン' } })
 
@@ -47,7 +47,7 @@ describe('CreatureSetup', () => {
     expect(onStart).toHaveBeenCalledTimes(1)
     const creature = onStart.mock.calls[0][0]
     expect(creature.name).toBe('マイモン')
-    expect(creature.type).toBe('Normal')
+    expect(creature.creatureId).toBe('egg')
   })
 
   it('Enter キーでもゲームを開始できる（名前入力済みの場合）', () => {

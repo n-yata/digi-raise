@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { Creature, EvolutionStage } from '../types/creature'
-import { TYPE_COLORS, STAGE_NAMES } from '../data/evolutions'
+import { BRANCH_COLORS, STAGE_NAMES, getCreatureBranch } from '../data/evolutions'
 import CreatureSprite from './CreatureSprite'
 
 interface EvolutionScreenProps {
@@ -11,7 +11,7 @@ interface EvolutionScreenProps {
 
 export default function EvolutionScreen({ creature, evolvedFrom, onContinue }: EvolutionScreenProps) {
   const [phase, setPhase] = useState<'flash' | 'reveal' | 'done'>('flash')
-  const color = TYPE_COLORS[creature.type]
+  const color = BRANCH_COLORS[getCreatureBranch(creature.creatureId)]
 
   useEffect(() => {
     const t1 = setTimeout(() => setPhase('reveal'), 1500)
@@ -77,7 +77,7 @@ export default function EvolutionScreen({ creature, evolvedFrom, onContinue }: E
             }}
           >
             <CreatureSprite
-              type={creature.type}
+              creatureId={creature.creatureId}
               stage={creature.evolutionStage}
               animState="happy"
             />

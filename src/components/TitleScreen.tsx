@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
-import type { CreatureType } from '../types/creature'
-import { PixelSprite, getPixelSprite } from './creatures/pixel'
+import { BRANCH_COLORS, type CreatureBranch } from '../data/evolutions'
 
 interface TitleScreenProps {
   hasExistingSave: boolean
@@ -8,18 +7,15 @@ interface TitleScreenProps {
   onContinue: () => void
 }
 
-// タイトルで巡回表示する代表クリーチャー（各タイプの成長期）
-const PREVIEW_TYPES: CreatureType[] = ['Fire', 'Water', 'Plant', 'Thunder', 'Dark', 'Light']
-const GLOW_CLASS: Record<CreatureType, string> = {
-  Fire: 'glow-fire', Water: 'glow-water', Plant: 'glow-plant',
-  Thunder: 'glow-thunder', Dark: 'glow-dark', Light: 'glow-light', Normal: '',
-}
-const TYPE_DOT: Record<CreatureType, string> = {
-  Fire: '#ff6b35', Water: '#4fc3f7', Plant: '#81c784',
-  Thunder: '#ffd54f', Dark: '#ce93d8', Light: '#fff9c4', Normal: '#9ca3af',
+const PREVIEW_BRANCHES: CreatureBranch[] = ['A', 'B', 'C', 'none']
+
+const GLOW_COLOR: Record<CreatureBranch, string> = {
+  A:    '#ffd700',
+  B:    '#9b59b6',
+  C:    '#3498db',
+  none: '#9ca3af',
 }
 
-// 背景の星は一度だけ生成して固定する（再レンダーで位置が飛ばないように）
 function createStars() {
   return Array.from({ length: 20 }).map(() => ({
     size: Math.random() * 3 + 1,
@@ -36,12 +32,12 @@ export default function TitleScreen({ hasExistingSave, onNewGame, onContinue }: 
   const [stars] = useState(createStars)
 
   useEffect(() => {
-    const id = setInterval(() => setFrame(f => (f + 1) % PREVIEW_TYPES.length), 900)
+    const id = setInterval(() => setFrame(f => (f + 1) % PREVIEW_BRANCHES.length), 900)
     return () => clearInterval(id)
   }, [])
 
-  const previewType = PREVIEW_TYPES[frame]
-  const previewData = getPixelSprite(previewType, 3)
+  const previewBranch = PREVIEW_BRANCHES[frame]
+  const glowColor = GLOW_COLOR[previewBranch]
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4 py-8 scanlines"
@@ -67,9 +63,9 @@ export default function TitleScreen({ hasExistingSave, onNewGame, onContinue }: 
         ))}
       </div>
 
-      {/* Floating creature preview（ドット絵・タイプ巡回） */}
+      {/* Floating creature preview frame */}
       <div
-        className={`mb-6 animate-float rounded-2xl pixel-border ${GLOW_CLASS[previewType]}`}
+        className="mb-6 animate-float rounded-2xl pixel-border"
         style={{
           display: 'flex',
           alignItems: 'center',
@@ -77,12 +73,22 @@ export default function TitleScreen({ hasExistingSave, onNewGame, onContinue }: 
           width: 132,
           height: 132,
           background: 'radial-gradient(circle at 50% 40%, #1f2b4a 0%, #131d33 100%)',
-          transition: 'box-shadow 0.5s ease',
+          boxShadow: `0 0 24px ${glowColor}44`,
+          border: `2px solid ${glowColor}33`,
+          transition: 'box-shadow 0.5s ease, border-color 0.5s ease',
         }}
       >
-        <div className="creature-sprite">
-          {previewData && <PixelSprite data={previewData} size={104} animState="happy" />}
-        </div>
+        <div
+          className="creature-sprite"
+          style={{
+            width: 60,
+            height: 60,
+            borderRadius: '50%',
+            background: `radial-gradient(circle, ${glowColor}44 0%, transparent 70%)`,
+            boxShadow: `0 0 16px ${glowColor}66`,
+            transition: 'background 0.5s ease, box-shadow 0.5s ease',
+          }}
+        />
       </div>
 
       {/* Title */}
@@ -102,21 +108,24 @@ export default function TitleScreen({ hasExistingSave, onNewGame, onContinue }: 
         </div>
       </div>
 
-      {/* Pixel decoration（タイプ色のドット・巡回中のタイプを強調） */}
+      {/* Branch dots */}
       <div className="flex gap-1 my-4">
-        {PREVIEW_TYPES.map((t, i) => (
-          <div
-            key={i}
-            className="w-3 h-3"
-            style={{
-              background: TYPE_DOT[t],
-              boxShadow: i === frame ? `0 0 8px ${TYPE_DOT[t]}` : 'none',
-              transform: i === frame ? 'scale(1.3)' : 'scale(1)',
-              transition: 'transform 0.3s ease',
-              outline: '1px solid #00000040',
-            }}
-          />
-        ))}
+        {PREVIEW_BRANCHES.map((branch, i) => {
+          const c = BRANCH_COLORS[branch]
+          return (
+            <div
+              key={i}
+              className="w-3 h-3"
+              style={{
+                background: c,
+                boxShadow: i === frame ? `0 0 8px ${c}` : 'none',
+                transform: i === frame ? 'scale(1.3)' : 'scale(1)',
+                transition: 'transform 0.3s ease',
+                outline: '1px solid #00000040',
+              }}
+            />
+          )
+        })}
       </div>
 
       {/* Tagline */}

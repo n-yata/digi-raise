@@ -109,7 +109,7 @@ export default function BattleLobbyScreen({
     const playerSnapshot: CreatureSnapshot = {
       name: creature.name,
       evolutionStage: creature.evolutionStage,
-      type: creature.type,
+      type: creature.creatureId,
       hp: creature.hp,
       maxHp: creature.maxHp,
       atk: creature.atk,
@@ -131,7 +131,7 @@ export default function BattleLobbyScreen({
     const playerSnapshot: CreatureSnapshot = {
       name: creature.name,
       evolutionStage: creature.evolutionStage,
-      type: creature.type,
+      type: creature.creatureId,
       hp: creature.hp,
       maxHp: creature.maxHp,
       atk: creature.atk,
@@ -200,7 +200,7 @@ export default function BattleLobbyScreen({
   const mySnapshot: CreatureSnapshot = {
     name: creature.name,
     evolutionStage: creature.evolutionStage,
-    type: creature.type,
+    type: creature.creatureId,
     hp: creature.hp,
     maxHp: creature.maxHp,
     atk: creature.atk,

@@ -1,14 +1,7 @@
 import type { FC } from 'react'
-import type { CreatureType, EvolutionStage } from '../../types/creature'
-import { TYPE_COLORS } from '../../data/evolutions'
+import type { EvolutionStage } from '../../types/creature'
 import { STAGE_SIZES } from '../../data/spriteConfig'
 import { FallbackSilhouette } from './FallbackSilhouette'
-import { FireSprites } from './FireSprites'
-import { WaterSprites } from './WaterSprites'
-import { PlantSprites } from './PlantSprites'
-import { ThunderSprites } from './ThunderSprites'
-import { DarkSprites } from './DarkSprites'
-import { LightSprites } from './LightSprites'
 
 export type AnimState = 'idle' | 'happy' | 'sleeping' | 'attack' | 'evolving' | 'dead' | 'sad' | 'hungry' | 'critical' | 'eating' | 'walking'
 export type EyeVariant = 'normal' | 'angry' | 'closed'
@@ -42,32 +35,18 @@ export interface SpriteProps {
 
 export type StageSpriteMap = Partial<Record<Exclude<EvolutionStage, 0>, FC<SpriteProps>>>
 
-const SPRITE_DISPATCH: Record<CreatureType, StageSpriteMap> = {
-  Normal: {},
-  Fire: FireSprites,
-  Water: WaterSprites,
-  Plant: PlantSprites,
-  Thunder: ThunderSprites,
-  Dark: DarkSprites,
-  Light: LightSprites,
-}
-
-export function hasDefaultSprite(type: CreatureType, stage: EvolutionStage): boolean {
-  if (stage === 0) return false
-  return Boolean(SPRITE_DISPATCH[type]?.[stage as Exclude<EvolutionStage, 0>])
+export function hasDefaultSprite(_stage: EvolutionStage): boolean {
+  return false
 }
 
 interface DefaultCreatureBodyProps {
-  type: CreatureType
+  color: string
   stage: EvolutionStage
   animState: AnimState
 }
 
-export function DefaultCreatureBody({ type, stage, animState }: DefaultCreatureBodyProps) {
-  const color = TYPE_COLORS[type]
+export function DefaultCreatureBody({ color, stage, animState }: DefaultCreatureBodyProps) {
   const size = STAGE_SIZES[stage]
   if (stage === 0) return null
-  const SpriteComp = SPRITE_DISPATCH[type]?.[stage as Exclude<EvolutionStage, 0>]
-  if (!SpriteComp) return <FallbackSilhouette color={color} size={size} stage={stage} animState={animState} />
-  return <SpriteComp color={color} size={size} animState={animState} />
+  return <FallbackSilhouette color={color} size={size} stage={stage} animState={animState} />
 }
