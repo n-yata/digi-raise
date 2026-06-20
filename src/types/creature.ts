@@ -40,7 +40,7 @@ export interface Creature {
   losses?: number
 }
 
-export type GameScreen = 'title' | 'setup' | 'main' | 'evolution' | 'death' | 'status' | 'battle_lobby' | 'battle'
+export type GameScreen = 'title' | 'setup' | 'main' | 'evolution' | 'death' | 'status' | 'battle_lobby' | 'battle' | 'zukan'
 
 export interface GameState {
   creatures: Creature[]
