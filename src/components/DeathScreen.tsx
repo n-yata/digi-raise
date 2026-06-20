@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from 'react'
 import type { Creature } from '../types/creature'
-import { TYPE_COLORS, STAGE_NAMES } from '../data/evolutions'
+import { BRANCH_COLORS, STAGE_NAMES, getCreatureBranch } from '../data/evolutions'
 
 interface DeathScreenProps {
   creature: Creature
@@ -11,7 +11,7 @@ interface DeathScreenProps {
 
 export default function DeathScreen({ creature, hasOtherAliveCreatures, onStartOver, onGoToCreatureList }: DeathScreenProps) {
   const [showButton, setShowButton] = useState(false)
-  const color = TYPE_COLORS[creature.type]
+  const color = BRANCH_COLORS[getCreatureBranch(creature.creatureId)]
 
   useEffect(() => {
     const t = setTimeout(() => setShowButton(true), 2000)

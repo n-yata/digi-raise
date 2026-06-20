@@ -13,9 +13,9 @@ import {
 // テスト用ヘルパー: デフォルトのクリーチャーを生成
 function makeCreature(overrides: Partial<Creature> = {}): Creature {
   return {
-    id: 'test-Fire-1000',
+    id: 'test-baby-1000',
     name: 'テストモン',
-    type: 'Fire',
+    creatureId: 'baby',
     evolutionStage: 1,
     level: 1,
     exp: 0,
@@ -44,14 +44,14 @@ function makeCreature(overrides: Partial<Creature> = {}): Creature {
 // 1. createNewCreature
 // ----------------------------------------------------------------
 describe('createNewCreature', () => {
-  it('指定した名前とタイプでクリーチャーが生成される', () => {
-    const creature = createNewCreature('マイモン', 'Fire')
+  it('指定した名前でクリーチャーが生成される', () => {
+    const creature = createNewCreature('マイモン')
     expect(creature.name).toBe('マイモン')
-    expect(creature.type).toBe('Fire')
+    expect(creature.creatureId).toBe('egg')
   })
 
   it('初期ステータスがBASE_STATS[0]の値になる (hp:20, atk:2, def:2, spd:2)', () => {
-    const creature = createNewCreature('テスト', 'Water')
+    const creature = createNewCreature('テスト')
     expect(creature.hp).toBe(20)
     expect(creature.maxHp).toBe(20)
     expect(creature.atk).toBe(2)
@@ -60,40 +60,37 @@ describe('createNewCreature', () => {
   })
 
   it('初期hunger:80, happiness:70, age:0になる', () => {
-    const creature = createNewCreature('テスト', 'Plant')
+    const creature = createNewCreature('テスト')
     expect(creature.hunger).toBe(80)
     expect(creature.happiness).toBe(70)
     expect(creature.age).toBe(0)
   })
 
   it('isAlive:true, isSleeping:falseで生成される', () => {
-    const creature = createNewCreature('テスト', 'Thunder')
+    const creature = createNewCreature('テスト')
     expect(creature.isAlive).toBe(true)
     expect(creature.isSleeping).toBe(false)
   })
 
   it('evolutionStage:0, level:1, exp:0で生成される', () => {
-    const creature = createNewCreature('テスト', 'Dark')
+    const creature = createNewCreature('テスト')
     expect(creature.evolutionStage).toBe(0)
     expect(creature.level).toBe(1)
     expect(creature.exp).toBe(0)
   })
 
-  it('evolutionNameがタイプに対応したステージ0の名前になる', () => {
-    const fireCreature = createNewCreature('テスト', 'Fire')
-    expect(fireCreature.evolutionName).toBe('タマゴ')
-
-    const waterCreature = createNewCreature('テスト', 'Water')
-    expect(waterCreature.evolutionName).toBe('タマゴ')
+  it('evolutionNameがタマゴになる', () => {
+    const creature = createNewCreature('テスト')
+    expect(creature.evolutionName).toBe('タマゴ')
   })
 
-  it('IDにタイプ名が含まれる', () => {
-    const creature = createNewCreature('テスト', 'Light')
-    expect(creature.id).toContain('Light')
+  it('IDに egg が含まれる', () => {
+    const creature = createNewCreature('テスト')
+    expect(creature.id).toContain('egg')
   })
 
   it('trainCount/playCount/feedCount が 0 で生成される', () => {
-    const creature = createNewCreature('テスト', 'Fire')
+    const creature = createNewCreature('テスト')
     expect(creature.trainCount).toBe(0)
     expect(creature.playCount).toBe(0)
     expect(creature.feedCount).toBe(0)

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { Creature } from '../types/creature'
-import { TYPE_COLORS } from '../data/evolutions'
+import { BRANCH_COLORS, getCreatureBranch } from '../data/evolutions'
 
 interface Props {
   creature: Creature
@@ -10,7 +10,7 @@ interface Props {
 export default function TrainingMiniGame({ creature, onResult }: Props) {
   const [result, setResult] = useState<'success' | 'fail' | null>(null)
   const [chosen, setChosen] = useState<'left' | 'right' | null>(null)
-  const color = TYPE_COLORS[creature.type]
+  const color = BRANCH_COLORS[getCreatureBranch(creature.creatureId)]
 
   const handleChoice = (side: 'left' | 'right') => {
     if (chosen) return

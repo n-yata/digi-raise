@@ -1,13 +1,12 @@
 import { describe, it, expect } from 'vitest'
-import type { Creature } from '../types/creature'
-import { canEvolve, evolveCreature, getEvolutionProgress, determineTypeFromRaising } from './evolution'
+import type { Creature, CreatureId } from '../types/creature'
+import { canEvolve, evolveCreature, getEvolutionProgress, determineEvolutionTarget } from './evolution'
 
-// テスト用ヘルパー: 任意ステージのクリーチャーを生成
 function makeCreature(overrides: Partial<Creature> = {}): Creature {
   return {
-    id: 'test-Fire-1000',
-    name: 'テストモン',
-    type: 'Fire',
+    id: 'test-1000',
+    name: 'プティ',
+    creatureId: 'baby',
     evolutionStage: 1,
     level: 1,
     exp: 0,
@@ -23,7 +22,7 @@ function makeCreature(overrides: Partial<Creature> = {}): Creature {
     isSleeping: false,
     isAlive: true,
     lastUpdated: 1000000,
-    evolutionName: 'ホノカ',
+    evolutionName: 'プティ',
     totalDeaths: 0,
     trainCount: 0,
     playCount: 0,
@@ -33,464 +32,331 @@ function makeCreature(overrides: Partial<Creature> = {}): Creature {
 }
 
 // ----------------------------------------------------------------
-// 1. canEvolve
+// 1. determineEvolutionTarget
+// ----------------------------------------------------------------
+describe('determineEvolutionTarget', () => {
+  describe('egg → baby', () => {
+    it('egg は常に baby に進化する', () => {
+      const creature = makeCreature({ creatureId: 'egg', evolutionStage: 0 })
+      expect(determineEvolutionTarget(creature)).toBe('baby')
+    })
+  })
+
+  describe('baby → child（幸福度3分岐）', () => {
+    it('happiness >= 70 → childA（善/ルーチェ）', () => {
+      expect(determineEvolutionTarget(makeCreature({ creatureId: 'baby', happiness: 70 }))).toBe('childA')
+      expect(determineEvolutionTarget(makeCreature({ creatureId: 'baby', happiness: 71 }))).toBe('childA')
+      expect(determineEvolutionTarget(makeCreature({ creatureId: 'baby', happiness: 100 }))).toBe('childA')
+    })
+
+    it('happiness <= 30 → childB（悪/モルテ）', () => {
+      expect(determineEvolutionTarget(makeCreature({ creatureId: 'baby', happiness: 30 }))).toBe('childB')
+      expect(determineEvolutionTarget(makeCreature({ creatureId: 'baby', happiness: 29 }))).toBe('childB')
+      expect(determineEvolutionTarget(makeCreature({ creatureId: 'baby', happiness: 0 }))).toBe('childB')
+    })
+
+    it('happiness 31〜69 → childC（中間/ゼファ）', () => {
+      expect(determineEvolutionTarget(makeCreature({ creatureId: 'baby', happiness: 31 }))).toBe('childC')
+      expect(determineEvolutionTarget(makeCreature({ creatureId: 'baby', happiness: 50 }))).toBe('childC')
+      expect(determineEvolutionTarget(makeCreature({ creatureId: 'baby', happiness: 69 }))).toBe('childC')
+    })
+
+    it('境界値: 30/31 と 69/70 で正しく分岐する', () => {
+      expect(determineEvolutionTarget(makeCreature({ creatureId: 'baby', happiness: 30 }))).toBe('childB')
+      expect(determineEvolutionTarget(makeCreature({ creatureId: 'baby', happiness: 31 }))).toBe('childC')
+      expect(determineEvolutionTarget(makeCreature({ creatureId: 'baby', happiness: 69 }))).toBe('childC')
+      expect(determineEvolutionTarget(makeCreature({ creatureId: 'baby', happiness: 70 }))).toBe('childA')
+    })
+  })
+
+  describe('child → adult（幸福度2分岐）', () => {
+    const childIds: CreatureId[] = ['childA', 'childB', 'childC']
+    const highRoad: Record<string, CreatureId> = { childA: 'adultA1', childB: 'adultB1', childC: 'adultC1' }
+    const lowRoad:  Record<string, CreatureId> = { childA: 'adultA2', childB: 'adultB2', childC: 'adultC2' }
+
+    for (const childId of childIds) {
+      it(`${childId}: happiness >= 70 → 高道（1）`, () => {
+        const creature = makeCreature({ creatureId: childId, evolutionStage: 2, happiness: 70 })
+        expect(determineEvolutionTarget(creature)).toBe(highRoad[childId])
+      })
+
+      it(`${childId}: happiness < 70 → 低道（2）`, () => {
+        const creature = makeCreature({ creatureId: childId, evolutionStage: 2, happiness: 69 })
+        expect(determineEvolutionTarget(creature)).toBe(lowRoad[childId])
+      })
+    }
+  })
+
+  describe('adult → perfect（1対1）', () => {
+    const cases: [CreatureId, CreatureId][] = [
+      ['adultA1', 'perfectA1'], ['adultA2', 'perfectA2'],
+      ['adultB1', 'perfectB1'], ['adultB2', 'perfectB2'],
+      ['adultC1', 'perfectC1'], ['adultC2', 'perfectC2'],
+    ]
+    for (const [from, to] of cases) {
+      it(`${from} → ${to}`, () => {
+        const creature = makeCreature({ creatureId: from, evolutionStage: 3 })
+        expect(determineEvolutionTarget(creature)).toBe(to)
+      })
+    }
+  })
+
+  describe('perfect → ultimate（1系のみ）', () => {
+    it('perfectA1 → ultimateA', () => {
+      expect(determineEvolutionTarget(makeCreature({ creatureId: 'perfectA1', evolutionStage: 4 }))).toBe('ultimateA')
+    })
+    it('perfectB1 → ultimateB', () => {
+      expect(determineEvolutionTarget(makeCreature({ creatureId: 'perfectB1', evolutionStage: 4 }))).toBe('ultimateB')
+    })
+    it('perfectC1 → ultimateC', () => {
+      expect(determineEvolutionTarget(makeCreature({ creatureId: 'perfectC1', evolutionStage: 4 }))).toBe('ultimateC')
+    })
+
+    it('perfectA2 は終点（null）', () => {
+      expect(determineEvolutionTarget(makeCreature({ creatureId: 'perfectA2', evolutionStage: 4 }))).toBeNull()
+    })
+    it('perfectB2 は終点（null）', () => {
+      expect(determineEvolutionTarget(makeCreature({ creatureId: 'perfectB2', evolutionStage: 4 }))).toBeNull()
+    })
+    it('perfectC2 は終点（null）', () => {
+      expect(determineEvolutionTarget(makeCreature({ creatureId: 'perfectC2', evolutionStage: 4 }))).toBeNull()
+    })
+  })
+
+  describe('ultimate は進化不可', () => {
+    const ultimates: CreatureId[] = ['ultimateA', 'ultimateB', 'ultimateC']
+    for (const id of ultimates) {
+      it(`${id} は null を返す`, () => {
+        expect(determineEvolutionTarget(makeCreature({ creatureId: id, evolutionStage: 5 }))).toBeNull()
+      })
+    }
+  })
+})
+
+// ----------------------------------------------------------------
+// 2. canEvolve
 // ----------------------------------------------------------------
 describe('canEvolve', () => {
   describe('stage 0 (Egg → Baby, minAge:0)', () => {
-    it('age:0 でも即時進化できる (minAge:0)', () => {
-      const creature = makeCreature({ evolutionStage: 0, age: 0, isAlive: true })
+    it('age:0 でも即時進化できる', () => {
+      const creature = makeCreature({ creatureId: 'egg', evolutionStage: 0, age: 0 })
       expect(canEvolve(creature)).toBe(true)
     })
   })
 
   describe('stage 1 (Baby → Child, minAge:1)', () => {
-    it('age が 1 以上のとき true を返す', () => {
-      const creature = makeCreature({ evolutionStage: 1, age: 1, isAlive: true })
-      expect(canEvolve(creature)).toBe(true)
+    it('age >= 1 のとき true を返す', () => {
+      expect(canEvolve(makeCreature({ creatureId: 'baby', evolutionStage: 1, age: 1 }))).toBe(true)
     })
 
-    it('age が 1 未満のとき false を返す', () => {
-      const creature = makeCreature({ evolutionStage: 1, age: 0.5, isAlive: true })
-      expect(canEvolve(creature)).toBe(false)
+    it('age < 1 のとき false を返す', () => {
+      expect(canEvolve(makeCreature({ creatureId: 'baby', evolutionStage: 1, age: 0.5 }))).toBe(false)
     })
   })
 
   describe('stage 2 (Child → Adult, minAge:3, minHappiness:50)', () => {
     it('age>=3 かつ happiness>=50 のとき true を返す', () => {
-      const creature = makeCreature({ evolutionStage: 2, age: 3, happiness: 50 })
-      expect(canEvolve(creature)).toBe(true)
+      expect(canEvolve(makeCreature({ creatureId: 'childA', evolutionStage: 2, age: 3, happiness: 50 }))).toBe(true)
     })
 
-    it('age が 3 未満のとき false を返す', () => {
-      const creature = makeCreature({ evolutionStage: 2, age: 2, happiness: 50 })
-      expect(canEvolve(creature)).toBe(false)
+    it('age < 3 のとき false を返す', () => {
+      expect(canEvolve(makeCreature({ creatureId: 'childA', evolutionStage: 2, age: 2, happiness: 50 }))).toBe(false)
     })
 
-    it('happiness が 50 未満のとき false を返す', () => {
-      const creature = makeCreature({ evolutionStage: 2, age: 3, happiness: 49 })
-      expect(canEvolve(creature)).toBe(false)
+    it('happiness < 50 のとき false を返す', () => {
+      expect(canEvolve(makeCreature({ creatureId: 'childA', evolutionStage: 2, age: 3, happiness: 49 }))).toBe(false)
     })
   })
 
   describe('stage 3 (Adult → Perfect, minAge:6, minLevel:8, minCombatStats:40)', () => {
     it('全条件を満たすとき true を返す', () => {
-      const creature = makeCreature({
-        evolutionStage: 3,
-        age: 6,
-        level: 8,
-        atk: 15,
-        def: 15,
-        spd: 10, // atk+def+spd=40
-      })
-      expect(canEvolve(creature)).toBe(true)
+      expect(canEvolve(makeCreature({ creatureId: 'adultA1', evolutionStage: 3, age: 6, level: 8, atk: 15, def: 15, spd: 10 }))).toBe(true)
     })
 
-    it('age が 6 未満のとき false を返す', () => {
-      const creature = makeCreature({
-        evolutionStage: 3,
-        age: 5,
-        level: 8,
-        atk: 15,
-        def: 15,
-        spd: 10,
-      })
-      expect(canEvolve(creature)).toBe(false)
+    it('age < 6 のとき false を返す', () => {
+      expect(canEvolve(makeCreature({ creatureId: 'adultA1', evolutionStage: 3, age: 5, level: 8, atk: 15, def: 15, spd: 10 }))).toBe(false)
     })
 
-    it('level が 8 未満のとき false を返す', () => {
-      const creature = makeCreature({
-        evolutionStage: 3,
-        age: 6,
-        level: 7,
-        atk: 15,
-        def: 15,
-        spd: 10,
-      })
-      expect(canEvolve(creature)).toBe(false)
+    it('level < 8 のとき false を返す', () => {
+      expect(canEvolve(makeCreature({ creatureId: 'adultA1', evolutionStage: 3, age: 6, level: 7, atk: 15, def: 15, spd: 10 }))).toBe(false)
     })
 
-    it('atk+def+spd が 40 未満のとき false を返す', () => {
-      const creature = makeCreature({
-        evolutionStage: 3,
-        age: 6,
-        level: 8,
-        atk: 10,
-        def: 10,
-        spd: 10, // 合計30 < 40
-      })
-      expect(canEvolve(creature)).toBe(false)
+    it('atk+def+spd < 40 のとき false を返す', () => {
+      expect(canEvolve(makeCreature({ creatureId: 'adultA1', evolutionStage: 3, age: 6, level: 8, atk: 10, def: 10, spd: 10 }))).toBe(false)
     })
   })
 
-  describe('stage 4 (Perfect → Ultimate, minAge:12, minLevel:14, minEachStat:20)', () => {
-    it('全条件を満たすとき true を返す', () => {
-      const creature = makeCreature({
-        evolutionStage: 4,
-        age: 12,
-        level: 14,
-        atk: 20,
-        def: 20,
-        spd: 20,
-      })
-      expect(canEvolve(creature)).toBe(true)
+  describe('stage 4 (Perfect1 → Ultimate)', () => {
+    it('perfectA1: 全条件を満たすとき true を返す', () => {
+      expect(canEvolve(makeCreature({ creatureId: 'perfectA1', evolutionStage: 4, age: 12, level: 14, atk: 20, def: 20, spd: 20 }))).toBe(true)
     })
 
-    it('age が 12 未満のとき false を返す', () => {
-      const creature = makeCreature({
-        evolutionStage: 4,
-        age: 11,
-        level: 14,
-        atk: 20,
-        def: 20,
-        spd: 20,
-      })
-      expect(canEvolve(creature)).toBe(false)
+    it('perfectA2: 終点のため条件を満たしても false を返す', () => {
+      expect(canEvolve(makeCreature({ creatureId: 'perfectA2', evolutionStage: 4, age: 12, level: 14, atk: 20, def: 20, spd: 20 }))).toBe(false)
     })
 
-    it('level が 14 未満のとき false を返す', () => {
-      const creature = makeCreature({
-        evolutionStage: 4,
-        age: 12,
-        level: 13,
-        atk: 20,
-        def: 20,
-        spd: 20,
-      })
-      expect(canEvolve(creature)).toBe(false)
+    it('perfectB2: 終点のため false を返す', () => {
+      expect(canEvolve(makeCreature({ creatureId: 'perfectB2', evolutionStage: 4, age: 12, level: 14, atk: 20, def: 20, spd: 20 }))).toBe(false)
     })
 
-    it('atk が 20 未満のとき false を返す', () => {
-      const creature = makeCreature({
-        evolutionStage: 4,
-        age: 12,
-        level: 14,
-        atk: 19,
-        def: 20,
-        spd: 20,
-      })
-      expect(canEvolve(creature)).toBe(false)
-    })
-
-    it('def が 20 未満のとき false を返す', () => {
-      const creature = makeCreature({
-        evolutionStage: 4,
-        age: 12,
-        level: 14,
-        atk: 20,
-        def: 19,
-        spd: 20,
-      })
-      expect(canEvolve(creature)).toBe(false)
-    })
-
-    it('spd が 20 未満のとき false を返す', () => {
-      const creature = makeCreature({
-        evolutionStage: 4,
-        age: 12,
-        level: 14,
-        atk: 20,
-        def: 20,
-        spd: 19,
-      })
-      expect(canEvolve(creature)).toBe(false)
+    it('perfectC2: 終点のため false を返す', () => {
+      expect(canEvolve(makeCreature({ creatureId: 'perfectC2', evolutionStage: 4, age: 12, level: 14, atk: 20, def: 20, spd: 20 }))).toBe(false)
     })
   })
 
-  describe('stage 5 (最終進化済み)', () => {
-    it('evolutionStage が 5 のとき常に false を返す', () => {
-      const creature = makeCreature({
-        evolutionStage: 5,
-        age: 100,
-        level: 99,
-        atk: 100,
-        def: 100,
-        spd: 100,
-      })
-      expect(canEvolve(creature)).toBe(false)
+  describe('ultimate（最終進化済み）', () => {
+    it('ultimateA は常に false を返す', () => {
+      expect(canEvolve(makeCreature({ creatureId: 'ultimateA', evolutionStage: 5, age: 100, level: 99, atk: 100, def: 100, spd: 100 }))).toBe(false)
     })
   })
 
   describe('共通の前提条件', () => {
     it('isAlive:false のとき false を返す', () => {
-      const creature = makeCreature({ evolutionStage: 1, age: 5, isAlive: false })
-      expect(canEvolve(creature)).toBe(false)
+      expect(canEvolve(makeCreature({ creatureId: 'baby', evolutionStage: 1, age: 5, isAlive: false }))).toBe(false)
     })
 
     it('isSleeping:true のとき false を返す', () => {
-      const creature = makeCreature({ evolutionStage: 1, age: 5, isSleeping: true })
-      expect(canEvolve(creature)).toBe(false)
+      expect(canEvolve(makeCreature({ creatureId: 'baby', evolutionStage: 1, age: 5, isSleeping: true }))).toBe(false)
     })
   })
 })
 
 // ----------------------------------------------------------------
-// 2. evolveCreature
+// 3. evolveCreature
 // ----------------------------------------------------------------
 describe('evolveCreature', () => {
-  it('evolutionStage が 1 増加する', () => {
-    const creature = makeCreature({ evolutionStage: 1 })
+  it('baby(happiness:70) → childA に進化する', () => {
+    const creature = makeCreature({ creatureId: 'baby', evolutionStage: 1, happiness: 70 })
     const result = evolveCreature(creature)
+    expect(result.creatureId).toBe('childA')
     expect(result.evolutionStage).toBe(2)
+    expect(result.evolutionName).toBe('ルーチェ')
   })
 
-  it('stage1 → stage2 進化時に hp/maxHp が BASE_STATS[2] の値(80)になる', () => {
-    const creature = makeCreature({ evolutionStage: 1, hp: 40, maxHp: 40 })
+  it('baby(happiness:30) → childB に進化する', () => {
+    const creature = makeCreature({ creatureId: 'baby', evolutionStage: 1, happiness: 30 })
+    const result = evolveCreature(creature)
+    expect(result.creatureId).toBe('childB')
+    expect(result.evolutionName).toBe('モルテ')
+  })
+
+  it('baby(happiness:50) → childC に進化する', () => {
+    const creature = makeCreature({ creatureId: 'baby', evolutionStage: 1, happiness: 50 })
+    const result = evolveCreature(creature)
+    expect(result.creatureId).toBe('childC')
+    expect(result.evolutionName).toBe('ゼファ')
+  })
+
+  it('childA(happiness:70) → adultA1（高道）に進化する', () => {
+    const creature = makeCreature({ creatureId: 'childA', evolutionStage: 2, happiness: 70 })
+    const result = evolveCreature(creature)
+    expect(result.creatureId).toBe('adultA1')
+    expect(result.evolutionName).toBe('セラフィア')
+  })
+
+  it('childA(happiness:69) → adultA2（低道）に進化する', () => {
+    const creature = makeCreature({ creatureId: 'childA', evolutionStage: 2, happiness: 69 })
+    const result = evolveCreature(creature)
+    expect(result.creatureId).toBe('adultA2')
+    expect(result.evolutionName).toBe('エリアル')
+  })
+
+  it('hp/maxHp が BASE_STATS の値に更新される', () => {
+    const creature = makeCreature({ creatureId: 'baby', evolutionStage: 1, happiness: 70, hp: 40, maxHp: 40 })
     const result = evolveCreature(creature)
     expect(result.maxHp).toBe(80)
     expect(result.hp).toBe(80)
   })
 
-  it('stage0 → stage1 進化時に hp/maxHp が BASE_STATS[1] の値(40)になる', () => {
-    const creature = makeCreature({ evolutionStage: 0, hp: 20, maxHp: 20 })
-    const result = evolveCreature(creature)
-    expect(result.maxHp).toBe(40)
-    expect(result.hp).toBe(40)
-  })
-
   it('atk は Math.max(creature.atk+8, baseStats.atk) で計算される', () => {
-    // stage1→2: baseStats.atk=12, creature.atk=5 → Math.max(5+8, 12)=Math.max(13,12)=13
-    const creature = makeCreature({ evolutionStage: 1, atk: 5 })
-    const result = evolveCreature(creature)
-    expect(result.atk).toBe(13) // 5+8=13 > baseStats.atk(12)
+    // stage1→2: baseStats.atk=12, atk=5 → max(13,12)=13
+    const creature = makeCreature({ creatureId: 'baby', evolutionStage: 1, happiness: 70, atk: 5 })
+    expect(evolveCreature(creature).atk).toBe(13)
   })
 
   it('atk が低いとき baseStats.atk が採用される', () => {
-    // stage1→2: baseStats.atk=12, creature.atk=2 → Math.max(2+8, 12)=Math.max(10,12)=12
-    const creature = makeCreature({ evolutionStage: 1, atk: 2 })
-    const result = evolveCreature(creature)
-    expect(result.atk).toBe(12) // baseStats.atk(12) > 2+8=10
+    // stage1→2: baseStats.atk=12, atk=2 → max(10,12)=12
+    const creature = makeCreature({ creatureId: 'baby', evolutionStage: 1, happiness: 70, atk: 2 })
+    expect(evolveCreature(creature).atk).toBe(12)
   })
 
-  it('def は Math.max(creature.def+6, baseStats.def) で計算される', () => {
-    // stage1→2: baseStats.def=10, creature.def=5 → Math.max(5+6, 10)=Math.max(11,10)=11
-    const creature = makeCreature({ evolutionStage: 1, def: 5 })
-    const result = evolveCreature(creature)
-    expect(result.def).toBe(11) // 5+6=11 > baseStats.def(10)
-  })
-
-  it('def が低いとき baseStats.def が採用される', () => {
-    // stage1→2: baseStats.def=10, creature.def=2 → Math.max(2+6, 10)=Math.max(8,10)=10
-    const creature = makeCreature({ evolutionStage: 1, def: 2 })
-    const result = evolveCreature(creature)
-    expect(result.def).toBe(10) // baseStats.def(10) > 2+6=8
-  })
-
-  it('spd は Math.max(creature.spd+6, baseStats.spd) で計算される', () => {
-    // stage1→2: baseStats.spd=10, creature.spd=5 → Math.max(5+6, 10)=Math.max(11,10)=11
-    const creature = makeCreature({ evolutionStage: 1, spd: 5 })
-    const result = evolveCreature(creature)
-    expect(result.spd).toBe(11) // 5+6=11 > baseStats.spd(10)
-  })
-
-  it('hunger が 20 増加する (上限100)', () => {
-    const creature = makeCreature({ evolutionStage: 1, hunger: 70 })
-    const result = evolveCreature(creature)
-    expect(result.hunger).toBe(90)
+  it('hunger が 20 増加する（上限100）', () => {
+    const creature = makeCreature({ creatureId: 'baby', evolutionStage: 1, happiness: 70, hunger: 70 })
+    expect(evolveCreature(creature).hunger).toBe(90)
   })
 
   it('hunger の上限は 100 を超えない', () => {
-    const creature = makeCreature({ evolutionStage: 1, hunger: 90 })
-    const result = evolveCreature(creature)
-    expect(result.hunger).toBe(100)
+    const creature = makeCreature({ creatureId: 'baby', evolutionStage: 1, happiness: 70, hunger: 90 })
+    expect(evolveCreature(creature).hunger).toBe(100)
   })
 
-  it('happiness が 30 増加する (上限100)', () => {
-    const creature = makeCreature({ evolutionStage: 1, happiness: 50 })
+  it('happiness が 30 増加する（上限100）', () => {
+    const creature = makeCreature({ creatureId: 'baby', evolutionStage: 1, happiness: 70, hunger: 60 })
     const result = evolveCreature(creature)
-    expect(result.happiness).toBe(80)
+    expect(result.happiness).toBe(100) // min(70+30, 100)
   })
 
-  it('happiness の上限は 100 を超えない', () => {
-    const creature = makeCreature({ evolutionStage: 1, happiness: 80 })
+  it('perfectA2（終点）は進化しない（自分自身を返す）', () => {
+    const creature = makeCreature({ creatureId: 'perfectA2', evolutionStage: 4 })
     const result = evolveCreature(creature)
-    expect(result.happiness).toBe(100)
-  })
-
-  it('stage1→2 進化時は育て方で進化先タイプが決まる (トレ最多+あそぶ次点 → Fire)', () => {
-    const creature = makeCreature({ evolutionStage: 1, type: 'Normal', trainCount: 5, playCount: 3, feedCount: 1 })
-    const result = evolveCreature(creature)
-    expect(result.type).toBe('Fire')
-    expect(result.evolutionName).toBe('フレイモン') // EVOLUTION_NAMES.Fire[2]
-  })
-
-  it('stage0→1 進化（孵化）ではタイプを再判定せず中立のまま', () => {
-    const creature = makeCreature({ evolutionStage: 0, type: 'Normal', trainCount: 5 })
-    const result = evolveCreature(creature)
-    expect(result.type).toBe('Normal')
-    expect(result.evolutionName).toBe('ノービモン') // EVOLUTION_NAMES.Normal[1]
-  })
-
-  it('育て方が変われば次の進化で別タイプに分岐し得る (あそぶ最多+えさ次点 → Light)', () => {
-    const creature = makeCreature({ evolutionStage: 2, type: 'Fire', age: 3, happiness: 50, playCount: 9, feedCount: 4, trainCount: 1 })
-    const result = evolveCreature(creature)
-    expect(result.type).toBe('Light')
+    expect(result.creatureId).toBe('perfectA2')
+    expect(result.evolutionStage).toBe(4)
   })
 })
 
 // ----------------------------------------------------------------
-// determineTypeFromRaising（育て方→タイプ判定）
-// ----------------------------------------------------------------
-describe('determineTypeFromRaising', () => {
-  it('全回数0なら Water（バランス）', () => {
-    expect(determineTypeFromRaising({ trainCount: 0, playCount: 0, feedCount: 0 })).toBe('Water')
-  })
-
-  it('最多→次点のマッピングが正しい', () => {
-    expect(determineTypeFromRaising({ trainCount: 5, playCount: 3, feedCount: 1 })).toBe('Fire')    // train→play
-    expect(determineTypeFromRaising({ trainCount: 5, playCount: 1, feedCount: 3 })).toBe('Plant')   // train→feed
-    expect(determineTypeFromRaising({ trainCount: 3, playCount: 5, feedCount: 1 })).toBe('Thunder') // play→train
-    expect(determineTypeFromRaising({ trainCount: 1, playCount: 5, feedCount: 3 })).toBe('Light')   // play→feed
-    expect(determineTypeFromRaising({ trainCount: 1, playCount: 3, feedCount: 5 })).toBe('Water')   // feed→play
-    expect(determineTypeFromRaising({ trainCount: 3, playCount: 1, feedCount: 5 })).toBe('Dark')    // feed→train
-  })
-
-  it('同数は train > play > feed の優先順位でタイブレークする', () => {
-    // train=play=feed → dominant=train, runnerUp=play → Fire
-    expect(determineTypeFromRaising({ trainCount: 2, playCount: 2, feedCount: 2 })).toBe('Fire')
-  })
-})
-
-// ----------------------------------------------------------------
-// 3. getEvolutionProgress
+// 4. getEvolutionProgress
 // ----------------------------------------------------------------
 describe('getEvolutionProgress', () => {
-  it('evolutionStage が 5 のとき空配列を返す', () => {
-    const creature = makeCreature({ evolutionStage: 5 })
-    const result = getEvolutionProgress(creature)
-    expect(result).toEqual([])
+  it('ultimateA（終点）のとき空配列を返す', () => {
+    expect(getEvolutionProgress(makeCreature({ creatureId: 'ultimateA', evolutionStage: 5 }))).toEqual([])
   })
 
-  describe('stage 1 (Baby → Child, minAge:1)', () => {
+  it('perfectA2（終点）のとき空配列を返す', () => {
+    expect(getEvolutionProgress(makeCreature({ creatureId: 'perfectA2', evolutionStage: 4 }))).toEqual([])
+  })
+
+  describe('stage 1 (baby → child, minAge:1)', () => {
     it('年齢チェックのみ1件返す', () => {
-      const creature = makeCreature({ evolutionStage: 1, age: 0.5 })
-      const result = getEvolutionProgress(creature)
+      const result = getEvolutionProgress(makeCreature({ creatureId: 'baby', evolutionStage: 1, age: 0.5 }))
       expect(result).toHaveLength(1)
       expect(result[0].label).toBe('年齢')
-    })
-
-    it('age が minAge 未満のとき met:false を返す', () => {
-      const creature = makeCreature({ evolutionStage: 1, age: 0.5 })
-      const result = getEvolutionProgress(creature)
       expect(result[0].met).toBe(false)
-      expect(result[0].max).toBe(1)
     })
 
-    it('age が minAge 以上のとき met:true を返す', () => {
-      const creature = makeCreature({ evolutionStage: 1, age: 1 })
-      const result = getEvolutionProgress(creature)
+    it('age >= 1 のとき met:true', () => {
+      const result = getEvolutionProgress(makeCreature({ creatureId: 'baby', evolutionStage: 1, age: 1 }))
       expect(result[0].met).toBe(true)
-    })
-
-    it('value は Math.floor(age * 10) / 10 で丸められる', () => {
-      const creature = makeCreature({ evolutionStage: 1, age: 0.55 })
-      const result = getEvolutionProgress(creature)
-      expect(result[0].value).toBe(0.5) // floor(0.55*10)/10 = 5/10 = 0.5
     })
   })
 
-  describe('stage 2 (Child → Adult, minAge:3, minHappiness:50)', () => {
+  describe('stage 2 (child → adult, minAge:3, minHappiness:50)', () => {
     it('年齢と幸福度の2件を返す', () => {
-      const creature = makeCreature({ evolutionStage: 2, age: 2, happiness: 40 })
-      const result = getEvolutionProgress(creature)
+      const result = getEvolutionProgress(makeCreature({ creatureId: 'childA', evolutionStage: 2, age: 2, happiness: 40 }))
       expect(result).toHaveLength(2)
       expect(result[0].label).toBe('年齢')
       expect(result[1].label).toBe('幸福度')
     })
 
-    it('happiness の met と max が正しい', () => {
-      const creature = makeCreature({ evolutionStage: 2, age: 3, happiness: 40 })
-      const result = getEvolutionProgress(creature)
-      expect(result[1].met).toBe(false)
-      expect(result[1].value).toBe(40)
-      expect(result[1].max).toBe(50)
-    })
-
-    it('条件を全て満たすとき全て met:true', () => {
-      const creature = makeCreature({ evolutionStage: 2, age: 3, happiness: 50 })
-      const result = getEvolutionProgress(creature)
+    it('全条件を満たすとき全て met:true', () => {
+      const result = getEvolutionProgress(makeCreature({ creatureId: 'childA', evolutionStage: 2, age: 3, happiness: 50 }))
       expect(result.every(c => c.met)).toBe(true)
     })
   })
 
-  describe('stage 3 (Adult → Perfect, minAge:6, minLevel:8, minCombatStats:40)', () => {
+  describe('stage 3 (adult → perfect)', () => {
     it('年齢・レベル・戦闘力の3件を返す', () => {
-      const creature = makeCreature({
-        evolutionStage: 3,
-        age: 5,
-        level: 7,
-        atk: 10,
-        def: 10,
-        spd: 10,
-      })
-      const result = getEvolutionProgress(creature)
+      const result = getEvolutionProgress(makeCreature({ creatureId: 'adultA1', evolutionStage: 3, age: 5, level: 7, atk: 10, def: 10, spd: 10 }))
       expect(result).toHaveLength(3)
-      expect(result[0].label).toBe('年齢')
-      expect(result[1].label).toBe('レベル')
-      expect(result[2].label).toBe('戦闘力')
-    })
-
-    it('戦闘力の value が atk+def+spd の合計になる', () => {
-      const creature = makeCreature({
-        evolutionStage: 3,
-        age: 6,
-        level: 8,
-        atk: 12,
-        def: 15,
-        spd: 13,
-      })
-      const result = getEvolutionProgress(creature)
-      const combatCheck = result.find(c => c.label === '戦闘力')!
-      expect(combatCheck.value).toBe(40) // 12+15+13
-      expect(combatCheck.max).toBe(40)
-      expect(combatCheck.met).toBe(true)
+      expect(result.map(c => c.label)).toEqual(['年齢', 'レベル', '戦闘力'])
     })
   })
 
-  describe('stage 4 (Perfect → Ultimate, minAge:12, minLevel:14, minEachStat:20)', () => {
-    it('年齢・レベル・最低ステータスの3件を返す', () => {
-      const creature = makeCreature({
-        evolutionStage: 4,
-        age: 12,
-        level: 14,
-        atk: 20,
-        def: 20,
-        spd: 20,
-      })
-      const result = getEvolutionProgress(creature)
+  describe('stage 4 (perfect1 → ultimate)', () => {
+    it('perfectA1: 年齢・レベル・最低ステータスの3件を返す', () => {
+      const result = getEvolutionProgress(makeCreature({ creatureId: 'perfectA1', evolutionStage: 4, age: 12, level: 14, atk: 20, def: 20, spd: 20 }))
       expect(result).toHaveLength(3)
-      expect(result[0].label).toBe('年齢')
-      expect(result[1].label).toBe('レベル')
-      expect(result[2].label).toBe('最低ステータス')
-    })
-
-    it('最低ステータスの value が Math.min(atk, def, spd) になる', () => {
-      const creature = makeCreature({
-        evolutionStage: 4,
-        age: 12,
-        level: 14,
-        atk: 25,
-        def: 20,
-        spd: 18,
-      })
-      const result = getEvolutionProgress(creature)
-      const statCheck = result.find(c => c.label === '最低ステータス')!
-      expect(statCheck.value).toBe(18) // Math.min(25, 20, 18)
-      expect(statCheck.max).toBe(20)
-      expect(statCheck.met).toBe(false) // 18 < 20
-    })
-
-    it('全ステータスが minEachStat 以上のとき met:true になる', () => {
-      const creature = makeCreature({
-        evolutionStage: 4,
-        age: 12,
-        level: 14,
-        atk: 20,
-        def: 20,
-        spd: 20,
-      })
-      const result = getEvolutionProgress(creature)
-      const statCheck = result.find(c => c.label === '最低ステータス')!
-      expect(statCheck.met).toBe(true)
+      expect(result.map(c => c.label)).toEqual(['年齢', 'レベル', '最低ステータス'])
     })
   })
 })

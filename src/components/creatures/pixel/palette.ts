@@ -1,6 +1,3 @@
-import type { CreatureType } from '../../../types/creature'
-import { TYPE_COLORS } from '../../../data/evolutions'
-
 /**
  * ドット絵の共通シェードキー。全スプライトでこの 8 キーを必ず用意する。
  * k/o/d/r/l はベース色から HSL シフトで自動生成し、c/w/b は全タイプ共通の固定色。
@@ -9,34 +6,28 @@ export interface TypePalette {
   k: string // outline（アウトライン）
   o: string // deep shadow（濃影）
   d: string // shadow（影）
-  r: string // base（ベース ＝ TYPE_COLORS[type]）
+  r: string // base
   l: string // highlight（ハイライト）
   c: string // belly（お腹・クリーム）
   w: string // eye white（目・白）
   b: string // pupil（瞳）
 }
 
-/**
- * HSL 明度・彩度シフトの集約定数（マジックナンバーの散逸を防ぐ）。
- * プロト fireAdult の実測パレットを base からの相対シフトに分解した規則。
- * 影は彩度を落として沈め、ハイライトは色相を暖色側へ回して鮮やかに見せる王道技法。
- */
 const SHADE = {
-  highlight:  { dh: +10, ds: -6, dl: +11 }, // 暖色回し + 明るく
-  shadow:     { dsFactor: 0.76, dl: -10 },  // 彩度 ×0.76・暗く
-  deepShadow: { dsFactor: 0.84, dl: -21 },  // 彩度 ×0.84・さらに暗く
-  outlineL: 18,                              // アウトラインは常に L=18 の暗さに固定
+  highlight:  { dh: +10, ds: -6, dl: +11 },
+  shadow:     { dsFactor: 0.76, dl: -10 },
+  deepShadow: { dsFactor: 0.84, dl: -21 },
+  outlineL: 18,
 } as const
 
-const BELLY = '#ffd9a8' // お腹（クリーム）共通
-const EYE_W = '#ffffff' // 目（白）
-const PUPIL = '#2a1a08' // 瞳（暗色・ニュートラル）
+const BELLY = '#ffd9a8'
+const EYE_W = '#ffffff'
+const PUPIL = '#2a1a08'
 
 function clamp(v: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, v))
 }
 
-/** 彩度を [0,100] に収める。 */
 function clampS(s: number): number {
   return clamp(s, 0, 100)
 }
@@ -108,21 +99,7 @@ export function buildTypePalette(base: string): TypePalette {
   }
 }
 
-/**
- * 属性を象徴するアクセント色（ベース色から導けないためタイプ別に手当て）。
- * キーは共通シェードキー（k/o/d/r/l/c/w/b）と衝突しないものを使う。
- */
-const TYPE_ACCENT: Record<CreatureType, Record<string, string>> = {
-  Fire:    { y: '#ffe06b', g: '#ff9a3c' }, // 炎: 黄〜橙
-  Water:   { a: '#e8f7ff', s: '#2196f3' }, // 水: 白青ハイライト / 濃青しぶき
-  Plant:   { a: '#c8e6a0', s: '#fff176' }, // 葉: 明緑 / 花・実の黄
-  Thunder: { y: '#fffde7', a: '#fff176' }, // 雷: 白閃光 / 黄電
-  Dark:    { a: '#7e57c2', s: '#e1bee7' }, // 闇: 紫炎 / 妖光ハイライト
-  Light:   { a: '#ffffff', s: '#fff59d' }, // 光: 白輝 / 金光輪
-  Normal:  {},                              // 進化スプライト無し（参照されない）
-}
-
-/** タイプ → 完成パレット（共通シェード + 属性アクセント）。 */
-export function paletteFor(type: CreatureType): Record<string, string> {
-  return { ...buildTypePalette(TYPE_COLORS[type]), ...TYPE_ACCENT[type] }
+/** スプライトファイルとの後方互換スタブ（実行時未使用、コンパイル通過用）。 */
+export function paletteFor(_type: string): TypePalette & Record<string, string> {
+  return buildTypePalette('#9ca3af') as TypePalette & Record<string, string>
 }

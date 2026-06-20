@@ -12,7 +12,7 @@ function makeCreature(overrides: Partial<Creature> = {}): Creature {
   return {
     id: 'test-1',
     name: 'テストモン',
-    type: 'Fire',
+    creatureId: 'baby',
     evolutionStage: 1,
     level: 5,
     exp: 30,
@@ -68,9 +68,9 @@ describe('MainGame', () => {
     expect(screen.getByText(/バーニモン/)).toBeInTheDocument()
   })
 
-  it('creature.type.toUpperCase() のタイプバッジが表示される', () => {
-    render(<MainGame {...defaultProps} creature={makeCreature({ type: 'Water' })} />)
-    expect(screen.getByText('WATER')).toBeInTheDocument()
+  it('ブランチ名バッジが表示される（childA → 善）', () => {
+    render(<MainGame {...defaultProps} creature={makeCreature({ creatureId: 'childA', evolutionStage: 2 })} />)
+    expect(screen.getByText('善')).toBeInTheDocument()
   })
 
   it('creature.isSleeping=true のとき「おやすみ中」バッジが表示される', () => {

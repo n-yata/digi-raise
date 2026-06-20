@@ -1,14 +1,13 @@
 import type { ReactNode } from 'react'
-import type { CreatureType, EvolutionStage } from '../types/creature'
-import { TYPE_COLORS } from '../data/evolutions'
+import type { CreatureId, EvolutionStage } from '../types/creature'
+import { BRANCH_COLORS, getCreatureBranch } from '../data/evolutions'
 import { STAGE_SIZES } from '../data/spriteConfig'
 import { EggBody } from './creatures/EggBody'
 import { DefaultCreatureBody } from './creatures/DefaultCreatureBody'
 import type { AnimState } from './creatures/DefaultCreatureBody'
-import { PixelSprite, getPixelSprite } from './creatures/pixel'
 
 interface CreatureSpriteProps {
-  type: CreatureType
+  creatureId: CreatureId
   stage: EvolutionStage
   animState: AnimState
   customSvg?: ReactNode
@@ -31,19 +30,16 @@ function getAnimClass(animState: AnimState): string {
   }
 }
 
-export default function CreatureSprite({ type, stage, animState, customSvg }: CreatureSpriteProps) {
-  const color = TYPE_COLORS[type]
+export default function CreatureSprite({ creatureId, stage, animState, customSvg }: CreatureSpriteProps) {
+  const branch = getCreatureBranch(creatureId)
+  const color = BRANCH_COLORS[branch]
   const size = STAGE_SIZES[stage]
   const shadowWidth = [40, 55, 70, 85, 100, 115][stage]
-
-  const pixelData = stage > 0 ? getPixelSprite(type, stage) : null
 
   const body = customSvg ?? (
     stage === 0
       ? <EggBody color={color} size={size} />
-      : pixelData
-        ? <PixelSprite data={pixelData} size={size} animState={animState} />
-        : <DefaultCreatureBody type={type} stage={stage} animState={animState} />
+      : <DefaultCreatureBody color={color} stage={stage} animState={animState} />
   )
 
   return (
