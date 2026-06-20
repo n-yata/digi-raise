@@ -42,6 +42,8 @@ export default function App() {
   const [loading, setLoading] = useState(true)
   const [discoveredCreatures, setDiscoveredCreatures] = useState<Set<CreatureId>>(new Set())
   const [zukanReturnScreen, setZukanReturnScreen] = useState<GameScreen>('title')
+  // 未認証で「つづきから」を押した後、サインイン→クラウド復元の完了を待って自動遷移するためのフラグ
+  const [continuePending, setContinuePending] = useState(false)
 
   // Battle state
   const [battleRole, setBattleRole] = useState<BattleRole | null>(null)
@@ -53,12 +55,9 @@ export default function App() {
   const activeCreatureIdRef = useRef<string | null>(null)
   const actionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const discoveredRef = useRef<Set<CreatureId>>(new Set())
-  // 未認証時の「つづきから」→サインイン後に自動続行するためのフラグ
-  const continueAfterAuthRef = useRef(false)
   // useAuth が後で定義されるため ref 経由で間接参照する
   const signInRef = useRef<() => Promise<void>>(() => Promise.resolve())
   const authStatusRef = useRef<string>('loading')
-  const handleContinueRef = useRef<() => void>(() => undefined)
 
   // Derive active creature
   const activeCreature = creatures.find(c => c.id === activeCreatureId) ?? null
@@ -200,9 +199,14 @@ export default function App() {
   }, [])
 
   const handleContinue = useCallback(async () => {
-    // 未認証なら先にサインインを促す（サインイン完了後に自動で再実行）
-    if (authStatusRef.current === 'signedOut' || authStatusRef.current === 'error') {
-      continueAfterAuthRef.current = true
+    // 認証状態が確定するまで（loading / signingIn 中）は何もしない。
+    // signingIn 中の二重押下による多重サインインも防ぐ。
+    const st = authStatusRef.current
+    if (st === 'loading' || st === 'signingIn') return
+    // 未認証なら先にサインインを促す。サインイン後、クラウド復元の完了を
+    // 待ってから自動遷移する（continuePending を監視する useEffect が担当）。
+    if (st === 'signedOut' || st === 'error') {
+      setContinuePending(true)
       signInRef.current()
       return
     }
@@ -431,15 +435,41 @@ export default function App() {
   // ref を最新値に同期（handleContinue の useCallback 依存を増やさないため）
   useEffect(() => { signInRef.current = signIn }, [signIn])
   useEffect(() => { authStatusRef.current = authState.status }, [authState.status])
-  useEffect(() => { handleContinueRef.current = handleContinue }, [handleContinue])
 
-  // サインイン完了後に「つづきから」の続きを自動実行
+  // サインインがキャンセル/失敗で未認証へ戻ったら保留フラグを解除する
+  // （フラグ残存による意図しない自動遷移・トースト残留を防ぐ）。
   useEffect(() => {
-    if (!continueAfterAuthRef.current) return
-    if (authState.status !== 'signedIn') return
-    continueAfterAuthRef.current = false
-    handleContinueRef.current()
-  }, [authState.status])
+    if (continuePending && (authState.status === 'signedOut' || authState.status === 'error')) {
+      setContinuePending(false)
+    }
+  }, [continuePending, authState.status])
+
+  // 「つづきから」→サインイン後の自動遷移。
+  // クラウド復元（useCloudSave→handleCloudData）で creatures が揃ったら main へ。
+  // 一定時間データが来なければ、セーブが存在しないものとして通知する。
+  useEffect(() => {
+    if (!continuePending || authState.status !== 'signedIn') return
+
+    const alive = creatures.filter(c => c.isAlive)
+    if (alive.length > 0) {
+      setContinuePending(false)
+      const target = creatures.find(c => c.id === activeCreatureId && c.isAlive) ?? alive[0]
+      const updated = applyTimeUpdate(target, false)
+      const newCreatures = creatures.map(c => c.id === updated.id ? updated : c)
+      setCreatures(newCreatures)
+      setActiveCreatureId(updated.id)
+      saveSaveData({ creatures: newCreatures, activeCreatureId: updated.id, discoveredCreatures: Array.from(discoveredRef.current) })
+      setScreen('main')
+      return
+    }
+
+    // データ到着待ち。一定時間で諦めて通知（クラウドにもセーブが無いケース）。
+    const timer = setTimeout(() => {
+      setContinuePending(false)
+      showMessage('セーブデータが見つかりませんでした')
+    }, 6000)
+    return () => clearTimeout(timer)
+  }, [continuePending, authState.status, creatures, activeCreatureId, showMessage])
 
   const uid = authState.status === 'signedIn' ? authState.uid : null
   const currentSaveData: SaveData | null = creatures.length > 0
@@ -477,9 +507,22 @@ export default function App() {
           />
         </div>
       )}
+      {screen === 'title' && (continuePending || message) && (
+        <div
+          className="fixed top-0 left-0 right-0 flex justify-center z-50"
+          style={{ pointerEvents: 'none', paddingTop: 16 }}
+        >
+          <div
+            className="font-pixel px-4 py-2 rounded-lg"
+            style={{ fontSize: '0.7rem', background: '#16213e', border: '1px solid #4fc3f766', color: '#4fc3f7' }}
+          >
+            {continuePending ? 'セーブデータを確認中...' : message}
+          </div>
+        </div>
+      )}
       {screen === 'title' && (
         <TitleScreen
-          hasExistingSave={hasExistingSave}
+          hasExistingSave={hasExistingSave || authState.status === 'signedOut' || authState.status === 'error'}
           onNewGame={handleNewGame}
           onContinue={handleContinue}
           onZukan={() => { setZukanReturnScreen('title'); setScreen('zukan') }}
