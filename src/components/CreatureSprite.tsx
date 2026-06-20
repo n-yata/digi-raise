@@ -42,7 +42,7 @@ export default function CreatureSprite({ type, stage, animState, customSvg }: Cr
     stage === 0
       ? <EggBody color={color} size={size} />
       : pixelData
-        ? <PixelSprite data={pixelData} size={size} />
+        ? <PixelSprite data={pixelData} size={size} animState={animState} />
         : <DefaultCreatureBody type={type} stage={stage} animState={animState} />
   )
 
@@ -51,12 +51,6 @@ export default function CreatureSprite({ type, stage, animState, customSvg }: Cr
       {animState === 'sleeping' && (
         <div className="absolute -top-8 right-0 text-sm font-pixel animate-sleep-zzz select-none z-10" style={{ color: 'rgba(255,255,255,0.85)' }}>
           Zzz
-        </div>
-      )}
-
-      {animState === 'critical' && (
-        <div className="absolute pointer-events-none animate-critical-warn font-pixel" style={{ top: '-28px', left: '50%', transform: 'translateX(-50%)', fontSize: 18, color: '#ef4444', whiteSpace: 'nowrap' }}>
-          ！
         </div>
       )}
 

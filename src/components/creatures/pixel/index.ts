@@ -1,5 +1,6 @@
 import type { CreatureType, EvolutionStage } from '../../../types/creature'
 import type { PixelSpriteData } from './PixelSprite'
+import { getFaceAnchors } from './faces'
 
 import { fireBabyPixel } from './fireBaby'
 import { fireChildPixel } from './fireChild'
@@ -55,5 +56,8 @@ export const PIXEL_DISPATCH: Partial<Record<CreatureType, Partial<Record<Evoluti
 }
 
 export function getPixelSprite(type: CreatureType, stage: EvolutionStage): PixelSpriteData | null {
-  return PIXEL_DISPATCH[type]?.[stage] ?? null
+  const data = PIXEL_DISPATCH[type]?.[stage]
+  if (!data) return null
+  const face = getFaceAnchors(type, stage)
+  return face ? { ...data, face } : data
 }

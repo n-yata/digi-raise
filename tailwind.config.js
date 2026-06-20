@@ -50,7 +50,6 @@ export default {
         'hungry-droop': 'hungryDroop 3s ease-in-out infinite',
         'hungry-callout': 'hungryCallout 1.2s ease-in-out infinite',
         'critical-blink': 'criticalBlink 0.6s ease-in-out infinite',
-        'critical-warn': 'criticalWarn 0.6s ease-in-out infinite',
         'walk-bounce': 'walkBounce 0.55s ease-in-out infinite',
       },
       keyframes: {
@@ -136,10 +135,6 @@ export default {
         criticalBlink: {
           '0%, 100%': { opacity: '1', filter: 'brightness(1)' },
           '50%': { opacity: '0.3', filter: 'brightness(1.8) saturate(0.5)' },
-        },
-        criticalWarn: {
-          '0%, 100%': { opacity: '1', transform: 'translateX(-50%) scale(1)' },
-          '50%': { opacity: '0.5', transform: 'translateX(-50%) scale(1.2)' },
         },
       },
     },
