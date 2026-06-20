@@ -59,7 +59,7 @@ export default function StatusScreen({ creature, allCreatures, activeCreatureId,
     { label: 'SPD（素早さ）', value: creature.spd },
     { label: 'LV（レベル）', value: creature.level },
     { label: 'EXP', value: `${creature.exp} / ${expNeeded}` },
-    { label: '年齢', value: `${Math.floor(creature.age)}日` },
+    { label: '年齢', value: `${Math.floor(creature.age)}歳` },
     { label: '体重', value: `${creature.weight}kg` },
     { label: '空腹度', value: `${Math.floor(creature.hunger)}/100` },
   ]

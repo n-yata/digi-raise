@@ -29,7 +29,7 @@ export default function DeathScreen({ creature, hasOtherAliveCreatures, onStartO
   const achievements = [
     { label: '最終ステージ', value: STAGE_NAMES[creature.evolutionStage] },
     { label: '最終レベル', value: `Lv.${creature.level}` },
-    { label: '生きた日数', value: `${Math.floor(creature.age)}日` },
+    { label: '年齢', value: `${Math.floor(creature.age)}歳` },
     { label: '食事回数', value: `${creature.feedCount}回` },
     { label: 'トレーニング', value: `${creature.trainCount}回` },
     { label: '遊んだ回数', value: `${creature.playCount}回` },
