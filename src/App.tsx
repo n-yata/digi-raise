@@ -53,6 +53,12 @@ export default function App() {
   const activeCreatureIdRef = useRef<string | null>(null)
   const actionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const discoveredRef = useRef<Set<CreatureId>>(new Set())
+  // 未認証時の「つづきから」→サインイン後に自動続行するためのフラグ
+  const continueAfterAuthRef = useRef(false)
+  // useAuth が後で定義されるため ref 経由で間接参照する
+  const signInRef = useRef<() => Promise<void>>(() => Promise.resolve())
+  const authStatusRef = useRef<string>('loading')
+  const handleContinueRef = useRef<() => void>(() => undefined)
 
   // Derive active creature
   const activeCreature = creatures.find(c => c.id === activeCreatureId) ?? null
@@ -194,6 +200,12 @@ export default function App() {
   }, [])
 
   const handleContinue = useCallback(async () => {
+    // 未認証なら先にサインインを促す（サインイン完了後に自動で再実行）
+    if (authStatusRef.current === 'signedOut' || authStatusRef.current === 'error') {
+      continueAfterAuthRef.current = true
+      signInRef.current()
+      return
+    }
     // クラウド同期でメモリに読み込み済みの場合はそちらを優先する
     const aliveInMemory = creatures.filter(c => c.isAlive)
     if (aliveInMemory.length > 0) {
@@ -415,6 +427,20 @@ export default function App() {
   }, [])
 
   const { authState, signIn, signOut } = useAuth()
+
+  // ref を最新値に同期（handleContinue の useCallback 依存を増やさないため）
+  useEffect(() => { signInRef.current = signIn }, [signIn])
+  useEffect(() => { authStatusRef.current = authState.status }, [authState.status])
+  useEffect(() => { handleContinueRef.current = handleContinue }, [handleContinue])
+
+  // サインイン完了後に「つづきから」の続きを自動実行
+  useEffect(() => {
+    if (!continueAfterAuthRef.current) return
+    if (authState.status !== 'signedIn') return
+    continueAfterAuthRef.current = false
+    handleContinueRef.current()
+  }, [authState.status])
+
   const uid = authState.status === 'signedIn' ? authState.uid : null
   const currentSaveData: SaveData | null = creatures.length > 0
     ? { creatures, activeCreatureId, discoveredCreatures: Array.from(discoveredCreatures) }
@@ -437,18 +463,20 @@ export default function App() {
 
   return (
     <div className="min-h-screen" style={{ background: '#1a1a2e' }}>
-      <div
-        className="fixed top-2 right-2 z-50 flex items-center"
-        style={{ pointerEvents: 'auto' }}
-      >
-        <AuthButton
-          authState={authState}
-          syncStatus={syncStatus}
-          lastSyncedAt={lastSyncedAt}
-          onSignIn={signIn}
-          onSignOut={signOut}
-        />
-      </div>
+      {authState.status === 'signedIn' && (
+        <div
+          className="fixed top-2 right-2 z-50 flex items-center"
+          style={{ pointerEvents: 'auto' }}
+        >
+          <AuthButton
+            authState={authState}
+            syncStatus={syncStatus}
+            lastSyncedAt={lastSyncedAt}
+            onSignIn={signIn}
+            onSignOut={signOut}
+          />
+        </div>
+      )}
       {screen === 'title' && (
         <TitleScreen
           hasExistingSave={hasExistingSave}
