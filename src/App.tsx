@@ -275,19 +275,23 @@ export default function App() {
     showMessage('もぐもぐ！ご飯を食べた！')
   }, [persistActiveCreature, showMessage, triggerAction])
 
-  // トレーニング: ミニゲーム（2分の1の成否）を開く（就寝中は不可）
+  // トレーニング: 連打ミニゲームを開く（就寝中は不可）
   const handleTrain = useCallback(() => {
     const c = creatureRef.current
     if (!c || c.isSleeping) return
     setShowTrainingGame(true)
   }, [])
 
-  // トレーニングミニゲームの結果を適用（成否で成長量が変わる）
-  const handleTrainResult = useCallback((success: boolean) => {
+  // トレーニングミニゲームの結果を適用（タップ数に比例して経験値を獲得）
+  const handleTrainResult = useCallback((taps: number) => {
     const c = creatureRef.current
     if (c) {
-      persistActiveCreature(trainCreature(c, success))
-      showMessage(success ? 'トレーニング成功！大きく強くなった！' : 'トレーニング失敗…でも経験になった')
+      persistActiveCreature(trainCreature(c, taps))
+      showMessage(
+        taps > 0
+          ? `トレーニング完了！ ${taps} 連打で +${taps * 2} EXP！`
+          : 'トレーニング失敗…でも経験になった'
+      )
     }
     setShowTrainingGame(false)
   }, [persistActiveCreature, showMessage])
