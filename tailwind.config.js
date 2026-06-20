@@ -37,8 +37,7 @@ export default {
       animation: {
         'retro-blink': 'retroBlink 1s steps(1) infinite',
         'idle-breathe': 'idleBreathe 3s ease-in-out infinite',
-        'happy-jump': 'happyJump 1s ease-in-out infinite',
-        'sleep-zzz': 'sleepZzz 1.5s ease-in-out infinite',
+        'happy-jump': 'happyJump 2.4s ease-in-out infinite',
         'attack-flash': 'attackFlash 0.3s ease-in-out 3',
         'attack-lunge': 'attackLunge 0.55s ease-in-out infinite',
         'eat-nod': 'eatNod 0.46s ease-in-out infinite',
@@ -65,11 +64,12 @@ export default {
         },
         happyJump: {
           '0%':   { transform: 'translateY(0) scaleX(1) scaleY(1)' },
-          '12%':  { transform: 'translateY(3px) scaleX(1.22) scaleY(0.74)' },
-          '32%':  { transform: 'translateY(-16px) scaleX(0.82) scaleY(1.24)' },
-          '54%':  { transform: 'translateY(-19px) scaleX(0.88) scaleY(1.16)' },
-          '74%':  { transform: 'translateY(-4px) scaleX(1.02) scaleY(0.99)' },
-          '87%':  { transform: 'translateY(3px) scaleX(1.26) scaleY(0.7)' },
+          '5%':   { transform: 'translateY(3px) scaleX(1.22) scaleY(0.74)' },
+          '14%':  { transform: 'translateY(-16px) scaleX(0.82) scaleY(1.24)' },
+          '23%':  { transform: 'translateY(-19px) scaleX(0.88) scaleY(1.16)' },
+          '31%':  { transform: 'translateY(-4px) scaleX(1.02) scaleY(0.99)' },
+          '37%':  { transform: 'translateY(3px) scaleX(1.26) scaleY(0.7)' },
+          '42%':  { transform: 'translateY(0) scaleX(1) scaleY(1)' },
           '100%': { transform: 'translateY(0) scaleX(1) scaleY(1)' },
         },
         sleepZzz: {
