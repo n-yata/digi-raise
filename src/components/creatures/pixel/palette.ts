@@ -98,8 +98,3 @@ export function buildTypePalette(base: string): TypePalette {
     b: PUPIL,
   }
 }
-
-/** スプライトファイルとの後方互換スタブ（実行時未使用、コンパイル通過用）。 */
-export function paletteFor(_type: string): TypePalette & Record<string, string> {
-  return buildTypePalette('#9ca3af') as TypePalette & Record<string, string>
-}
