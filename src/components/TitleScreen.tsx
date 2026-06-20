@@ -2,10 +2,8 @@ import { useEffect, useState } from 'react'
 import { BRANCH_COLORS, type CreatureBranch } from '../data/evolutions'
 
 interface TitleScreenProps {
-  hasExistingSave: boolean
   onNewGame: () => void
   onContinue: () => void
-  onZukan?: () => void
 }
 
 const PREVIEW_BRANCHES: CreatureBranch[] = ['A', 'B', 'C', 'none']
@@ -28,7 +26,7 @@ function createStars() {
   }))
 }
 
-export default function TitleScreen({ hasExistingSave, onNewGame, onContinue, onZukan }: TitleScreenProps) {
+export default function TitleScreen({ onNewGame, onContinue }: TitleScreenProps) {
   const [frame, setFrame] = useState(0)
   const [stars] = useState(createStars)
 
@@ -136,22 +134,20 @@ export default function TitleScreen({ hasExistingSave, onNewGame, onContinue, on
 
       {/* Buttons */}
       <div className="flex flex-col gap-3 w-full max-w-xs">
-        {hasExistingSave && (
-          <button
-            onClick={onContinue}
-            className="w-full py-4 rounded-lg font-pixel transition-all active:scale-95 hover:brightness-125"
-            style={{
-              fontSize: '1rem',
-              background: 'linear-gradient(135deg, #1e3a5f, #0f3460)',
-              border: '2px solid #4fc3f7',
-              color: '#4fc3f7',
-              boxShadow: '0 0 15px #4fc3f733',
-              letterSpacing: '0.1em',
-            }}
-          >
-            つづきから
-          </button>
-        )}
+        <button
+          onClick={onContinue}
+          className="w-full py-4 rounded-lg font-pixel transition-all active:scale-95 hover:brightness-125"
+          style={{
+            fontSize: '1rem',
+            background: 'linear-gradient(135deg, #1e3a5f, #0f3460)',
+            border: '2px solid #4fc3f7',
+            color: '#4fc3f7',
+            boxShadow: '0 0 15px #4fc3f733',
+            letterSpacing: '0.1em',
+          }}
+        >
+          つづきから
+        </button>
         <button
           onClick={onNewGame}
           className="w-full py-4 rounded-lg font-pixel transition-all active:scale-95 hover:brightness-125"
@@ -166,21 +162,6 @@ export default function TitleScreen({ hasExistingSave, onNewGame, onContinue, on
         >
           はじめから
         </button>
-        {onZukan && (
-          <button
-            onClick={onZukan}
-            className="w-full py-3 rounded-lg font-pixel transition-all active:scale-95 hover:brightness-125"
-            style={{
-              fontSize: '0.85rem',
-              background: 'transparent',
-              border: '1px solid #ffd70055',
-              color: '#ffd700',
-              letterSpacing: '0.15em',
-            }}
-          >
-            図鑑をみる
-          </button>
-        )}
       </div>
 
       {/* Footer */}

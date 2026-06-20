@@ -45,7 +45,6 @@ export default function App() {
   const [hatching, setHatching] = useState(false)
   const [evolvedFrom, setEvolvedFrom] = useState<EvolutionStage | null>(null)
   const [message, setMessage] = useState<string | null>(null)
-  const [hasExistingSave, setHasExistingSave] = useState(false)
   const [loading, setLoading] = useState(true)
   const [discoveredCreatures, setDiscoveredCreatures] = useState<Set<CreatureId>>(new Set())
   const [zukanReturnScreen, setZukanReturnScreen] = useState<GameScreen>('title')
@@ -78,9 +77,6 @@ export default function App() {
   // Load save on mount
   useEffect(() => {
     migrateLegacyData().then(() => loadSaveData()).then(saved => {
-      if (saved && saved.creatures.length > 0 && saved.creatures.some(c => c.isAlive)) {
-        setHasExistingSave(true)
-      }
       if (saved?.discoveredCreatures) {
         setDiscoveredCreatures(new Set(saved.discoveredCreatures))
       }
@@ -427,7 +423,6 @@ export default function App() {
     setScreen('title')
     setPendingEvolution(false)
     setEvolvedFrom(null)
-    setHasExistingSave(false)
   }, [])
 
   const handleDeleteCreature = useCallback((id: string) => {
@@ -460,7 +455,6 @@ export default function App() {
     setCreatures(loaded.creatures)
     const active = loaded.creatures.find(c => c.id === loaded.activeCreatureId) ?? loaded.creatures.find(c => c.isAlive)
     if (active) setActiveCreatureId(active.id)
-    setHasExistingSave(loaded.creatures.some(c => c.isAlive))
     if (loaded.discoveredCreatures) {
       setDiscoveredCreatures(new Set(loaded.discoveredCreatures))
     }
@@ -544,10 +538,8 @@ export default function App() {
       )}
       {screen === 'title' && (
         <TitleScreen
-          hasExistingSave={hasExistingSave || authState.status === 'signedOut' || authState.status === 'error'}
           onNewGame={handleNewGame}
           onContinue={handleContinue}
-          onZukan={() => { setZukanReturnScreen('title'); setScreen('zukan') }}
         />
       )}
 
