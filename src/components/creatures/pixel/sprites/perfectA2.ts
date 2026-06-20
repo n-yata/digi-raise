@@ -1,46 +1,49 @@
 import { buildTypePalette } from '../palette'
-import { makeGrid, inEll, ellBorder, inHalo, drawEye, drawMouth } from '../spriteBuilder'
+import { makeGrid, inEll, onEllRing, wingChar, drawEye } from '../spriteBuilder'
 import type { PixelSpriteData } from '../PixelSprite'
 
-const BASE = '#e8e8ff'
+const BASE = '#f6f0ff'
 
-// ヴェルタ（終点）: 神聖な光に包まれた天上的フォルム。翼が胴体と溶け合う。
+// ヴェルタ（終点）: オファニム。多眼の黄金の輪が幾重にも回る天輪。中心に聖核。
 export const perfectA2Sprite: PixelSpriteData = {
   grid: makeGrid((x, y) => {
-    const cx = 15.5, cy = 18, rx = 9, ry = 11
+    const cx = 15.5, cy = 16
 
-    // 二重ハロ
-    if (inHalo(x, y, 15.5, 5, 9, 2.5)) return 'l'
-    if (inHalo(x, y, 15.5, 5, 6.5, 1.5)) return 'l'
+    // ── 輪の周囲の小さな羽根（8方向のうち上下左右斜め）──
+    for (const [sx, sy, side, span, rise] of [
+      [4, 10, -1, 7, 7], [27, 10, 1, 7, 7],
+      [5, 22, -1, 6, 6], [26, 22, 1, 6, 6],
+    ] as const) {
+      const w = wingChar(x, y, sx, sy, side, span, rise)
+      if (w) return w
+    }
 
-    // 顔
-    const eL = drawEye(x, y, 11, 13); if (eL) return eL
-    const eR = drawEye(x, y, 20, 13); if (eR) return eR
-    const m = drawMouth(x, y, 11, 17, 'small'); if (m) return m
+    // ── 多眼の外輪（リング上に複数の眼）──
+    const eyePos: Array<[number, number]> = [
+      [15.5, 4], [25, 9], [27, 16], [25, 23],
+      [15.5, 28], [6, 23], [4, 16], [6, 9],
+    ]
+    for (const [ex, ey] of eyePos) {
+      if (inEll(x, y, ex, ey, 1.6, 1.6)) return inEll(x, y, ex, ey, 0.7, 0.7) ? 'b' : 'w'
+    }
 
-    // 胴体（ハイライト広め）
-    if (ellBorder(x, y, cx, cy, rx, ry)) return 'k'
-    if (inEll(x, y, cx, cy, rx, ry)) {
-      if (inEll(x, y, 9, 11, 6, 7)) return 'l'
-      if (inEll(x, y, 23, 25, 5, 4)) return 'd'
+    // ── 黄金の三重輪 ──
+    if (onEllRing(x, y, cx, cy, 12, 12)) return 'G'
+    if (onEllRing(x, y, cx, cy, 8.5, 8.5)) return 'g'
+    if (onEllRing(x, y, cx, cy, 5.5, 5.5)) return 'G'
+
+    // ── 中心の聖核（顔つき）──
+    const eL = drawEye(x, y, 13, 16); if (eL) return eL
+    const eR = drawEye(x, y, 18, 16); if (eR) return eR
+    if (inEll(x, y, cx, cy, 3.4, 3.4)) {
+      if (inEll(x, y, cx, cy, 1.8, 1.8)) return 'l'
       return 'r'
-    }
-
-    // 翼（より丸く広がる）
-    if (inEll(x, y, 2, 16, 8.5, 13)) {
-      if (ellBorder(x, y, 2, 16, 8.5, 13)) return 'k'
-      return inEll(x, y, 2, 11, 6, 8) ? 'l' : 'r'
-    }
-    if (inEll(x, y, 29, 16, 8.5, 13)) {
-      if (ellBorder(x, y, 29, 16, 8.5, 13)) return 'k'
-      return inEll(x, y, 29, 11, 6, 8) ? 'l' : 'r'
     }
 
     return '.'
   }),
-  palette: buildTypePalette(BASE),
+  palette: { ...buildTypePalette(BASE), G: '#e0a82e', g: '#ffe08a' },
   face: {
-    eyes: [{ x: 11, y: 13 }, { x: 20, y: 13 }],
-    mouth: { x: 11, y: 17 },
+    eyes: [{ x: 13, y: 16 }, { x: 18, y: 16 }],
   },
 }

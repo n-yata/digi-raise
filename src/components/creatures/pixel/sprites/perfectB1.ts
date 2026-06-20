@@ -1,43 +1,42 @@
 import { buildTypePalette } from '../palette'
-import { makeGrid, inEll, ellBorder, inHSpike, inTri, drawEye, drawMouth } from '../spriteBuilder'
+import { makeGrid, inEll, ellBorder, inCapsule, drawMouth } from '../spriteBuilder'
 import type { PixelSpriteData } from '../PixelSprite'
 
-const BASE = '#9b59b6'
+const BASE = '#26566b' // 深海の暗碧
 
+// アビシア: 深淵の多眼触手怪。冷たく光る複数の眼、牙の口、垂れ下がる触手。
 export const perfectB1Sprite: PixelSpriteData = {
   grid: makeGrid((x, y) => {
-    const cx = 15.5, cy = 19, rx = 10, ry = 11
-
-    // 頭部の角（前面）
-    if (inTri(x, y, 12, 6, 11, 13, 11)) {
-      const nb = !inTri(x-1,y,12,6,11,13,11)||!inTri(x+1,y,12,6,11,13,11)||!inTri(x,y-1,12,6,11,13,11)||!inTri(x,y+1,12,6,11,13,11)
-      return nb ? 'k' : 'o'
-    }
-    if (inTri(x, y, 19, 6, 18, 20, 11)) {
-      const nb = !inTri(x-1,y,19,6,18,20,11)||!inTri(x+1,y,19,6,18,20,11)||!inTri(x,y-1,19,6,18,20,11)||!inTri(x,y+1,19,6,18,20,11)
-      return nb ? 'k' : 'o'
+    // ── 触手（下方へ放射状に5本）──
+    for (const [bx, tx, ty] of [
+      [10, 6, 31], [13, 10, 32], [15.5, 15.5, 32], [18, 21, 32], [21, 25, 31],
+    ] as const) {
+      if (inCapsule(x, y, bx, 18, tx, ty, 1.5)) {
+        return inCapsule(x, y, bx, 18, tx, ty, 0.7) ? (y % 3 === 0 ? 'g' : 'd') : 'k'
+      }
     }
 
-    // 肩スパイク（前面）
-    if (inHSpike(x, y, 0, 15, 6, 6)) return x <= 1 || !inHSpike(x - 1, y, 0, 15, 6, 6) ? 'k' : 'o'
-    if (inHSpike(x, y, 31, 15, 25, 6)) return x >= 30 || !inHSpike(x + 1, y, 31, 15, 25, 6) ? 'k' : 'o'
+    // ── 牙の口 ──
+    const m = drawMouth(x, y, 13, 16, 'fang'); if (m) return m
 
-    // 顔
-    const eL = drawEye(x, y, 10, 13); if (eL) return eL
-    const eR = drawEye(x, y, 21, 13); if (eR) return eR
-    const m = drawMouth(x, y, 10, 18, 'fang'); if (m) return m
+    // ── 多眼（大小の光る眼）──
+    const eyes: Array<[number, number, number]> = [
+      [11, 11, 2], [20, 11, 2], [15.5, 8, 1.6], [9, 16, 1.4], [22, 16, 1.4],
+    ]
+    for (const [ex, ey, r] of eyes) {
+      if (inEll(x, y, ex, ey, r, r)) return inEll(x, y, ex, ey, r * 0.45, r * 0.45) ? 'k' : 'g'
+    }
 
-    // 胴体
-    if (ellBorder(x, y, cx, cy, rx, ry)) return 'k'
-    if (!inEll(x, y, cx, cy, rx, ry)) return '.'
-    if (inEll(x, y, 9, 12, 4, 5)) return 'l'
-    if (inEll(x, y, 24, 27, 5, 4)) return 'd'
+    // ── 暗い肉体 ──
+    if (inEll(x, y, 15.5, 14, 8, 7)) {
+      if (ellBorder(x, y, 15.5, 14, 8, 7)) return 'k'
+      if (inEll(x, y, 10, 10, 3, 3)) return 'l'
+      if (inEll(x, y, 21, 18, 3.5, 3)) return 'o'
+      return 'r'
+    }
 
-    return 'r'
+    return '.'
   }),
-  palette: buildTypePalette(BASE),
-  face: {
-    eyes: [{ x: 10, y: 13 }, { x: 21, y: 13 }],
-    mouth: { x: 10, y: 18 },
-  },
+  palette: { ...buildTypePalette(BASE), g: '#5fe9ff' },
+  face: { eyes: [{ x: 11, y: 11 }, { x: 20, y: 11 }], mouth: { x: 13, y: 16 } },
 }

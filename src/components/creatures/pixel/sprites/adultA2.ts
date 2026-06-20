@@ -1,45 +1,71 @@
 import { buildTypePalette } from '../palette'
-import { makeGrid, inEll, ellBorder, inHalo, drawEye, drawMouth } from '../spriteBuilder'
+import {
+  makeGrid, inEll, ellBorder, inTri, inCapsule, wingChar, drawEye,
+} from '../spriteBuilder'
 import type { PixelSpriteData } from '../PixelSprite'
 
-const BASE = '#e8e8ff'
+const BASE = '#f4612a' // 炎の橙赤
 
-// エリアル: より軽やかで広い翼。ハロは細め。
+// エリアル: 炎の不死鳥。長い胴と金の鳥脚（鉤爪）、跳ね上げた翼、燃える尾羽。
 export const adultA2Sprite: PixelSpriteData = {
   grid: makeGrid((x, y) => {
-    const cx = 15.5, cy = 19, rx = 7.5, ry = 11
+    // ── 跳ね上げた翼（V字・上方向）──
+    for (const [sx, sy, side, span, rise] of [
+      [13, 12, -1, 13, 14], [18, 12, 1, 13, 14],
+    ] as const) {
+      const w = wingChar(x, y, sx, sy, side, span, rise)
+      if (w) return w
+    }
 
-    // ハロ（細め）
-    if (inHalo(x, y, 15.5, 6, 6, 1.5)) return 'l'
+    // ── 金の冠羽 ──
+    if (inTri(x, y, 15.5, 1, 14, 17, 5)) return 'G'
+    // ── 金の嘴 ──
+    if (inTri(x, y, 15.5, 10, 14, 17, 7)) return 'G'
 
-    // 顔
-    const eL = drawEye(x, y, 11, 14); if (eL) return eL
-    const eR = drawEye(x, y, 20, 14); if (eR) return eR
-    const m = drawMouth(x, y, 11, 18, 'small'); if (m) return m
+    // ── 頭部の顔 ──
+    const eL = drawEye(x, y, 13, 6); if (eL) return eL
+    const eR = drawEye(x, y, 18, 6); if (eR) return eR
 
-    // 胴体（ハイライト多め）
-    if (ellBorder(x, y, cx, cy, rx, ry)) return 'k'
-    if (inEll(x, y, cx, cy, rx, ry)) {
-      if (inEll(x, y, 10, 12, 5, 6)) return 'l'
-      if (inEll(x, y, 22, 26, 4, 3)) return 'd'
+    // ── 頭部 ──
+    if (inEll(x, y, 15.5, 6, 2.9, 2.9)) {
+      if (ellBorder(x, y, 15.5, 6, 2.9, 2.9)) return 'k'
+      if (inEll(x, y, 14, 5, 1.1, 1.1)) return 'l'
       return 'r'
     }
 
-    // 翼（より広い）
-    if (inEll(x, y, 4, 17, 6.5, 10)) {
-      if (ellBorder(x, y, 4, 17, 6.5, 10)) return 'k'
-      return inEll(x, y, 4, 13, 4, 6) ? 'l' : 'r'
+    // ── 胴体（短め・縦の鳥の体）──
+    if (inEll(x, y, 15.5, 13, 3, 4.6)) {
+      if (ellBorder(x, y, 15.5, 13, 3, 4.6)) return 'k'
+      if (inEll(x, y, 14.5, 11, 1.3, 1.8)) return 'l'
+      if (inEll(x, y, 17, 15, 1.4, 1.8)) return 'd'
+      return 'r'
     }
-    if (inEll(x, y, 27, 17, 6.5, 10)) {
-      if (ellBorder(x, y, 27, 17, 6.5, 10)) return 'k'
-      return inEll(x, y, 27, 13, 4, 6) ? 'l' : 'r'
+
+    // ── 金の鳥脚（細く・外側に開く）──
+    if (inCapsule(x, y, 14, 16, 12, 25, 0.6)) return 'G'
+    if (inCapsule(x, y, 17, 16, 19, 25, 0.6)) return 'G'
+    // ── 鉤爪（足先・3本指）──
+    for (const fx of [12, 19] as const) {
+      if (y === 26 && (x === fx - 2 || x === fx || x === fx + 2)) return 'G'
+      if (y === 25 && x >= fx - 1 && x <= fx + 1) return 'G'
+    }
+
+    // ── 燃える尾羽（背面・下方に開く）──
+    for (const [tx, ty, bl, br, by] of [
+      [9, 28, 14, 16, 18], [13, 30, 14, 16, 18],
+      [18, 30, 15, 17, 18], [22, 28, 15, 17, 18],
+    ] as const) {
+      if (inTri(x, y, tx, ty, bl, br, by)) {
+        const nb = !inTri(x - 1, y, tx, ty, bl, br, by) || !inTri(x + 1, y, tx, ty, bl, br, by) || !inTri(x, y + 1, tx, ty, bl, br, by)
+        if (nb) return 'k'
+        return y >= 26 ? 'G' : 'r'
+      }
     }
 
     return '.'
   }),
-  palette: buildTypePalette(BASE),
+  palette: { ...buildTypePalette(BASE), G: '#ffd24a', l: '#ffd060' },
   face: {
-    eyes: [{ x: 11, y: 14 }, { x: 20, y: 14 }],
-    mouth: { x: 11, y: 18 },
+    eyes: [{ x: 13, y: 6 }, { x: 18, y: 6 }],
   },
 }

@@ -51,6 +51,81 @@ export function inHalo(x: number, y: number, cx: number, cy: number, rxOuter: nu
   return inEll(x, y, cx, cy, rxOuter, ryOuter) && !inEll(x, y, cx, cy, rxOuter - 2, ryOuter - 0.8)
 }
 
+/** 回転楕円内の正規化距離（0=中心,1=境界）。範囲外は >1。dir は単位ベクトル前提でなくてよい。 */
+function rotEllDist(
+  x: number, y: number, mx: number, my: number,
+  dirX: number, dirY: number, halfLen: number, halfW: number,
+): number {
+  const len = Math.hypot(dirX, dirY) || 1
+  const ux = dirX / len, uy = dirY / len
+  const px = x - mx, py = y - my
+  const along = px * ux + py * uy
+  const perp = -px * uy + py * ux
+  return (along / halfLen) ** 2 + (perp / halfW) ** 2
+}
+
+/**
+ * 羽根（フェザーウィング）を 1 枚描画し、シェードキーを返す（範囲外は null）。
+ * 肩 (sx,sy) から扇状に伸びる複数の「羽根（細長い回転楕円）」を重ねて描く。
+ * 羽先がとがり、層が重なって本物の翼らしいシルエットになる。
+ * side: -1 左 / +1 右、span: 羽根の長さ、rise: 縦の伸び（span に対する高さ比の基準）。
+ * 返り値: 'k'（羽先/輪郭）/ 'l'（羽軸ハイライト）/ 'd'（重なりの影）/ 'r'（面）。
+ */
+export function wingChar(
+  x: number, y: number,
+  sx: number, sy: number,
+  side: number, span: number, rise: number,
+): string | null {
+  const N = 6
+  const hScale = rise / span
+  // 内側（下）の羽根を前面に＝小さい i を後で評価して上書き優先するため、外側から走査
+  for (let i = N - 1; i >= 0; i--) {
+    const t = i / (N - 1)                       // 0:下 .. 1:上
+    const ang = (0.04 + 0.80 * t) * (Math.PI / 2)
+    const len = span * (0.60 + 0.40 * Math.sin(t * Math.PI)) // 中央が長い
+    const tipX = sx + side * Math.cos(ang) * len
+    const tipY = sy - Math.sin(ang) * len * hScale
+    const mx = (sx + tipX) / 2, my = (sy + tipY) / 2
+    const halfLen = Math.hypot(tipX - sx, tipY - sy) / 2 + 0.5
+    const halfW = 1.9
+    const d = rotEllDist(x, y, mx, my, tipX - sx, tipY - sy, halfLen, halfW)
+    if (d < 1) {
+      if (d > 0.66) return 'k'                  // 羽根の縁取り
+      // 羽軸（中心線）ハイライト：先端寄りは明るく
+      const len2 = Math.hypot(tipX - sx, tipY - sy) || 1
+      const along = ((x - mx) * (tipX - sx) + (y - my) * (tipY - sy)) / len2
+      if (along > halfLen * 0.15) return 'l'
+      return i % 2 === 0 ? 'r' : 'd'
+    }
+  }
+  return null
+}
+
+/** 線分 (x1,y1)-(x2,y2) を中心とする太さ r のカプセル内判定（腕・脚・尾に使う）。 */
+export function inCapsule(
+  x: number, y: number, x1: number, y1: number, x2: number, y2: number, r: number,
+): boolean {
+  const dx = x2 - x1, dy = y2 - y1
+  const l2 = dx * dx + dy * dy || 1
+  let t = ((x - x1) * dx + (y - y1) * dy) / l2
+  t = Math.max(0, Math.min(1, t))
+  const px = x1 + t * dx, py = y1 + t * dy
+  return (x - px) ** 2 + (y - py) ** 2 <= r * r
+}
+
+/** カプセルの縁（輪郭）判定: r では内側だが r-1 では外側。 */
+export function capsuleEdge(
+  x: number, y: number, x1: number, y1: number, x2: number, y2: number, r: number,
+): boolean {
+  return inCapsule(x, y, x1, y1, x2, y2, r) && !inCapsule(x, y, x1, y1, x2, y2, r - 1.0)
+}
+
+/** 楕円フォルド（脳のしわ等）の薄いリング境界判定。 */
+export function onEllRing(x: number, y: number, cx: number, cy: number, rx: number, ry: number): boolean {
+  const d = ((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2
+  return d < 1 && d > 0.55
+}
+
 /** 静的な目（3×3、中心に瞳）を描画。該当範囲外は null */
 export function drawEye(x: number, y: number, ex: number, ey: number): string | null {
   const dx = x - ex, dy = y - ey
