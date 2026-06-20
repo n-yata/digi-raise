@@ -1,8 +1,11 @@
 import React from 'react' // needed for JSX Fragment
 import type { Creature } from '../types/creature'
+import type { AuthState } from '../hooks/useAuth'
+import type { SyncStatus } from '../hooks/useCloudSave'
 import { BRANCH_COLORS, BRANCH_NAMES, STAGE_NAMES, CREATURE_TREE, getCreatureBranch } from '../data/evolutions'
 import { EXP_TO_LEVEL } from '../data/evolutions'
 import { canEvolve, getEvolutionProgress } from '../utils/evolution'
+import AuthButton from './AuthButton'
 
 interface StatusScreenProps {
   creature: Creature
@@ -13,6 +16,11 @@ interface StatusScreenProps {
   onDeleteCreature: (id: string) => void
   onNewCreature: () => void
   onZukan?: () => void
+  authState?: AuthState
+  syncStatus?: SyncStatus
+  lastSyncedAt?: number | null
+  onSignIn?: () => void
+  onSignOut?: () => void
 }
 
 const MAX_CREATURES = 5
@@ -32,7 +40,7 @@ function TypeDot({ color, size }: { color: string; size: number }) {
   )
 }
 
-export default function StatusScreen({ creature, allCreatures, activeCreatureId, onBack, onSelectCreature, onDeleteCreature, onNewCreature, onZukan }: StatusScreenProps) {
+export default function StatusScreen({ creature, allCreatures, activeCreatureId, onBack, onSelectCreature, onDeleteCreature, onNewCreature, onZukan, authState, syncStatus, lastSyncedAt, onSignIn, onSignOut }: StatusScreenProps) {
   const canAddCreature = allCreatures.length < MAX_CREATURES
   const branch = getCreatureBranch(creature.creatureId)
   const color = BRANCH_COLORS[branch]
@@ -293,6 +301,22 @@ export default function StatusScreen({ creature, allCreatures, activeCreatureId,
             : `上限${MAX_CREATURES}体に達しています`}
         </button>
       </div>
+
+      {/* Account / cloud sync */}
+      {authState && syncStatus && onSignIn && onSignOut && (
+        <div className="px-4 py-3 rounded-xl mb-4" style={{ background: '#16213e', border: '1px solid #0f3460' }}>
+          <div className="font-pixel mb-3" style={{ fontSize: '0.75rem', color }}>アカウント</div>
+          <div className="flex justify-end">
+            <AuthButton
+              authState={authState}
+              syncStatus={syncStatus}
+              lastSyncedAt={lastSyncedAt ?? null}
+              onSignIn={onSignIn}
+              onSignOut={onSignOut}
+            />
+          </div>
+        </div>
+      )}
 
     </div>
   )

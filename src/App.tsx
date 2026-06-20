@@ -7,7 +7,6 @@ import { saveSaveData, loadSaveData, deleteSaveData, migrateLegacyData } from '.
 import type { SaveData } from './utils/storage'
 import { useAuth } from './hooks/useAuth'
 import { useCloudSave } from './hooks/useCloudSave'
-import AuthButton from './components/AuthButton'
 import TitleScreen from './components/TitleScreen'
 import CreatureSetup from './components/CreatureSetup'
 import MainGame from './components/MainGame'
@@ -493,20 +492,6 @@ export default function App() {
 
   return (
     <div className="min-h-screen" style={{ background: '#1a1a2e' }}>
-      {authState.status === 'signedIn' && (
-        <div
-          className="fixed top-2 right-2 z-50 flex items-center"
-          style={{ pointerEvents: 'auto' }}
-        >
-          <AuthButton
-            authState={authState}
-            syncStatus={syncStatus}
-            lastSyncedAt={lastSyncedAt}
-            onSignIn={signIn}
-            onSignOut={signOut}
-          />
-        </div>
-      )}
       {screen === 'title' && (continuePending || message) && (
         <div
           className="fixed top-0 left-0 right-0 flex justify-center z-50"
@@ -584,6 +569,11 @@ export default function App() {
           onDeleteCreature={handleDeleteCreature}
           onNewCreature={() => setScreen('setup')}
           onZukan={() => { setZukanReturnScreen('status'); setScreen('zukan') }}
+          authState={authState}
+          syncStatus={syncStatus}
+          lastSyncedAt={lastSyncedAt}
+          onSignIn={signIn}
+          onSignOut={signOut}
         />
       )}
 
