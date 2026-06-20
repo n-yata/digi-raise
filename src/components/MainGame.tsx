@@ -4,15 +4,21 @@ import { BRANCH_COLORS, BRANCH_NAMES, STAGE_NAMES, getCreatureBranch } from '../
 import { EXP_TO_LEVEL } from '../data/evolutions'
 import { getAnimationState } from '../utils/gameLogic'
 import type { ActionAnim } from '../utils/gameLogic'
+import type { ActionItem } from '../types/action'
 import CreatureSprite from './CreatureSprite'
 import StatusBars from './StatusBars'
 import ActionButtons from './ActionButtons'
 import TrainingMiniGame from './TrainingMiniGame'
+import { ItemSprite } from './items/ItemSprite'
+import { FOOD_SPRITES } from './items/foodSprites'
+import { TOY_SPRITES } from './items/toySprites'
 
 interface MainGameProps {
   creature: Creature
   devMode: boolean
   actionAnimation: ActionAnim | null
+  actionItem: ActionItem | null
+  onSkipAction: () => void
   trainingActive: boolean
   onTrainResult: (success: boolean) => void
   message: string | null
@@ -32,6 +38,8 @@ export default function MainGame({
   creature,
   devMode,
   actionAnimation,
+  actionItem,
+  onSkipAction,
   trainingActive,
   onTrainResult,
   message,
@@ -49,6 +57,19 @@ export default function MainGame({
   const branch = getCreatureBranch(creature.creatureId)
   const color = BRANCH_COLORS[branch]
   const animState = getAnimationState(creature, actionAnimation)
+
+  // 食事・遊び演出中に表示するアイテムのドット絵。演出中はタップでスキップ可能。
+  const itemData = actionItem
+    ? (actionItem.kind === 'food' ? FOOD_SPRITES : TOY_SPRITES)[actionItem.index] ?? null
+    : null
+  // アイテムの動き: 食べ物は共通の「食べられる」動き、遊び道具は種類ごとに動きを変える。
+  const TOY_ANIM_CLASSES = ['action-toy-ball', 'action-toy-disc', 'action-toy-teddy']
+  const itemAnimClass = actionItem
+    ? actionItem.kind === 'food'
+      ? 'action-food'
+      : TOY_ANIM_CLASSES[actionItem.index] ?? 'action-toy-ball'
+    : ''
+  const isActionPlaying = (actionAnimation === 'eating' || actionAnimation === 'happy') && !!itemData
   const bgClass = `branch-bg-${branch}`
   const expNeeded = EXP_TO_LEVEL(creature.level)
   const expPct = Math.min(100, (creature.exp / expNeeded) * 100)
@@ -187,10 +208,12 @@ export default function MainGame({
       {/* Creature display area (伸縮してスクロールを防ぐ) */}
       <div
         className="relative flex flex-1 min-h-0 flex-col items-center justify-center py-2 mx-4 mt-2 rounded-xl overflow-hidden"
+        onClick={isActionPlaying ? onSkipAction : undefined}
         style={{
           background: `radial-gradient(ellipse at center, ${color}11 0%, transparent 70%)`,
           border: `1px solid ${color}22`,
           minHeight: 96,
+          cursor: isActionPlaying ? 'pointer' : 'default',
         }}
       >
         {/* Message popup */}
@@ -221,6 +244,28 @@ export default function MainGame({
             />
           </div>
         </div>
+
+        {/* 食事・遊びアイテム（クリーチャーの口元付近に出現し、食べる/遊ぶ動きをする） */}
+        {itemData && (
+          <div
+            className="absolute z-10 pointer-events-none"
+            style={{ left: '50%', top: '56%', transform: 'translate(-50%, -50%)' }}
+          >
+            <div className={itemAnimClass}>
+              <ItemSprite data={itemData} size={40} />
+            </div>
+          </div>
+        )}
+
+        {/* スキップ操作のヒント */}
+        {isActionPlaying && (
+          <div
+            className="skip-hint absolute bottom-2 right-3 z-20 font-pixel pointer-events-none"
+            style={{ fontSize: '0.45rem', color: '#e0e0e0' }}
+          >
+            タップでスキップ
+          </div>
+        )}
 
         {/* トレーニング連打ミニゲーム（クリーチャー表示エリア内オーバーレイ） */}
         {trainingActive && (

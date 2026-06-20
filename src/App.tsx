@@ -18,9 +18,14 @@ import BattleLobbyScreen from './components/BattleLobbyScreen'
 import BattleScreen from './components/BattleScreen'
 import { feedCreature, trainCreature, playWithCreature, toggleSleep } from './utils/gameLogic'
 import type { ActionAnim } from './utils/gameLogic'
+import { FOOD_SPRITES } from './components/items/foodSprites'
+import { TOY_SPRITES } from './components/items/toySprites'
+import type { ActionItem } from './types/action'
 
-/** ごはん/遊びのアクション演出（eating/happy）を再生する時間（ms）。 */
-const ACTION_ANIM_MS = 1200
+/** ごはん/遊びのアクション演出（eating/happy）を再生する時間（ms）。
+ *  食べる/遊ぶ動作（アイテムが口元へ運ばれてかじられる・道具で遊ぶ）を見せきる長さ。
+ *  CSS 側のアイテムアニメーション（foodEat / toy*）と尺を合わせる。 */
+const ACTION_ANIM_MS = 1600
 /** 卵をメイン画面に見せてから、ふ化演出を始めるまでの待ち時間（ms）。 */
 const EGG_HATCH_DELAY_MS = 3000
 /** ふ化演出（殻が割れる振動＋閃光）の長さ（ms）。これを過ぎたらクリーチャーへ切り替える。 */
@@ -32,6 +37,8 @@ export default function App() {
   const [activeCreatureId, setActiveCreatureId] = useState<string | null>(null)
   const [devMode, setDevMode] = useState(false)
   const [actionAnimation, setActionAnimation] = useState<ActionAnim | null>(null)
+  // 食事・遊び演出中に表示するアイテム（食べ物 / 遊び道具）。演出終了で null に戻す。
+  const [actionItem, setActionItem] = useState<ActionItem | null>(null)
   const [showTrainingGame, setShowTrainingGame] = useState(false)
   const [pendingEvolution, setPendingEvolution] = useState(false)
   const [hatching, setHatching] = useState(false)
@@ -87,13 +94,26 @@ export default function App() {
 
   // メイン画面で一時的にアクション演出（eating/happy/attack）を再生し、一定時間後に自動解除する。
   // 連打されても前のタイマーを破棄して多重発火を防ぐ。
-  const triggerAction = useCallback((kind: ActionAnim) => {
+  // item を渡すと演出中に食べ物 / 遊び道具のドット絵を併せて表示する。
+  const triggerAction = useCallback((kind: ActionAnim, item: ActionItem | null = null) => {
     if (actionTimerRef.current) clearTimeout(actionTimerRef.current)
     setActionAnimation(kind)
+    setActionItem(item)
     actionTimerRef.current = setTimeout(() => {
       setActionAnimation(null)
+      setActionItem(null)
       actionTimerRef.current = null
     }, ACTION_ANIM_MS)
+  }, [])
+
+  // 食事・遊び演出を即終了する（画面タップによるスキップ）。
+  const skipAction = useCallback(() => {
+    if (actionTimerRef.current) {
+      clearTimeout(actionTimerRef.current)
+      actionTimerRef.current = null
+    }
+    setActionAnimation(null)
+    setActionItem(null)
   }, [])
 
   // unmount 時にアクションタイマーを確実に解除（リーク防止）
@@ -271,7 +291,8 @@ export default function App() {
     }
     const updated = feedCreature(c)
     persistActiveCreature(updated)
-    triggerAction('eating')
+    const foodIndex = Math.floor(Math.random() * FOOD_SPRITES.length)
+    triggerAction('eating', { kind: 'food', index: foodIndex })
     showMessage('もぐもぐ！ご飯を食べた！')
   }, [persistActiveCreature, showMessage, triggerAction])
 
@@ -298,7 +319,8 @@ export default function App() {
     if (!c || c.isSleeping) return
     const updated = playWithCreature(c, true)
     persistActiveCreature(updated)
-    triggerAction('happy')
+    const toyIndex = Math.floor(Math.random() * TOY_SPRITES.length)
+    triggerAction('happy', { kind: 'toy', index: toyIndex })
     showMessage('一緒に遊んだ！楽しかった！')
   }, [persistActiveCreature, showMessage, triggerAction])
 
@@ -526,6 +548,8 @@ export default function App() {
           creature={activeCreature}
           devMode={devMode}
           actionAnimation={actionAnimation}
+          actionItem={actionItem}
+          onSkipAction={skipAction}
           trainingActive={showTrainingGame}
           onTrainResult={handleTrainResult}
           message={message}

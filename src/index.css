@@ -91,6 +91,67 @@
   animation: popUp 2.5s ease-in-out forwards;
 }
 
+/* 食事・遊び演出のアイテムアニメーション。再生時間はアクション演出
+   （ACTION_ANIM_MS = 1600ms）に合わせる。クリーチャーが実際に「食べる / 遊ぶ」
+   ように、アイテムがクリーチャーに絡んで動く。 */
+
+/* 食事: 口元へ運ばれ、数口かじられて段階的に縮小して消える。 */
+@keyframes foodEat {
+  0%   { opacity: 0; transform: translate(28px, 4px) scale(0.5) rotate(10deg); }
+  16%  { opacity: 1; transform: translate(0, 0) scale(1) rotate(0deg); }
+  30%  { transform: translate(0, 3px) scale(0.9); }       /* 一口目 */
+  38%  { transform: translate(0, 0) scale(0.78); }
+  54%  { transform: translate(0, 3px) scale(0.66); }      /* 二口目 */
+  62%  { transform: translate(0, 0) scale(0.54); }
+  80%  { transform: translate(0, 3px) scale(0.34); opacity: 0.85; } /* 三口目 */
+  100% { transform: translate(0, -3px) scale(0.08); opacity: 0; }
+}
+.action-food { animation: foodEat 1.6s ease-in-out forwards; }
+
+/* 遊び・ボール: クリーチャーの前で弾む。 */
+@keyframes toyBall {
+  0%   { opacity: 0; transform: translate(22px, 0) scale(0.4); }
+  14%  { opacity: 1; transform: translate(0, 0) scale(1); }
+  30%  { transform: translateY(-24px) scale(1.06, 0.94); }
+  44%  { transform: translateY(0) scale(0.94, 1.06); }
+  58%  { transform: translateY(-15px) scale(1.03, 0.97); }
+  72%  { transform: translateY(0) scale(1); }
+  86%  { transform: translateY(-7px); opacity: 1; }
+  100% { transform: translateY(0) scale(0.8); opacity: 0; }
+}
+.action-toy-ball { animation: toyBall 1.6s ease-in-out forwards; }
+
+/* 遊び・ディスク: 回転しながら左右に飛ぶ。 */
+@keyframes toyDisc {
+  0%   { opacity: 0; transform: translateX(-44px) rotate(0deg); }
+  14%  { opacity: 1; transform: translateX(-30px) rotate(120deg); }
+  50%  { transform: translateX(40px) rotate(420deg); }
+  82%  { opacity: 1; transform: translateX(-26px) rotate(720deg); }
+  100% { opacity: 0; transform: translateX(44px) rotate(960deg); }
+}
+.action-toy-disc { animation: toyDisc 1.6s ease-in-out forwards; }
+
+/* 遊び・ぬいぐるみ: ふわふわ抱えて揺れる。 */
+@keyframes toyTeddy {
+  0%   { opacity: 0; transform: translateY(12px) scale(0.5) rotate(-8deg); }
+  18%  { opacity: 1; transform: translateY(0) scale(1) rotate(0deg); }
+  40%  { transform: translateY(-12px) rotate(8deg); }
+  60%  { transform: translateY(0) rotate(-8deg); }
+  80%  { transform: translateY(-7px) rotate(5deg); opacity: 1; }
+  100% { opacity: 0; transform: translateY(0) scale(0.85) rotate(0deg); }
+}
+.action-toy-teddy { animation: toyTeddy 1.6s ease-in-out forwards; }
+
+/* スキップ操作のヒント表示（うっすら点滅）。 */
+@keyframes skipHintPulse {
+  0%, 100% { opacity: 0.35; }
+  50%      { opacity: 0.7; }
+}
+
+.skip-hint {
+  animation: skipHintPulse 1.4s ease-in-out infinite;
+}
+
 /* Scanline effect */
 .scanlines {
   position: relative;
