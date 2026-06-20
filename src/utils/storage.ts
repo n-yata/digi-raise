@@ -1,5 +1,5 @@
 import { openDB, type IDBPDatabase } from 'idb'
-import type { Creature } from '../types/creature'
+import type { Creature, CreatureId } from '../types/creature'
 import { CREATURE_TREE } from '../data/evolutions'
 
 export function validateCreature(c: unknown): c is Creature {
@@ -42,6 +42,13 @@ export function validateSaveData(data: unknown): data is SaveData {
     if (!exists) return false
   }
 
+  if (obj.discoveredCreatures !== undefined) {
+    if (!Array.isArray(obj.discoveredCreatures)) return false
+    for (const id of obj.discoveredCreatures) {
+      if (typeof id !== 'string' || !Object.prototype.hasOwnProperty.call(CREATURE_TREE, id)) return false
+    }
+  }
+
   return true
 }
 
@@ -54,6 +61,7 @@ const SAVE_DATA_KEY = 'saveData'
 export interface SaveData {
   creatures: Creature[]
   activeCreatureId: string | null
+  discoveredCreatures?: CreatureId[]
 }
 
 let db: IDBPDatabase | null = null

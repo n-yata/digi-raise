@@ -12,6 +12,7 @@ interface StatusScreenProps {
   onSelectCreature: (id: string) => void
   onDeleteCreature: (id: string) => void
   onNewCreature: () => void
+  onZukan?: () => void
 }
 
 const MAX_CREATURES = 5
@@ -31,7 +32,7 @@ function TypeDot({ color, size }: { color: string; size: number }) {
   )
 }
 
-export default function StatusScreen({ creature, allCreatures, activeCreatureId, onBack, onSelectCreature, onDeleteCreature, onNewCreature }: StatusScreenProps) {
+export default function StatusScreen({ creature, allCreatures, activeCreatureId, onBack, onSelectCreature, onDeleteCreature, onNewCreature, onZukan }: StatusScreenProps) {
   const canAddCreature = allCreatures.length < MAX_CREATURES
   const branch = getCreatureBranch(creature.creatureId)
   const color = BRANCH_COLORS[branch]
@@ -60,22 +61,38 @@ export default function StatusScreen({ creature, allCreatures, activeCreatureId,
       style={{ background: '#1a1a2e', maxWidth: 420, margin: '0 auto' }}
     >
       {/* Header */}
-      <div className="flex items-center gap-3 mb-4">
-        <button
-          onClick={onBack}
-          className="font-pixel px-3 py-2 rounded-lg transition-all active:scale-95"
-          style={{
-            fontSize: '0.75rem',
-            background: '#16213e',
-            border: '1px solid #334155',
-            color: '#94a3b8',
-          }}
-        >
-          &lt; もどる
-        </button>
-        <h2 className="font-pixel flex items-center gap-2" style={{ fontSize: '1rem', color }}>
-          <TypeDot color={color} size={14} /> ステータス
-        </h2>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={onBack}
+            className="font-pixel px-3 py-2 rounded-lg transition-all active:scale-95"
+            style={{
+              fontSize: '0.75rem',
+              background: '#16213e',
+              border: '1px solid #334155',
+              color: '#94a3b8',
+            }}
+          >
+            &lt; もどる
+          </button>
+          <h2 className="font-pixel flex items-center gap-2" style={{ fontSize: '1rem', color }}>
+            <TypeDot color={color} size={14} /> ステータス
+          </h2>
+        </div>
+        {onZukan && (
+          <button
+            onClick={onZukan}
+            className="font-pixel px-3 py-2 rounded-lg transition-all active:scale-95"
+            style={{
+              fontSize: '0.65rem',
+              background: '#16213e',
+              border: '1px solid #ffd70055',
+              color: '#ffd700',
+            }}
+          >
+            図鑑
+          </button>
+        )}
       </div>
 
       {/* Creature identity */}

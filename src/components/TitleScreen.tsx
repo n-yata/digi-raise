@@ -5,6 +5,7 @@ interface TitleScreenProps {
   hasExistingSave: boolean
   onNewGame: () => void
   onContinue: () => void
+  onZukan?: () => void
 }
 
 const PREVIEW_BRANCHES: CreatureBranch[] = ['A', 'B', 'C', 'none']
@@ -27,7 +28,7 @@ function createStars() {
   }))
 }
 
-export default function TitleScreen({ hasExistingSave, onNewGame, onContinue }: TitleScreenProps) {
+export default function TitleScreen({ hasExistingSave, onNewGame, onContinue, onZukan }: TitleScreenProps) {
   const [frame, setFrame] = useState(0)
   const [stars] = useState(createStars)
 
@@ -165,6 +166,21 @@ export default function TitleScreen({ hasExistingSave, onNewGame, onContinue }: 
         >
           はじめから
         </button>
+        {onZukan && (
+          <button
+            onClick={onZukan}
+            className="w-full py-3 rounded-lg font-pixel transition-all active:scale-95 hover:brightness-125"
+            style={{
+              fontSize: '0.85rem',
+              background: 'transparent',
+              border: '1px solid #ffd70055',
+              color: '#ffd700',
+              letterSpacing: '0.15em',
+            }}
+          >
+            図鑑をみる
+          </button>
+        )}
       </div>
 
       {/* Footer */}
