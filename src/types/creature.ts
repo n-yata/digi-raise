@@ -28,7 +28,8 @@ export interface Creature {
   happiness: number   // 0-100
   age: number         // in days (fractional)
   weight: number
-  isSleeping: boolean
+  isSleeping: boolean // 実時刻（夜 22:00〜6:00）に同期して自動更新される
+  lightsOn?: boolean  // 部屋の照明。未指定は ON 扱い（既存セーブ互換）
   isAlive: boolean
   lastUpdated: number // timestamp
   evolutionName: string

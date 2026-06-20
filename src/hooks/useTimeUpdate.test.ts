@@ -15,7 +15,9 @@ vi.mock('../utils/gameLogic', () => ({
   feedCreature: vi.fn(),
   trainCreature: vi.fn(),
   playWithCreature: vi.fn(),
-  toggleSleep: vi.fn(),
+  toggleLights: vi.fn(),
+  isNightTime: vi.fn(),
+  isLightsOn: vi.fn(),
   getAnimationState: vi.fn(),
 }))
 

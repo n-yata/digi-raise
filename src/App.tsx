@@ -16,7 +16,7 @@ import StatusScreen from './components/StatusScreen'
 import ZukanScreen from './components/ZukanScreen'
 import BattleLobbyScreen from './components/BattleLobbyScreen'
 import BattleScreen from './components/BattleScreen'
-import { feedCreature, trainCreature, playWithCreature, toggleSleep } from './utils/gameLogic'
+import { feedCreature, trainCreature, playWithCreature, toggleLights } from './utils/gameLogic'
 import type { ActionAnim } from './utils/gameLogic'
 import { playSound } from './utils/sound'
 import { FOOD_SPRITES } from './components/items/foodSprites'
@@ -333,12 +333,13 @@ export default function App() {
     showMessage('一緒に遊んだ！楽しかった！')
   }, [persistActiveCreature, showMessage, triggerAction])
 
-  const handleSleep = useCallback(() => {
+  const handleToggleLights = useCallback(() => {
     if (!creatureRef.current) return
-    const updated = toggleSleep(creatureRef.current)
+    const updated = toggleLights(creatureRef.current)
     persistActiveCreature(updated)
-    playSound(updated.isSleeping ? 'sleep' : 'wake')
-    showMessage(updated.isSleeping ? 'おやすみなさい…' : 'おはよう！元気いっぱい！')
+    const lit = updated.lightsOn ?? true
+    playSound(lit ? 'wake' : 'sleep')
+    showMessage(lit ? '電気をつけた！' : '電気を消した…')
   }, [persistActiveCreature, showMessage])
 
   const handleEvolve = useCallback(() => {
@@ -572,7 +573,7 @@ export default function App() {
           onFeed={handleFeed}
           onTrain={handleTrain}
           onPlay={handlePlay}
-          onSleep={handleSleep}
+          onToggleLights={handleToggleLights}
           onEvolve={handleEvolve}
           onStatus={() => setScreen('status')}
           onToggleDevMode={() => setDevMode(d => !d)}

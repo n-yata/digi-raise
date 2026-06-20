@@ -49,7 +49,7 @@ const defaultProps = {
   onFeed: vi.fn(),
   onTrain: vi.fn(),
   onPlay: vi.fn(),
-  onSleep: vi.fn(),
+  onToggleLights: vi.fn(),
   onEvolve: vi.fn(),
   onStatus: vi.fn(),
   onToggleDevMode: vi.fn(),
@@ -198,19 +198,23 @@ describe('MainGame', () => {
     expect(onFeed).toHaveBeenCalledTimes(1)
   })
 
-  it('「寝る」ボタンをクリックすると onSleep が呼ばれる', () => {
-    const onSleep = vi.fn()
+  it('電気ONのとき「電気を消す」ボタンをクリックすると onToggleLights が呼ばれる', () => {
+    const onToggleLights = vi.fn()
     render(
       <MainGame
         {...defaultProps}
-        onSleep={onSleep}
-        creature={makeCreature({ isSleeping: false })}
+        onToggleLights={onToggleLights}
+        creature={makeCreature({ lightsOn: true })}
       />
     )
-    // isSleeping=false のとき「寝る」と表示される
-    const sleepBtn = screen.getByText('寝る').closest('button')!
-    fireEvent.click(sleepBtn)
-    expect(onSleep).toHaveBeenCalledTimes(1)
+    const lightsBtn = screen.getByText('電気を消す').closest('button')!
+    fireEvent.click(lightsBtn)
+    expect(onToggleLights).toHaveBeenCalledTimes(1)
+  })
+
+  it('電気OFFのとき「電気をつける」ボタンが表示される', () => {
+    render(<MainGame {...defaultProps} creature={makeCreature({ lightsOn: false })} />)
+    expect(screen.getByText('電気をつける')).toBeInTheDocument()
   })
 
   it('「ステータス」ボタンをクリックすると onStatus が呼ばれる', () => {
