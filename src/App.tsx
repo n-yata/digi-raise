@@ -12,9 +12,6 @@ import MainGame from './components/MainGame'
 import EvolutionScreen from './components/EvolutionScreen'
 import DeathScreen from './components/DeathScreen'
 import StatusScreen from './components/StatusScreen'
-import TrainingMiniGame from './components/TrainingMiniGame'
-import PlayMiniGame from './components/PlayMiniGame'
-import FeedMiniGame from './components/FeedMiniGame'
 import BattleLobbyScreen from './components/BattleLobbyScreen'
 import BattleScreen from './components/BattleScreen'
 import { feedCreature, trainCreature, playWithCreature, toggleSleep } from './utils/gameLogic'
@@ -36,9 +33,6 @@ export default function App() {
   const [message, setMessage] = useState<string | null>(null)
   const [hasExistingSave, setHasExistingSave] = useState(false)
   const [loading, setLoading] = useState(true)
-  const [showTrainingGame, setShowTrainingGame] = useState(false)
-  const [showPlayGame, setShowPlayGame] = useState(false)
-  const [showFeedGame, setShowFeedGame] = useState(false)
 
   // Battle state
   const [battleRole, setBattleRole] = useState<BattleRole | null>(null)
@@ -197,49 +191,37 @@ export default function App() {
     setPendingEvolution(false)
   }, [])
 
+  // ごはん: メイン画面のまま即時に満腹度を回復（満腹なら不可）
   const handleFeed = useCallback(() => {
-    if (!creatureRef.current) return
-    if (creatureRef.current.hunger >= 100) {
+    const c = creatureRef.current
+    if (!c) return
+    if (c.hunger >= 100) {
       showMessage('お腹いっぱいで食べられない！')
       return
     }
-    setShowFeedGame(true)
-  }, [showMessage])
-
-  const handleFeedDone = useCallback(() => {
-    setShowFeedGame(false)
-    if (!creatureRef.current) return
-    const updated = feedCreature(creatureRef.current)
+    const updated = feedCreature(c)
     persistActiveCreature(updated)
     showMessage('もぐもぐ！ご飯を食べた！')
   }, [persistActiveCreature, showMessage])
 
+  // トレーニング: メイン画面のまま1タップで完了（常に成功扱い）
   const handleTrain = useCallback(() => {
-    if (!creatureRef.current || creatureRef.current.isSleeping) return
-    setShowTrainingGame(true)
-  }, [])
-
-  const handleTrainResult = useCallback((success: boolean) => {
-    setShowTrainingGame(false)
-    if (!creatureRef.current) return
-    const updated = trainCreature(creatureRef.current, success)
+    const c = creatureRef.current
+    if (!c || c.isSleeping) return
+    const updated = trainCreature(c, true)
     persistActiveCreature(updated)
     setAttackAnimation(true)
-    showMessage(success ? 'トレーニング成功！大きく強くなった！' : 'トレーニング失敗…でも少し強くなった')
+    showMessage('トレーニング成功！大きく強くなった！')
     setTimeout(() => setAttackAnimation(false), 1200)
   }, [persistActiveCreature, showMessage])
 
+  // 遊び: メイン画面のまま即時に幸福度を回復（常に成功扱い）
   const handlePlay = useCallback(() => {
-    if (!creatureRef.current || creatureRef.current.isSleeping) return
-    setShowPlayGame(true)
-  }, [])
-
-  const handlePlayResult = useCallback((success: boolean) => {
-    setShowPlayGame(false)
-    if (!creatureRef.current) return
-    const updated = playWithCreature(creatureRef.current, success)
+    const c = creatureRef.current
+    if (!c || c.isSleeping) return
+    const updated = playWithCreature(c, true)
     persistActiveCreature(updated)
-    showMessage(success ? '一緒に遊んだ！楽しかった！' : '一緒に遊んだ！少し楽しかった')
+    showMessage('一緒に遊んだ！楽しかった！')
   }, [persistActiveCreature, showMessage])
 
   const handleSleep = useCallback(() => {
@@ -540,15 +522,6 @@ export default function App() {
         />
       )}
 
-      {showTrainingGame && activeCreature && (
-        <TrainingMiniGame creature={activeCreature} onResult={handleTrainResult} />
-      )}
-      {showPlayGame && activeCreature && (
-        <PlayMiniGame creature={activeCreature} onResult={handlePlayResult} />
-      )}
-      {showFeedGame && activeCreature && (
-        <FeedMiniGame creature={activeCreature} onDone={handleFeedDone} />
-      )}
     </div>
   )
 }
