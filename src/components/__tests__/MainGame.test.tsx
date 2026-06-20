@@ -228,18 +228,19 @@ describe('MainGame', () => {
       expect(screen.queryByText('連打！')).not.toBeInTheDocument()
     })
 
-    it('trainingActive=true のときメイン画面内に連打UI（「連打！」と残りタップ数）が表示される', () => {
+    it('trainingActive=true のときメイン画面内に連打UI（「連打！」とタップ数）が表示される', () => {
       render(<MainGame {...defaultProps} trainingActive={true} />)
       expect(screen.getByText('連打！')).toBeInTheDocument()
-      // 目標10回・未タップなので「あと 10 回」
-      expect(screen.getByText(/あと\s*10\s*回/)).toBeInTheDocument()
+      // 未タップなので「0 タップ / +0 EXP」
+      expect(screen.getByText(/0\s*タップ\s*\/\s*\+0\s*EXP/)).toBeInTheDocument()
     })
 
-    it('連打UIをタップすると残りタップ数が減る', () => {
+    it('連打UIをタップするとタップ数と獲得EXPが増える', () => {
       render(<MainGame {...defaultProps} trainingActive={true} />)
       const overlay = screen.getByText('連打！').closest('button')!
       fireEvent.click(overlay)
-      expect(screen.getByText(/あと\s*9\s*回/)).toBeInTheDocument()
+      // 1タップ → +2 EXP
+      expect(screen.getByText(/1\s*タップ\s*\/\s*\+2\s*EXP/)).toBeInTheDocument()
     })
   })
 })

@@ -14,7 +14,7 @@ interface MainGameProps {
   devMode: boolean
   actionAnimation: ActionAnim | null
   trainingActive: boolean
-  onTrainResult: (success: boolean) => void
+  onTrainResult: (taps: number) => void
   message: string | null
   pendingEvolution: boolean
   hatching: boolean

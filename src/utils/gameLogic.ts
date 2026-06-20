@@ -54,12 +54,21 @@ export function feedCreature(creature: Creature): Creature {
   }
 }
 
-export function trainCreature(creature: Creature, success: boolean = true): Creature {
+/** タップ1回あたりの獲得経験値。 */
+export const EXP_PER_TAP = 2
+
+/**
+ * トレーニングを適用する。連打ミニゲームでタップした回数 `taps` に比例して
+ * 経験値（`EXP_PER_TAP × taps`）を獲得し、atk/def/spd はランダムに 1〜3 成長する。
+ * タップ 0 回（一度も叩けなかった）場合は何も起きない。
+ */
+export function trainCreature(creature: Creature, taps: number = 0): Creature {
   if (!creature.isAlive || creature.isSleeping) return creature
-  const atkGain = success ? Math.floor(Math.random() * 3) + 1 : Math.floor(Math.random() * 2)
-  const defGain = success ? Math.floor(Math.random() * 3) + 1 : Math.floor(Math.random() * 2)
-  const spdGain = success ? Math.floor(Math.random() * 3) + 1 : Math.floor(Math.random() * 2)
-  const expGain = success ? 20 : 5
+  if (taps <= 0) return creature
+  const atkGain = Math.floor(Math.random() * 3) + 1
+  const defGain = Math.floor(Math.random() * 3) + 1
+  const spdGain = Math.floor(Math.random() * 3) + 1
+  const expGain = EXP_PER_TAP * taps
   const updated = addExp(
     {
       ...creature,
