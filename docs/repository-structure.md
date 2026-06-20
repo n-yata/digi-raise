@@ -18,8 +18,9 @@ digi-raise/
 │   ├── index.css                 # グローバルスタイル（Tailwind directives）
 │   ├── vite-env.d.ts             # Vite 環境変数の型定義
 │   ├── components/               # 画面・UI コンポーネント
-│   │   ├── creatures/            # クリーチャー描画コンポーネント（CreatureSprite・DefaultCreatureBody・EggBody・FallbackSilhouette・*Sprites）
-│   │   │   └── parts/            # 共通 SVG パーツ（Eye・Mouth・FlamePlume 等）
+│   │   ├── creatures/            # クリーチャー描画コンポーネント（CreatureSprite・DefaultCreatureBody・FallbackSilhouette・*Sprites）
+│   │   │   ├── parts/            # 共通 SVG パーツ（Eye・Mouth・FlamePlume 等）
+│   │   │   └── pixel/            # 32×32 ドット絵スプライト（PixelSprite・getPixelSprite・getEggPixel(卵)・palette）
 │   ├── hooks/                    # useBattleState 等のカスタムフック
 │   ├── types/                    # creature.ts / battle.ts
 │   ├── utils/                    # battleLogic / cpuBattle / evolution / gameLogic / storage

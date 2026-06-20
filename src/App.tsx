@@ -19,6 +19,11 @@ import BattleLobbyScreen from './components/BattleLobbyScreen'
 import BattleScreen from './components/BattleScreen'
 import { feedCreature, trainCreature, playWithCreature, toggleSleep } from './utils/gameLogic'
 
+/** 卵をメイン画面に見せてから、ふ化演出を始めるまでの待ち時間（ms）。 */
+const EGG_HATCH_DELAY_MS = 3000
+/** ふ化演出（殻が割れる振動＋閃光）の長さ（ms）。これを過ぎたらクリーチャーへ切り替える。 */
+const EGG_HATCH_ANIM_MS = 700
+
 export default function App() {
   const [screen, setScreen] = useState<GameScreen>('title')
   const [creatures, setCreatures] = useState<Creature[]>([])
@@ -26,6 +31,7 @@ export default function App() {
   const [devMode, setDevMode] = useState(false)
   const [attackAnimation, setAttackAnimation] = useState(false)
   const [pendingEvolution, setPendingEvolution] = useState(false)
+  const [hatching, setHatching] = useState(false)
   const [evolvedFrom, setEvolvedFrom] = useState<EvolutionStage | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const [hasExistingSave, setHasExistingSave] = useState(false)
@@ -107,22 +113,47 @@ export default function App() {
 
   // Check evolution on activeCreature change
   useEffect(() => {
-    if (activeCreature && screen === 'main') {
-      if (canEvolve(activeCreature)) {
-        if (activeCreature.evolutionStage === 0) {
-          const evolved = evolveCreature(activeCreature)
-          setEvolvedFrom(0)
-          persistActiveCreature(evolved)
-          setPendingEvolution(false)
-          setScreen('evolution')
-        } else {
-          setPendingEvolution(true)
-        }
-      } else {
-        setPendingEvolution(false)
-      }
+    if (!activeCreature || screen !== 'main') return
+    if (!canEvolve(activeCreature)) {
+      setPendingEvolution(false)
+      return
     }
-  }, [activeCreature, screen, persistActiveCreature])
+
+    if (activeCreature.evolutionStage === 0) {
+      // 卵: メイン画面に数秒見せてから、その場でふ化演出を開始（画面遷移なし・タップ不要）
+      const timer = setTimeout(() => {
+        const c = creatureRef.current
+        if (!c || c.evolutionStage !== 0 || !canEvolve(c)) return
+        setHatching(true)
+      }, EGG_HATCH_DELAY_MS)
+      return () => clearTimeout(timer)
+    }
+
+    setPendingEvolution(true)
+  }, [activeCreature, screen])
+
+  // 卵のふ化演出が終わったら、メイン画面のままクリーチャーへ切り替える
+  useEffect(() => {
+    if (!hatching) return
+    // 演出中に画面遷移したら中断（タイマーは張らない）
+    if (screen !== 'main') {
+      setHatching(false)
+      return
+    }
+    const timer = setTimeout(() => {
+      const c = creatureRef.current
+      if (!c || c.evolutionStage !== 0) {
+        setHatching(false)
+        return
+      }
+      const hatched = evolveCreature(c)
+      persistActiveCreature(hatched)
+      setHatching(false)
+      setPendingEvolution(false)
+      showMessage(`${hatched.name} が うまれた！`)
+    }, EGG_HATCH_ANIM_MS)
+    return () => clearTimeout(timer)
+  }, [hatching, screen, persistActiveCreature, showMessage])
 
   // --- Actions ---
 
@@ -430,6 +461,7 @@ export default function App() {
           attackAnimation={attackAnimation}
           message={message}
           pendingEvolution={pendingEvolution}
+          hatching={hatching}
           onFeed={handleFeed}
           onTrain={handleTrain}
           onPlay={handlePlay}

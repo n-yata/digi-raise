@@ -13,6 +13,7 @@ interface MainGameProps {
   attackAnimation: boolean
   message: string | null
   pendingEvolution: boolean
+  hatching: boolean
   onFeed: () => void
   onTrain: () => void
   onPlay: () => void
@@ -29,6 +30,7 @@ export default function MainGame({
   attackAnimation,
   message,
   pendingEvolution,
+  hatching,
   onFeed,
   onTrain,
   onPlay,
@@ -198,7 +200,10 @@ export default function MainGame({
           </div>
         )}
 
-        <div style={{ transform: `translateX(${walkX}px)`, willChange: 'transform' }}>
+        <div
+          className={isEgg ? (hatching ? 'egg-hatch' : 'egg-wobble') : ''}
+          style={isEgg ? undefined : { transform: `translateX(${walkX}px)`, willChange: 'transform' }}
+        >
           <div style={{ transform: `scaleX(${facing})` }}>
             <CreatureSprite
               creatureId={creature.creatureId}
@@ -207,6 +212,17 @@ export default function MainGame({
             />
           </div>
         </div>
+
+        {/* 卵のふ化フラッシュ（殻が割れてクリーチャーが現れる閃光） */}
+        {hatching && (
+          <div
+            className="absolute inset-0 rounded-xl pointer-events-none egg-hatch-flash"
+            style={{
+              zIndex: 15,
+              background: `radial-gradient(circle at center, rgba(255,255,255,0.95) 0%, ${color}55 38%, transparent 70%)`,
+            }}
+          />
+        )}
 
         {/* Evolution ready glow */}
         {pendingEvolution && (
