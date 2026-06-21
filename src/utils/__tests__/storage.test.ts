@@ -98,6 +98,16 @@ describe('validateCreature', () => {
     expect(validateCreature({ ...validCreature, wins: '3' })).toBe(false)
     expect(validateCreature({ ...validCreature, losses: NaN })).toBe(false)
   })
+
+  it('fatigue は任意フィールド: 無くても受理（既存セーブ互換）、存在時のみ検証する', () => {
+    // レガシーセーブ（fatigue 欠落）でもロードできる
+    expect(validateCreature(validCreature)).toBe(true)
+    expect(validateCreature({ ...validCreature, fatigue: 0 })).toBe(true)
+    expect(validateCreature({ ...validCreature, fatigue: 60 })).toBe(true)
+    // 不正な fatigue は拒否
+    expect(validateCreature({ ...validCreature, fatigue: '0' })).toBe(false)
+    expect(validateCreature({ ...validCreature, fatigue: NaN })).toBe(false)
+  })
 })
 
 describe('validateSaveData', () => {

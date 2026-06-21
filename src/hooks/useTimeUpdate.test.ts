@@ -51,6 +51,7 @@ function makeCreature(overrides: Partial<Creature> = {}): Creature {
     spd: 8,
     hunger: 80,
     happiness: 70,
+    fatigue: 0,
     age: 1,
     weight: 10,
     isSleeping: false,

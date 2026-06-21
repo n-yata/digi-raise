@@ -21,8 +21,8 @@ export function validateCreature(c: unknown): c is Creature {
     if (typeof val !== 'number' || !isFinite(val)) return false
   }
 
-  // 任意フィールドは存在する場合のみ数値検証する
-  const optionalNumFields: (keyof Creature)[] = ['wins', 'losses']
+  // 任意フィールドは存在する場合のみ数値検証する（fatigue はレガシーセーブに無いため任意扱い）
+  const optionalNumFields: (keyof Creature)[] = ['wins', 'losses', 'fatigue']
   for (const field of optionalNumFields) {
     if (obj[field] !== undefined && (typeof obj[field] !== 'number' || !isFinite(obj[field] as number))) return false
   }

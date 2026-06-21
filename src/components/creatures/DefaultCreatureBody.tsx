@@ -3,7 +3,7 @@ import type { EvolutionStage } from '../../types/creature'
 import { STAGE_SIZES } from '../../data/spriteConfig'
 import { FallbackSilhouette } from './FallbackSilhouette'
 
-export type AnimState = 'idle' | 'happy' | 'sleeping' | 'attack' | 'evolving' | 'dead' | 'sad' | 'hungry' | 'critical' | 'eating' | 'walking'
+export type AnimState = 'idle' | 'happy' | 'sleeping' | 'attack' | 'evolving' | 'dead' | 'sad' | 'hungry' | 'critical' | 'eating' | 'walking' | 'tired'
 export type EyeVariant = 'normal' | 'angry' | 'closed'
 export type MouthVariant = 'smile' | 'fang' | 'small' | 'open'
 
@@ -19,6 +19,7 @@ export function getExpression(animState: AnimState, highStage = false): { eye: E
       return { eye: 'normal', mouth: 'open' }
     case 'sad':
     case 'hungry':
+    case 'tired':
       return { eye: 'closed', mouth: 'small' }
     case 'critical':
       return { eye: 'angry', mouth: 'small' }
