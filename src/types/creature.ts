@@ -26,7 +26,8 @@ export interface Creature {
   spd: number
   hunger: number      // 0-100
   happiness: number   // 0-100
-  age: number         // in days (fractional)
+  fatigue: number     // 0-100 裏パラメータ。トレ/遊ぶで蓄積、時間経過で回復。MAXで行動不可
+  age: number         // in days (fractional). 現実1日で +1
   weight: number
   isSleeping: boolean // 実時刻（夜 22:00〜6:00）に同期して自動更新される
   lightsOn?: boolean  // 部屋の照明。未指定は ON 扱い（既存セーブ互換）

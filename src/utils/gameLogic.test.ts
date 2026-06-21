@@ -27,6 +27,7 @@ function makeCreature(overrides: Partial<Creature> = {}): Creature {
     spd: 5,
     hunger: 60,
     happiness: 60,
+    fatigue: 0,
     age: 2,
     weight: 10,
     isSleeping: false,
@@ -60,10 +61,11 @@ describe('createNewCreature', () => {
     expect(creature.spd).toBe(2)
   })
 
-  it('初期hunger:80, happiness:70, age:0になる', () => {
+  it('初期hunger:80, happiness:70, fatigue:0, age:0になる', () => {
     const creature = createNewCreature('テスト')
     expect(creature.hunger).toBe(80)
     expect(creature.happiness).toBe(70)
+    expect(creature.fatigue).toBe(0)
     expect(creature.age).toBe(0)
   })
 
@@ -228,18 +230,32 @@ describe('trainCreature', () => {
     expect(result.trainCount).toBe(3)
   })
 
-  it('hunger が 10 減少する (下限0)', () => {
+  it('hunger は変化しない（おなかは時間経過のみで減る）', () => {
     vi.mocked(Math.random).mockReturnValue(0.5)
     const creature = makeCreature({ hunger: 60 })
     const result = trainCreature(creature, 10)
-    expect(result.hunger).toBe(50)
+    expect(result.hunger).toBe(60)
   })
 
-  it('hunger の下限は 0 を下回らない', () => {
+  it('fatigue が 15 蓄積する', () => {
     vi.mocked(Math.random).mockReturnValue(0.5)
-    const creature = makeCreature({ hunger: 5 })
+    const creature = makeCreature({ fatigue: 20 })
     const result = trainCreature(creature, 10)
-    expect(result.hunger).toBe(0)
+    expect(result.fatigue).toBe(35)
+  })
+
+  it('fatigue の上限は 100 を超えない', () => {
+    vi.mocked(Math.random).mockReturnValue(0.5)
+    const creature = makeCreature({ fatigue: 90 })
+    const result = trainCreature(creature, 10)
+    expect(result.fatigue).toBe(100)
+  })
+
+  it('fatigue が MAX(100) のときそのまま返す（実行不可）', () => {
+    vi.mocked(Math.random).mockReturnValue(0.5)
+    const creature = makeCreature({ fatigue: 100, trainCount: 0, atk: 5 })
+    const result = trainCreature(creature, 10)
+    expect(result).toBe(creature)
   })
 
   it('happiness が 5 減少する (下限0)', () => {
@@ -296,22 +312,28 @@ describe('playWithCreature', () => {
     expect(result.happiness).toBe(100)
   })
 
-  it('hunger が 5 減少する (success=true)', () => {
+  it('hunger は変化しない（おなかは時間経過のみで減る）', () => {
     const creature = makeCreature({ hunger: 60 })
     const result = playWithCreature(creature, true)
-    expect(result.hunger).toBe(55)
+    expect(result.hunger).toBe(60)
   })
 
-  it('hunger が 5 減少する (success=false)', () => {
-    const creature = makeCreature({ hunger: 60 })
-    const result = playWithCreature(creature, false)
-    expect(result.hunger).toBe(55)
-  })
-
-  it('hunger の下限は 0 を下回らない', () => {
-    const creature = makeCreature({ hunger: 3 })
+  it('fatigue が 10 蓄積する', () => {
+    const creature = makeCreature({ fatigue: 20 })
     const result = playWithCreature(creature, true)
-    expect(result.hunger).toBe(0)
+    expect(result.fatigue).toBe(30)
+  })
+
+  it('fatigue の上限は 100 を超えない', () => {
+    const creature = makeCreature({ fatigue: 95 })
+    const result = playWithCreature(creature, true)
+    expect(result.fatigue).toBe(100)
+  })
+
+  it('fatigue が MAX(100) のときそのまま返す（実行不可）', () => {
+    const creature = makeCreature({ fatigue: 100, playCount: 0 })
+    const result = playWithCreature(creature, true)
+    expect(result).toBe(creature)
   })
 
   it('EXP は変化しない (success=true)', () => {
@@ -423,14 +445,14 @@ describe('applyTimeUpdate', () => {
     expect(result.isSleeping).toBe(true)
   })
 
-  it('昼は isSleeping:false に同期し、電気ONなら happiness は -2/tick のみ', () => {
+  it('昼は isSleeping:false に同期し、おなか -6.25/tick・happiness -2/tick・年齢 +1/48 tick', () => {
     const creature = makeCreature({ lastUpdated: DAY_TIME, hunger: 60, happiness: 60, age: 2, isSleeping: true, lightsOn: true })
     vi.spyOn(Date, 'now').mockReturnValue(DAY_TIME + 1000 * 60 * 30) // 1 tick・昼
     const result = applyTimeUpdate(creature, false)
     expect(result.isSleeping).toBe(false)
-    expect(result.hunger).toBe(55)
+    expect(result.hunger).toBe(53.75) // 60 - 6.25
     expect(result.happiness).toBe(58)
-    expect(result.age).toBe(2.5)
+    expect(result.age).toBeCloseTo(2 + 1 / 48, 6) // 現実1日=+1歳
   })
 
   it('夜は isSleeping:true に同期し、電気OFFなら happiness は -2/tick のみ', () => {
@@ -525,8 +547,20 @@ describe('applyTimeUpdate', () => {
     const creature = makeCreature({ lastUpdated: DAY_TIME, hunger: 60, happiness: 60, age: 0, lightsOn: true })
     vi.spyOn(Date, 'now').mockReturnValue(DAY_TIME + 1000 * 30) // 30秒後・昼
     const result = applyTimeUpdate(creature, true)
-    expect(result.hunger).toBe(55) // 1 tick
-    expect(result.age).toBe(0.5)
+    expect(result.hunger).toBe(53.75) // 1 tick = -6.25
+    expect(result.age).toBeCloseTo(1 / 48, 6)
+  })
+
+  it('fatigue は時間経過で回復する（1 tick で約 -16.67、3時間=6 tick で 0）', () => {
+    const creature = makeCreature({ lastUpdated: DAY_TIME, fatigue: 100, lightsOn: true })
+    vi.spyOn(Date, 'now').mockReturnValue(DAY_TIME + 1000 * 60 * 30) // 1 tick・昼
+    const oneTick = applyTimeUpdate(creature, false)
+    expect(oneTick.fatigue).toBeCloseTo(100 - 100 / 6, 6)
+
+    const creature2 = makeCreature({ lastUpdated: DAY_TIME, fatigue: 100, lightsOn: true })
+    vi.spyOn(Date, 'now').mockReturnValue(DAY_TIME + 1000 * 60 * 30 * 6) // 6 ticks = 3h
+    const full = applyTimeUpdate(creature2, false)
+    expect(full.fatigue).toBe(0)
   })
 
   it('isAlive:false のときそのまま返す', () => {
@@ -585,6 +619,26 @@ describe('getAnimationState', () => {
   it('happiness < 70 のとき "idle" を返す', () => {
     const creature = makeCreature({ happiness: 50 })
     expect(getAnimationState(creature, null)).toBe('idle')
+  })
+
+  it('fatigue >= 60 のとき "tired" を返す', () => {
+    const creature = makeCreature({ fatigue: 60, happiness: 50 })
+    expect(getAnimationState(creature, null)).toBe('tired')
+  })
+
+  it('fatigue が 59 のときは "tired" にならない', () => {
+    const creature = makeCreature({ fatigue: 59, happiness: 50 })
+    expect(getAnimationState(creature, null)).toBe('idle')
+  })
+
+  it('tired より hungry が優先される', () => {
+    const creature = makeCreature({ fatigue: 80, hunger: 10 })
+    expect(getAnimationState(creature, null)).toBe('hungry')
+  })
+
+  it('tired は happy より優先される（疲労時は幸福でも疲労表現）', () => {
+    const creature = makeCreature({ fatigue: 80, happiness: 90 })
+    expect(getAnimationState(creature, null)).toBe('tired')
   })
 
   it('dead が actionOverride より優先される', () => {

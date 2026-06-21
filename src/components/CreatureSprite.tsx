@@ -25,6 +25,7 @@ function getAnimClass(animState: AnimState): string {
     case 'dead':     return 'opacity-40 grayscale'
     case 'sad':      return 'animate-sad-sway'
     case 'hungry':   return 'animate-hungry-droop'
+    case 'tired':    return 'animate-tired-droop'
     case 'critical': return 'animate-critical-blink'
     case 'walking':  return 'animate-walk-bounce'
     case 'idle':

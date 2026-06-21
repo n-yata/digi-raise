@@ -1,5 +1,6 @@
 import type { Creature } from '../types/creature'
 import { canEvolve } from '../utils/evolution'
+import { FATIGUE_MAX } from '../utils/gameLogic'
 
 interface ActionButtonsProps {
   creature: Creature
@@ -63,6 +64,8 @@ export default function ActionButtons({
   const lightsOn = creature.lightsOn ?? true
   const canEvolveNow = canEvolve(creature)
   const isEgg = creature.evolutionStage === 0
+  // 疲労MAXではトレ・遊ぶ不可（裏パラメータなので理由は表示しない）
+  const exhausted = (creature.fatigue ?? 0) >= FATIGUE_MAX
 
   // タマゴステージ: 自動ふ化のため操作不要
   if (isEgg) {
@@ -102,13 +105,13 @@ export default function ActionButtons({
         <ActionBtn
           label="トレーニング"
           onClick={onTrain}
-          disabled={sleeping || creature.hunger <= 0}
+          disabled={sleeping || creature.hunger <= 0 || exhausted}
           accent="#f43f5e"
         />
         <ActionBtn
           label="遊ぶ"
           onClick={onPlay}
-          disabled={sleeping || creature.hunger <= 0}
+          disabled={sleeping || creature.hunger <= 0 || exhausted}
           accent="#a78bfa"
         />
         <ActionBtn

@@ -1,6 +1,26 @@
 import type { Creature, EvolutionStage } from '../types/creature'
 import { CREATURE_TREE, BASE_STATS, EXP_TO_LEVEL } from '../data/evolutions'
 
+// ── 成長レート定数（ハードコーディング集約） ──
+// 時間更新は 30分/ティック（本番）。24h = 48 ティック。
+export const TICKS_PER_DAY = 48
+/** 1 実日 = +1 歳。1 ティックあたりの加齢量（≈0.02083）。 */
+export const AGE_PER_TICK = 1 / TICKS_PER_DAY
+/** おなかは時間経過のみで減少。約8時間（16ティック）で 100→0（=6.25/ティック）。 */
+export const HUNGER_DECAY_PER_TICK = 100 / (8 * 2)
+
+// ── 疲労度（裏パラメータ 0–100） ──
+/** 疲労度の上限。これ以上はトレ/遊ぶ不可。 */
+export const FATIGUE_MAX = 100
+/** トレーニング1回で蓄積する疲労。 */
+export const FATIGUE_TRAIN_COST = 15
+/** 遊ぶ1回で蓄積する疲労。 */
+export const FATIGUE_PLAY_COST = 10
+/** この値以上で「疲労中」モーションを表示する。 */
+export const TIRED_THRESHOLD = 60
+/** 1 ティックあたりの疲労回復量。約3時間（6ティック）で全回復（≈16.67/ティック）。 */
+export const FATIGUE_RECOVERY_PER_TICK = 100 / (3 * 2)
+
 export function createNewCreature(name: string): Creature {
   const baseStats = BASE_STATS[0]
   const now = Date.now()
@@ -18,6 +38,7 @@ export function createNewCreature(name: string): Creature {
     spd: baseStats.spd,
     hunger: 80,
     happiness: 70,
+    fatigue: 0,
     age: 0,
     weight: 10,
     isSleeping: false,
@@ -62,9 +83,11 @@ export const EXP_PER_TAP = 2
  * トレーニングを適用する。連打ミニゲームでタップした回数 `taps` に比例して
  * 経験値（`EXP_PER_TAP × taps`）を獲得し、atk/def/spd はランダムに 1〜3 成長する。
  * タップ 0 回（一度も叩けなかった）場合は何も起きない。
+ * 疲労度が MAX のときは実行できない（no-op）。おなかは消費しない（疲労を蓄積する）。
  */
 export function trainCreature(creature: Creature, taps: number = 0): Creature {
   if (!creature.isAlive || creature.isSleeping) return creature
+  if (creature.fatigue >= FATIGUE_MAX) return creature
   if (taps <= 0) return creature
   const atkGain = Math.floor(Math.random() * 3) + 1
   const defGain = Math.floor(Math.random() * 3) + 1
@@ -76,7 +99,7 @@ export function trainCreature(creature: Creature, taps: number = 0): Creature {
       atk: creature.atk + atkGain,
       def: creature.def + defGain,
       spd: creature.spd + spdGain,
-      hunger: Math.max(0, creature.hunger - 10),
+      fatigue: Math.min(FATIGUE_MAX, (creature.fatigue ?? 0) + FATIGUE_TRAIN_COST),
       happiness: Math.max(0, creature.happiness - 5),
       trainCount: creature.trainCount + 1,
     },
@@ -85,12 +108,17 @@ export function trainCreature(creature: Creature, taps: number = 0): Creature {
   return { ...updated, lastUpdated: Date.now() }
 }
 
+/**
+ * 遊ぶ。幸福度を上げる。疲労度が MAX のときは実行できない（no-op）。
+ * おなかは消費しない（疲労を蓄積する）。
+ */
 export function playWithCreature(creature: Creature, success: boolean = true): Creature {
   if (!creature.isAlive || creature.isSleeping) return creature
+  if (creature.fatigue >= FATIGUE_MAX) return creature
   return {
     ...creature,
     happiness: Math.min(100, creature.happiness + (success ? 20 : 5)),
-    hunger: Math.max(0, creature.hunger - 5),
+    fatigue: Math.min(FATIGUE_MAX, (creature.fatigue ?? 0) + FATIGUE_PLAY_COST),
     playCount: creature.playCount + 1,
     lastUpdated: Date.now(),
   }
@@ -139,8 +167,11 @@ export function applyTimeUpdate(creature: Creature, devMode: boolean): Creature 
 
   let updated = { ...creature, isSleeping: night }
 
-  // Apply 30-min ticks
-  updated.hunger = Math.max(0, updated.hunger - thirtyMinTicks * 5)
+  // おなかは時間経過のみで減少（約8時間で 100→0）
+  updated.hunger = Math.max(0, updated.hunger - thirtyMinTicks * HUNGER_DECAY_PER_TICK)
+
+  // 疲労度は時間経過で常時回復（約3時間で全回復）。既存セーブ（undefined）は 0 起点。
+  updated.fatigue = Math.max(0, (updated.fatigue ?? 0) - thirtyMinTicks * FATIGUE_RECOVERY_PER_TICK)
 
   // 通常の幸福度減少 + 照明ミスマッチの追加ペナルティ。
   //  - 夜（睡眠中）に電気 ON のまま: 眩しくて眠れない
@@ -149,9 +180,8 @@ export function applyTimeUpdate(creature: Creature, devMode: boolean): Creature 
   const happinessLoss = thirtyMinTicks * (lightMismatch ? 5 : 2)
   updated.happiness = Math.max(0, updated.happiness - happinessLoss)
 
-  // Apply hourly effects: 2 thirty-min ticks = 1 game-hour
-  // age はティック数 × 0.5 ずつ増える（float。表示は Math.floor）
-  updated.age = updated.age + thirtyMinTicks * 0.5
+  // 年齢は現実1日で +1 歳（48ティック=24h で +1。float。表示は Math.floor）
+  updated.age = updated.age + thirtyMinTicks * AGE_PER_TICK
 
   // HP回復は「夜 ＋ 電気OFF」で快適に眠れているときのみ
   if (night && !lightsOn) {
@@ -181,13 +211,15 @@ export type ActionAnim = 'attack' | 'eating' | 'happy'
 export function getAnimationState(
   creature: Creature,
   actionOverride: ActionAnim | null = null
-): 'idle' | 'happy' | 'sleeping' | 'attack' | 'eating' | 'evolving' | 'dead' | 'sad' | 'hungry' | 'critical' {
+): 'idle' | 'happy' | 'sleeping' | 'attack' | 'eating' | 'evolving' | 'dead' | 'sad' | 'hungry' | 'critical' | 'tired' {
   if (!creature.isAlive) return 'dead'
   // 明示アクション（ごはん/遊び/トレ）はその場で即フィードバック。dead 以外より優先。
   if (actionOverride) return actionOverride
   if (creature.isSleeping) return 'sleeping'
   if (creature.hp <= creature.maxHp * 0.2) return 'critical'
   if (creature.hunger <= 20) return 'hungry'
+  // 疲労中（裏パラメータ）。空腹より下・不機嫌より上の優先度で表現する。
+  if ((creature.fatigue ?? 0) >= TIRED_THRESHOLD) return 'tired'
   if (creature.happiness <= 30) return 'sad'
   if (creature.happiness > 70) return 'happy'
   return 'idle'

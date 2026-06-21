@@ -124,10 +124,11 @@ interface Creature {
   evolutionStage: EvolutionStage
   hp: number; maxHp: number
   hunger: number; happiness: number
+  fatigue: number          // 0-100 裏パラメータ。トレ/遊ぶで蓄積、時間経過で回復
   level: number; exp: number
   atk: number; def: number; spd: number
   weight: number
-  age: number              // float、30分ティックごとに +0.5
+  age: number              // float（日）、現実1日で +1（30分ティックごとに +1/48）
   isAlive: boolean         // false = 墓石
   isSleeping: boolean
   lastUpdated: number      // Unix ms
@@ -177,19 +178,19 @@ interface BattleState {
 ```
 egg → baby（タップで即時進化）
 
-baby → child（age ≥ 1 で分岐）
+baby → child（age ≥ 0.5 で分岐）
   happiness ≥ 70 → childA（善）
   happiness ≤ 30 → childB（悪）
   happiness 31〜69 → childC（中間）
 
-child → adult（age ≥ 3 AND happiness ≥ 50 で分岐）
+child → adult（age ≥ 1 AND happiness ≥ 50 で分岐）
   happiness ≥ 70 → adultX1（高道）
   happiness < 70  → adultX2（低道）
 
-adult → perfect（age ≥ 6 AND level ≥ 8 AND atk+def+spd ≥ 40）
+adult → perfect（age ≥ 3 AND level ≥ 8 AND atk+def+spd ≥ 40）
   → perfectX1（adultX1 から）または perfectX2（adultX2 から）
 
-perfectX1 → ultimate（age ≥ 12 AND level ≥ 14 AND 各 stat ≥ 20）
+perfectX1 → ultimate（age ≥ 7 AND level ≥ 14 AND 各 stat ≥ 20）
   → ultimateA / B / C
 
 perfectX2 → 終点（evolvesTo: []）アルティメットには進化しない
@@ -298,12 +299,12 @@ HP はバトル終了時の値を維持する。
 |---------|------|----------|
 | 0 | タマゴ | — |
 | 1 | ベイビー | minAge: 0 を満たした時点で自動ふ化（タップ不要） |
-| 2 | チャイルド | `age ≥ 1` |
-| 3 | アダルト | `age ≥ 3` AND `happiness ≥ 50` |
-| 4 | パーフェクト | `age ≥ 6` AND `level ≥ 8` AND `atk + def + spd ≥ 40` |
-| 5 | アルティメット | `age ≥ 12` AND `level ≥ 14` AND 各ステータス `≥ 20` |
+| 2 | チャイルド | `age ≥ 0.5`（日） |
+| 3 | アダルト | `age ≥ 1` AND `happiness ≥ 50` |
+| 4 | パーフェクト | `age ≥ 3` AND `level ≥ 8` AND `atk + def + spd ≥ 40` |
+| 5 | アルティメット | `age ≥ 7` AND `level ≥ 14` AND 各ステータス `≥ 20` |
 
-`age` は float（30分ティックごとに +0.5）。比較は float のまま行い、表示のみ `Math.floor`。
+`age` は float（単位は日。現実1日で +1、30分ティックごとに +1/48）。比較は float のまま行い、表示のみ `Math.floor`。
 
 ### 進化のたびのお絵描き
 

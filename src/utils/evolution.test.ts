@@ -17,6 +17,7 @@ function makeCreature(overrides: Partial<Creature> = {}): Creature {
     spd: 5,
     hunger: 60,
     happiness: 60,
+    fatigue: 0,
     age: 2,
     weight: 10,
     isSleeping: false,
@@ -144,51 +145,55 @@ describe('canEvolve', () => {
     })
   })
 
-  describe('stage 1 (Baby → Child, minAge:1)', () => {
-    it('age >= 1 のとき true を返す', () => {
-      expect(canEvolve(makeCreature({ creatureId: 'baby', evolutionStage: 1, age: 1 }))).toBe(true)
+  describe('stage 1 (Baby → Child, minAge:0.5)', () => {
+    it('age >= 0.5 のとき true を返す', () => {
+      expect(canEvolve(makeCreature({ creatureId: 'baby', evolutionStage: 1, age: 0.5 }))).toBe(true)
+    })
+
+    it('age < 0.5 のとき false を返す', () => {
+      expect(canEvolve(makeCreature({ creatureId: 'baby', evolutionStage: 1, age: 0.4 }))).toBe(false)
+    })
+  })
+
+  describe('stage 2 (Child → Adult, minAge:1, minHappiness:50)', () => {
+    it('age>=1 かつ happiness>=50 のとき true を返す', () => {
+      expect(canEvolve(makeCreature({ creatureId: 'childA', evolutionStage: 2, age: 1, happiness: 50 }))).toBe(true)
     })
 
     it('age < 1 のとき false を返す', () => {
-      expect(canEvolve(makeCreature({ creatureId: 'baby', evolutionStage: 1, age: 0.5 }))).toBe(false)
-    })
-  })
-
-  describe('stage 2 (Child → Adult, minAge:3, minHappiness:50)', () => {
-    it('age>=3 かつ happiness>=50 のとき true を返す', () => {
-      expect(canEvolve(makeCreature({ creatureId: 'childA', evolutionStage: 2, age: 3, happiness: 50 }))).toBe(true)
-    })
-
-    it('age < 3 のとき false を返す', () => {
-      expect(canEvolve(makeCreature({ creatureId: 'childA', evolutionStage: 2, age: 2, happiness: 50 }))).toBe(false)
+      expect(canEvolve(makeCreature({ creatureId: 'childA', evolutionStage: 2, age: 0.5, happiness: 50 }))).toBe(false)
     })
 
     it('happiness < 50 のとき false を返す', () => {
-      expect(canEvolve(makeCreature({ creatureId: 'childA', evolutionStage: 2, age: 3, happiness: 49 }))).toBe(false)
+      expect(canEvolve(makeCreature({ creatureId: 'childA', evolutionStage: 2, age: 1, happiness: 49 }))).toBe(false)
     })
   })
 
-  describe('stage 3 (Adult → Perfect, minAge:6, minLevel:8, minCombatStats:40)', () => {
+  describe('stage 3 (Adult → Perfect, minAge:3, minLevel:8, minCombatStats:40)', () => {
     it('全条件を満たすとき true を返す', () => {
-      expect(canEvolve(makeCreature({ creatureId: 'adultA1', evolutionStage: 3, age: 6, level: 8, atk: 15, def: 15, spd: 10 }))).toBe(true)
+      expect(canEvolve(makeCreature({ creatureId: 'adultA1', evolutionStage: 3, age: 3, level: 8, atk: 15, def: 15, spd: 10 }))).toBe(true)
     })
 
-    it('age < 6 のとき false を返す', () => {
-      expect(canEvolve(makeCreature({ creatureId: 'adultA1', evolutionStage: 3, age: 5, level: 8, atk: 15, def: 15, spd: 10 }))).toBe(false)
+    it('age < 3 のとき false を返す', () => {
+      expect(canEvolve(makeCreature({ creatureId: 'adultA1', evolutionStage: 3, age: 2, level: 8, atk: 15, def: 15, spd: 10 }))).toBe(false)
     })
 
     it('level < 8 のとき false を返す', () => {
-      expect(canEvolve(makeCreature({ creatureId: 'adultA1', evolutionStage: 3, age: 6, level: 7, atk: 15, def: 15, spd: 10 }))).toBe(false)
+      expect(canEvolve(makeCreature({ creatureId: 'adultA1', evolutionStage: 3, age: 3, level: 7, atk: 15, def: 15, spd: 10 }))).toBe(false)
     })
 
     it('atk+def+spd < 40 のとき false を返す', () => {
-      expect(canEvolve(makeCreature({ creatureId: 'adultA1', evolutionStage: 3, age: 6, level: 8, atk: 10, def: 10, spd: 10 }))).toBe(false)
+      expect(canEvolve(makeCreature({ creatureId: 'adultA1', evolutionStage: 3, age: 3, level: 8, atk: 10, def: 10, spd: 10 }))).toBe(false)
     })
   })
 
-  describe('stage 4 (Perfect1 → Ultimate)', () => {
+  describe('stage 4 (Perfect1 → Ultimate, minAge:7)', () => {
     it('perfectA1: 全条件を満たすとき true を返す', () => {
-      expect(canEvolve(makeCreature({ creatureId: 'perfectA1', evolutionStage: 4, age: 12, level: 14, atk: 20, def: 20, spd: 20 }))).toBe(true)
+      expect(canEvolve(makeCreature({ creatureId: 'perfectA1', evolutionStage: 4, age: 7, level: 14, atk: 20, def: 20, spd: 20 }))).toBe(true)
+    })
+
+    it('perfectA1: age < 7 のとき false を返す', () => {
+      expect(canEvolve(makeCreature({ creatureId: 'perfectA1', evolutionStage: 4, age: 6, level: 14, atk: 20, def: 20, spd: 20 }))).toBe(false)
     })
 
     it('perfectA2: 終点のため条件を満たしても false を返す', () => {
@@ -316,21 +321,21 @@ describe('getEvolutionProgress', () => {
     expect(getEvolutionProgress(makeCreature({ creatureId: 'perfectA2', evolutionStage: 4 }))).toEqual([])
   })
 
-  describe('stage 1 (baby → child, minAge:1)', () => {
+  describe('stage 1 (baby → child, minAge:0.5)', () => {
     it('年齢チェックのみ1件返す', () => {
-      const result = getEvolutionProgress(makeCreature({ creatureId: 'baby', evolutionStage: 1, age: 0.5 }))
+      const result = getEvolutionProgress(makeCreature({ creatureId: 'baby', evolutionStage: 1, age: 0.4 }))
       expect(result).toHaveLength(1)
       expect(result[0].label).toBe('年齢')
       expect(result[0].met).toBe(false)
     })
 
-    it('age >= 1 のとき met:true', () => {
-      const result = getEvolutionProgress(makeCreature({ creatureId: 'baby', evolutionStage: 1, age: 1 }))
+    it('age >= 0.5 のとき met:true', () => {
+      const result = getEvolutionProgress(makeCreature({ creatureId: 'baby', evolutionStage: 1, age: 0.5 }))
       expect(result[0].met).toBe(true)
     })
   })
 
-  describe('stage 2 (child → adult, minAge:3, minHappiness:50)', () => {
+  describe('stage 2 (child → adult, minAge:1, minHappiness:50)', () => {
     it('年齢と幸福度の2件を返す', () => {
       const result = getEvolutionProgress(makeCreature({ creatureId: 'childA', evolutionStage: 2, age: 2, happiness: 40 }))
       expect(result).toHaveLength(2)

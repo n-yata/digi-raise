@@ -48,6 +48,7 @@ export default {
         'sad-drop': 'sadDrop 2s ease-in infinite',
         'hungry-droop': 'hungryDroop 3s ease-in-out infinite',
         'hungry-callout': 'hungryCallout 1.2s ease-in-out infinite',
+        'tired-droop': 'tiredDroop 3.6s ease-in-out infinite',
         'critical-blink': 'criticalBlink 1.6s ease-in-out infinite',
         'walk-bounce': 'walkBounce 0.55s ease-in-out infinite',
       },
@@ -127,6 +128,11 @@ export default {
           '0%, 100%': { transform: 'translateY(0) scaleY(1)' },
           '40%': { transform: 'translateY(4px) scaleY(0.95)' },
           '60%': { transform: 'translateY(4px) scaleY(0.95)' },
+        },
+        // 疲労中: 重く沈み込みながらゆっくり左右に傾く（ぐったり）
+        tiredDroop: {
+          '0%, 100%': { transform: 'translateY(2px) scaleY(0.96) rotate(-3deg)' },
+          '50%': { transform: 'translateY(5px) scaleY(0.92) rotate(3deg)' },
         },
         hungryCallout: {
           '0%, 100%': { opacity: '1', transform: 'translateX(-50%) translateY(0) scale(1)' },

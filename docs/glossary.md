@@ -22,22 +22,23 @@
 | 進化ステージ | Evolution Stage | クリーチャーの成長段階。0〜5 の整数で管理 |
 | タマゴ | Egg | 進化ステージ 0。タップで即時ベイビーに進化 |
 | ベイビー | Baby | 進化ステージ 1 |
-| チャイルド | Child | 進化ステージ 2。`age ≥ 1` で進化 |
-| アダルト | Adult | 進化ステージ 3。`age ≥ 3` AND `happiness ≥ 50` で進化 |
-| パーフェクト | Perfect | 進化ステージ 4。`age ≥ 6` AND `level ≥ 8` AND `atk + def + spd ≥ 40` で進化 |
-| アルティメット | Ultimate | 進化ステージ 5（最終）。`age ≥ 12` AND `level ≥ 14` AND 各ステータス `≥ 20` で進化 |
+| チャイルド | Child | 進化ステージ 2。`age ≥ 0.5`（日）で進化 |
+| アダルト | Adult | 進化ステージ 3。`age ≥ 1` AND `happiness ≥ 50` で進化 |
+| パーフェクト | Perfect | 進化ステージ 4。`age ≥ 3` AND `level ≥ 8` AND `atk + def + spd ≥ 40` で進化 |
+| アルティメット | Ultimate | 進化ステージ 5（最終）。`age ≥ 7` AND `level ≥ 14` AND 各ステータス `≥ 20` で進化 |
 | ブランチ | Branch | クリーチャーの育ち方による系統。善(A)・悪(B)・中間(C)・none（未分岐）の4種。幸福度によって決まる |
 | 善（A系） | Branch A | しあわせ度が高い育て方で分岐する神聖テーマの系統。カラー: #ffd700 |
 | 悪（B系） | Branch B | しあわせ度が低い放置気味の育て方で分岐する禍々しいテーマの系統。カラー: #9b59b6 |
 | 中間（C系） | Branch C | しあわせ度が中間的な育て方で分岐するクールテーマの系統。カラー: #3498db |
 | 終点クリーチャー | Terminal Creature | `evolvesTo: []` を持ちアルティメットへ進化しないクリーチャー。perfectA2/B2/C2 の3体 |
 | ティック | Tick | 時間更新の最小単位。通常モード 30 分、devMode 30 秒 |
-| age | age | クリーチャー年齢（float）。1 ティックごとに +0.5。表示は `Math.floor(age)` 日 |
-| 満腹度 | Hunger | 0〜100。0 で餓死ダメージ、100 でこれ以上食べられない |
+| age | age | クリーチャー年齢（float、単位は日）。現実 1 日で +1 歳（1 ティックごとに +1/48）。表示は `Math.floor(age)` 歳 |
+| 満腹度 | Hunger | 0〜100。**時間経過のみ**で減少（約8時間で空腹＝1日3回の食事ペース）。0 で餓死ダメージ、100 でこれ以上食べられない |
 | しあわせ度 | Happiness | 0〜100。進化条件・あそぶで上昇、時間経過で減少 |
+| 疲労度 | Fatigue | 0〜100 の**裏パラメータ**（UI非表示）。トレ +15 / あそぶ +10 で蓄積、時間経過で常時回復（約3時間で全回復）。`≥ 100` でトレ・あそぶ不可、`≥ 60` で「疲労中」モーション |
 | えさ / ごはん | Feed | 育成アクションの 1 つ。hunger +30、happiness +5。EXP 付与なし |
-| トレーニング | Training | 育成アクション。もぐらたたきミニゲーム（3×3、8 秒、5 匹以上で成功） |
-| あそぶ | Play | 育成アクション。神経衰弱ミニゲーム（2×3、3 ペア、8 手以内で成功）。EXP 付与なし |
+| トレーニング | Training | 育成アクション。もぐらたたきミニゲーム（3×3、8 秒、5 匹以上で成功）。fatigue +15（おなかは消費しない） |
+| あそぶ | Play | 育成アクション。神経衰弱ミニゲーム（2×3、3 ペア、8 手以内で成功）。EXP 付与なし。fatigue +10（おなかは消費しない） |
 | ねる | Sleep | 睡眠状態をトグル。1 ティックごとに HP +ceil(maxHp × 0.1) |
 | 特殊アクション | Special | バトルアクションの 1 つ。タイプ別効果、クールダウン 2 ターン |
 | タイプ相性 | Type Advantage | タイプ間のダメージ補正（×0.8 / ×1.0 / ×1.2）。正本は `frontend/src/utils/battleLogic.ts` の `TYPE_ADVANTAGE` |
@@ -89,7 +90,7 @@
 | `SaveData` | 永続化用シリアライズ型（`{ creatures, activeCreatureId }`） |
 | `BattleState` | バトル中の状態型（`frontend/src/types/battle.ts`） |
 | `useBattleState` | `useReducer` ベースのバトル状態フック |
-| `applyTimeUpdate` | ティック更新関数（hunger / happiness / age / HP） |
+| `applyTimeUpdate` | ティック更新関数（hunger / happiness / age / fatigue / HP） |
 | `calcDamage` | バトルダメージ計算 |
 | `TYPE_ADVANTAGE` | タイプ相性マトリクス定数 |
 | `MAX_CREATURES` | クリーチャー保持上限（5） |
