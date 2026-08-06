@@ -1,0 +1,67 @@
+name: Cleanup stale branches
+
+# Actions 内の GITHUB_TOKEN はブランチ削除が可能なため、ここで一括削除する。
+# このファイルを含むブランチへ push されたときに動く（main へのマージ不要）。
+on:
+  push:
+    branches:
+      - claude/app-improvement-ideas-p382xi
+    paths:
+      - .github/workflows/cleanup-branches.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 不要ブランチを削除する
+        env:
+          # main と共通祖先を持たず、放置されている系列。誤作業の原因になったため削除する。
+          ORPHANS: |
+            claude/remove-handwritten-monster-tk9i4b
+            claude/creature-raising-pwa-game-11yMs
+        run: |
+          set -u
+          KEEP="main gh-pages ${GITHUB_REF_NAME}"
+
+          keep() {
+            for k in $KEEP; do [ "$1" = "$k" ] && return 0; done
+            return 1
+          }
+
+          deleted=0
+          kept=0
+
+          # 1. main に取り込み済み（ahead=0 = main に無い内容を持たない）ブランチ
+          for b in $(git branch -r --format='%(refname:short)' | sed 's#^origin/##' | grep -v '^HEAD'); do
+            keep "$b" && { echo "保持: $b (保護対象)"; kept=$((kept+1)); continue; }
+            ahead=$(git rev-list --count "origin/main..origin/$b" 2>/dev/null || echo 999)
+            if [ "$ahead" -eq 0 ]; then
+              echo "削除: $b (ahead=0)"
+              git push origin --delete "$b" && deleted=$((deleted+1))
+            else
+              echo "保持: $b (ahead=$ahead)"
+              kept=$((kept+1))
+            fi
+          done
+
+          # 2. main と無関係な歴史の放置ブランチ（明示指定）
+          for b in $ORPHANS; do
+            keep "$b" && continue
+            if git show-ref --quiet "refs/remotes/origin/$b"; then
+              echo "削除: $b (孤立系列)"
+              git push origin --delete "$b" && deleted=$((deleted+1))
+            fi
+          done
+
+          echo "----"
+          echo "削除 ${deleted} 件 / 保持 ${kept} 件"
+          echo "残ったブランチ:"
+          git ls-remote --heads origin | sed 's#.*refs/heads/#  #'
