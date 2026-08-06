@@ -102,6 +102,31 @@
 
 ## Git ワークフロー（worktree 運用）
 
+### 作業開始前に基点を必ず確認する
+
+**絶対に守ってください！** 既存ブランチの先端を「最新」と思い込んで作業を始めない。
+クローンに `origin/main` が含まれていないことがあり、放置された別系列のブランチを
+最新と誤認すると、公開中のアプリとは無関係なコードを直してしまう。
+
+```bash
+# 1. main を必ず取得する（クローンに含まれていない場合がある）
+git fetch origin main
+
+# 2. 今いるブランチが main の子孫か確認する
+git merge-base --is-ancestor origin/main HEAD && echo "OK: main を含む" || echo "NG: 分岐している"
+
+# 3. main と共通祖先があるか確認する（空なら無関係な歴史 = 使ってはいけない）
+git merge-base HEAD origin/main || echo "危険: main と共通祖先が無い"
+
+# 4. ずれていたら main から作り直す
+git fetch origin main && git checkout -B <branch-name> origin/main
+```
+
+- **共通祖先が無いブランチは絶対にマージしない**: 全ファイルが add/add 衝突し、現行アプリを
+  古いコードで上書きする。作り直すこと。
+- **マージ済みブランチは残さない**: GitHub の Settings → General →
+  「Automatically delete head branches」を有効にし、`gh pr merge --delete-branch` を使う。
+
 ### 絶対に守ってください！
 
 - **`main` 直コミット禁止**: すべての実装変更は feature ブランチで行う。
